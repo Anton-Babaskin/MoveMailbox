@@ -1,0 +1,17 @@
+services:
+  mailbox-migrator:
+    build: .
+    image: mailbox-migrator:local
+    restart: unless-stopped
+    ports:
+      # Localhost-only by default. Put an authenticated HTTPS proxy in front
+      # before exposing the application to the internet.
+      - "127.0.0.1:8080:8080"
+    environment:
+      MM_ADDR: 0.0.0.0:8080
+      MM_MAX_CONCURRENT: 2
+      MM_OPEN_BROWSER: "false"
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true

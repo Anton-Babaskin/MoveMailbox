@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10182d">
+  <title>Mailbox Migrator — перенос почты без лишней боли</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Mailbox Migrator">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40"><path d="M8 12.5 20 21l12-8.5M9 29h22a3 3 0 0 0 3-3V12a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="m24.5 26 4 4 7-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span><strong>Mailbox</strong><b>Migrator</b></span>
+      </a>
+
+      <div class="topbar-actions">
+        <button class="ghost-button history-button" type="button" id="historyButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6M12 8v4l2.7 1.7"/></svg>
+          История
+        </button>
+        <div class="engine-pill" id="enginePill">
+          <span class="status-dot"></span>
+          <span id="engineLabel">Проверяем движок…</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow"><span></span> IMAP MIGRATION WORKSPACE</div>
+        <h1>Перенесите почту.<br><em>Спокойно и красиво.</em></h1>
+        <p>Подключите два почтовых ящика — мы аккуратно перенесём папки, письма, даты и флаги. Без консоли и сложных инструкций.</p>
+        <div class="trust-row">
+          <span><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg> Пароли не сохраняются</span>
+          <span><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg> Только в одну сторону</span>
+          <span><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 7v5l3 2"/></svg> Можно отменить</span>
+        </div>
+      </section>
+
+      <section class="workspace" id="setupView">
+        <form id="migrationForm">
+          <div class="connection-grid">
+            <article class="connection-card source-card">
+              <div class="card-heading">
+                <span class="step-number">01</span>
+                <div><span class="card-kicker">ОТКУДА</span><h2>Источник</h2></div>
+                <span class="card-status" id="sourceStatus"><i></i> Не проверено</span>
+              </div>
+
+              <div class="field-row server-row">
+                <label class="field server-field"><span>IMAP-сервер</span><input id="sourceHost" name="sourceHost" placeholder="imap.example.com" autocomplete="off" required></label>
+                <label class="field port-field"><span>Порт</span><input id="sourcePort" name="sourcePort" type="number" value="993" min="1" max="65535" required></label>
+              </div>
+              <label class="field"><span>Защита соединения</span><select id="sourceSecurity" name="sourceSecurity"><option value="tls">SSL / TLS</option><option value="starttls">STARTTLS</option><option value="plain">Без шифрования — небезопасно</option></select></label>
+              <label class="field"><span>Логин</span><input id="sourceUsername" name="sourceUsername" type="text" placeholder="name@example.com" autocomplete="username" required></label>
+              <label class="field password-field"><span>Пароль или пароль приложения</span><input id="sourcePassword" name="sourcePassword" type="password" placeholder="••••••••••••" autocomplete="current-password" required><button class="reveal-button" type="button" data-target="sourcePassword" aria-label="Показать пароль"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></label>
+              <button class="test-button" type="button" data-side="source"><span class="button-label"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Проверить подключение</span><span class="button-loader"></span></button>
+            </article>
+
+            <div class="transfer-bridge" aria-hidden="true">
+              <span></span>
+              <div><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg></div>
+              <span></span>
+            </div>
+
+            <article class="connection-card destination-card">
+              <div class="card-heading">
+                <span class="step-number">02</span>
+                <div><span class="card-kicker">КУДА</span><h2>Назначение</h2></div>
+                <span class="card-status" id="destinationStatus"><i></i> Не проверено</span>
+              </div>
+
+              <div class="field-row server-row">
+                <label class="field server-field"><span>IMAP-сервер</span><input id="destinationHost" name="destinationHost" placeholder="imap.new-server.com" autocomplete="off" required></label>
+                <label class="field port-field"><span>Порт</span><input id="destinationPort" name="destinationPort" type="number" value="993" min="1" max="65535" required></label>
+              </div>
+              <label class="field"><span>Защита соединения</span><select id="destinationSecurity" name="destinationSecurity"><option value="tls">SSL / TLS</option><option value="starttls">STARTTLS</option><option value="plain">Без шифрования — небезопасно</option></select></label>
+              <label class="field"><span>Логин</span><input id="destinationUsername" name="destinationUsername" type="text" placeholder="name@new-domain.com" autocomplete="username" required></label>
+              <label class="field password-field"><span>Пароль или пароль приложения</span><input id="destinationPassword" name="destinationPassword" type="password" placeholder="••••••••••••" autocomplete="new-password" required><button class="reveal-button" type="button" data-target="destinationPassword" aria-label="Показать пароль"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></label>
+              <button class="test-button" type="button" data-side="destination"><span class="button-label"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>Проверить подключение</span><span class="button-loader"></span></button>
+            </article>
+          </div>
+
+          <div class="launch-panel">
+            <div class="options">
+              <label class="check-option"><input id="syncFlags" type="checkbox" checked><span class="check-ui"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"/></svg></span><span><strong>Сохранить флаги</strong><small>Прочитано, важное, отвечено</small></span></label>
+              <label class="check-option"><input id="preserveDates" type="checkbox" checked><span class="check-ui"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"/></svg></span><span><strong>Сохранить даты</strong><small>Исходное время получения</small></span></label>
+              <label class="check-option"><input id="dryRun" type="checkbox"><span class="check-ui"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"/></svg></span><span><strong>Пробный запуск</strong><small>Ничего не копировать</small></span></label>
+            </div>
+            <div class="launch-action">
+              <span class="safety-note"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Письма в источнике останутся на месте</span>
+              <button class="launch-button" id="launchButton" type="submit"><span>Начать миграцию</span><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="progress-view hidden" id="progressView">
+        <div class="progress-header">
+          <div><span class="live-badge"><i></i> МИГРАЦИЯ ИДЁТ</span><h2 id="progressTitle">Переносим почтовый ящик</h2><p id="progressRoute">—</p></div>
+          <button class="cancel-button" id="cancelButton" type="button">Отменить</button>
+        </div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <div class="progress-meta"><strong id="progressPercent">0%</strong><span id="progressPhase">Подготовка…</span><span id="currentFolder">Сканируем папки</span></div>
+        <div class="metric-grid">
+          <div class="metric"><span>Перенесено</span><strong id="transferredMetric">0</strong><small>писем</small></div>
+          <div class="metric"><span>Пропущено</span><strong id="skippedMetric">0</strong><small>уже были</small></div>
+          <div class="metric"><span>Объём</span><strong id="bytesMetric">0 Б</strong><small>данных</small></div>
+          <div class="metric"><span>Время</span><strong id="timeMetric">00:00</strong><small>прошло</small></div>
+        </div>
+        <details class="log-panel"><summary>Технический журнал <span>для диагностики</span><svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></summary><pre id="logOutput"></pre></details>
+        <div class="finished-actions hidden" id="finishedActions"><button class="secondary-button" id="newMigrationButton" type="button">Новая миграция</button></div>
+      </section>
+    </main>
+
+    <footer><span>Mailbox Migrator <b>preview</b></span><span>IMAP → IMAP · безопасное одностороннее копирование</span></footer>
+  </div>
+
+  <div class="toast" id="toast" role="status"><span class="toast-icon"></span><div><strong id="toastTitle"></strong><p id="toastMessage"></p></div></div>
+  <div class="modal-backdrop hidden" id="historyModal">
+    <section class="history-modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="modal-heading"><div><span class="card-kicker">ЖУРНАЛ</span><h2 id="historyTitle">История миграций</h2></div><button id="closeHistory" type="button" aria-label="Закрыть">×</button></div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

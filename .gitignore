@@ -1,0 +1,17 @@
+# Build output
+/bin/
+/dist/
+/mailbox-migrator
+/mailbox-migrator.exe
+
+# Local configuration and data
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
