@@ -52,7 +52,7 @@ jobs:
           mkdir -p "dist/${package}"
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build \
             -trimpath \
-            -ldflags="-s -w -X github.com/Anton-Babaskin/mailbox-migrator/internal/api.Version=${version}" \
+            -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=${version}" \
             -o "dist/${package}/movemailbox.exe" \
             ./cmd/mailbox-migrator
           cp scripts/windows/START-DEMO.cmd "dist/${package}/"

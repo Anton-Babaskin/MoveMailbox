@@ -98,7 +98,7 @@ jobs:
           fi
           CGO_ENABLED=0 GOOS="${TARGET_GOOS}" GOARCH="${TARGET_GOARCH}" \
             go build -trimpath \
-              -ldflags="-s -w -X github.com/Anton-Babaskin/mailbox-migrator/internal/api.Version=ci-${GITHUB_SHA::12}" \
+              -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=ci-${GITHUB_SHA::12}" \
               -o "dist/movemailbox-${TARGET_GOOS}-${TARGET_GOARCH}${suffix}" \
               ./cmd/mailbox-migrator
 
