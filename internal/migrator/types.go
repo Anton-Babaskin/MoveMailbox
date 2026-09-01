@@ -24,9 +24,20 @@ type Endpoint struct {
 	Password string       `json:"password"`
 }
 
+const (
+	maxHostLength     = 253
+	maxUsernameLength = 1024
+	maxPasswordLength = 4096
+	maxFolderLength   = 1024
+)
+
 func (e Endpoint) Validate() error {
-	if strings.TrimSpace(e.Host) == "" {
+	trimmedHost := strings.TrimSpace(e.Host)
+	if trimmedHost == "" {
 		return errors.New("укажите IMAP-сервер")
+	}
+	if trimmedHost != e.Host || len(e.Host) > maxHostLength || strings.ContainsAny(e.Host, "\x00\r\n\t") {
+		return errors.New("укажите корректное имя IMAP-сервера или IP-адрес")
 	}
 	if e.Port < 1 || e.Port > 65535 {
 		return errors.New("порт должен быть от 1 до 65535")
@@ -34,8 +45,14 @@ func (e Endpoint) Validate() error {
 	if strings.TrimSpace(e.Username) == "" {
 		return errors.New("укажите логин")
 	}
+	if len(e.Username) > maxUsernameLength || strings.ContainsRune(e.Username, '\x00') {
+		return errors.New("логин слишком длинный или содержит недопустимый символ")
+	}
 	if e.Password == "" {
 		return errors.New("укажите пароль или пароль приложения")
+	}
+	if len(e.Password) > maxPasswordLength || strings.ContainsRune(e.Password, '\x00') {
+		return errors.New("пароль слишком длинный или содержит недопустимый символ")
 	}
 	switch e.Security {
 	case SecurityTLS, SecurityStartTLS, SecurityPlain:
@@ -81,6 +98,9 @@ func (r Request) Validate() error {
 		}
 		if strings.ContainsRune(folder, '\x00') {
 			return errors.New("имя выбранной папки содержит недопустимый символ")
+		}
+		if len(folder) > maxFolderLength {
+			return errors.New("имя выбранной папки слишком длинное")
 		}
 		if _, duplicate := seenFolders[folder]; duplicate {
 			return fmt.Errorf("папка %q выбрана дважды", folder)

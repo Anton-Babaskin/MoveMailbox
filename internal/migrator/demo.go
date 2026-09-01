@@ -46,9 +46,11 @@ func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)
 	}{
 		{"INBOX", 184, 38_400_000},
 		{"Sent", 96, 21_700_000},
+		{"Drafts", 14, 2_900_000},
 		{"Archive/2024", 242, 74_900_000},
 		{"Archive/2025", 317, 96_200_000},
 		{"Projects", 73, 18_800_000},
+		{"Trash", 28, 5_600_000},
 	}
 
 	result := Result{}

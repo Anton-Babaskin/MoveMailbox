@@ -1,6 +1,9 @@
 package migrator
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestEndpointValidation(t *testing.T) {
 	tests := []struct {
@@ -12,6 +15,10 @@ func TestEndpointValidation(t *testing.T) {
 		{"missing host", Endpoint{Port: 993, Security: SecurityTLS, Username: "user", Password: "secret"}, false},
 		{"invalid port", Endpoint{Host: "imap.example.com", Port: 70000, Security: SecurityTLS, Username: "user", Password: "secret"}, false},
 		{"missing password", Endpoint{Host: "imap.example.com", Port: 993, Security: SecurityTLS, Username: "user"}, false},
+		{"host with surrounding whitespace", Endpoint{Host: " imap.example.com ", Port: 993, Security: SecurityTLS, Username: "user", Password: "secret"}, false},
+		{"host with control character", Endpoint{Host: "imap.example.com\nother", Port: 993, Security: SecurityTLS, Username: "user", Password: "secret"}, false},
+		{"oversized username", Endpoint{Host: "imap.example.com", Port: 993, Security: SecurityTLS, Username: strings.Repeat("u", maxUsernameLength+1), Password: "secret"}, false},
+		{"password with NUL", Endpoint{Host: "imap.example.com", Port: 993, Security: SecurityTLS, Username: "user", Password: "secret\x00value"}, false},
 		{"unknown security", Endpoint{Host: "imap.example.com", Port: 993, Security: "auto", Username: "user", Password: "secret"}, false},
 	}
 	for _, test := range tests {
@@ -28,7 +35,7 @@ func TestEndpointValidation(t *testing.T) {
 }
 
 func TestRequestRejectsSameMailbox(t *testing.T) {
-	source := Endpoint{Host: " IMAP.EXAMPLE.COM ", Port: 993, Security: SecurityTLS, Username: "User@example.com", Password: "source-secret"}
+	source := Endpoint{Host: "IMAP.EXAMPLE.COM", Port: 993, Security: SecurityTLS, Username: "User@example.com", Password: "source-secret"}
 	destination := Endpoint{Host: "imap.example.com", Port: 993, Security: SecurityTLS, Username: "user@example.com", Password: "destination-secret"}
 
 	if err := (Request{Source: source, Destination: destination}).Validate(); err == nil {
@@ -66,5 +73,10 @@ func TestRequestRejectsInvalidFolderSelection(t *testing.T) {
 	request.Options.DestinationSubfolder = "Imported mail"
 	if err := request.Validate(); err != nil {
 		t.Fatalf("expected valid folder options to be accepted, got %v", err)
+	}
+
+	request.Options.Folders = []string{strings.Repeat("f", maxFolderLength+1)}
+	if err := request.Validate(); err == nil {
+		t.Fatal("expected an oversized folder name to be rejected")
 	}
 }

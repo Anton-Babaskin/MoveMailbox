@@ -89,6 +89,20 @@ func TestNativeIMAPConnectionReturnsTypedTLSError(t *testing.T) {
 	}
 }
 
+func TestNativeIMAPConnectionAllowsServerToCloseDuringLogout(t *testing.T) {
+	address := startIMAPTestServer(t, imapServerOptions{
+		security:      SecurityPlain,
+		acceptLogin:   true,
+		closeOnLogout: true,
+	})
+	host, port := splitTestAddress(t, address)
+	endpoint := Endpoint{Host: host, Port: port, Security: SecurityPlain, Username: "user", Password: "password"}
+
+	if err := (ImapsyncEngine{}).TestConnection(context.Background(), endpoint, nil); err != nil {
+		t.Fatalf("successful authentication must not fail on a logout close race: %v", err)
+	}
+}
+
 func TestNativeIMAPConnectionHonorsContextCancellation(t *testing.T) {
 	address := startIMAPTestServer(t, imapServerOptions{security: SecurityPlain, acceptLogin: true, hangOnLogin: true})
 	host, port := splitTestAddress(t, address)
@@ -111,10 +125,11 @@ func TestNativeIMAPConnectionHonorsContextCancellation(t *testing.T) {
 }
 
 type imapServerOptions struct {
-	security    SecurityMode
-	certificate tls.Certificate
-	acceptLogin bool
-	hangOnLogin bool
+	security      SecurityMode
+	certificate   tls.Certificate
+	acceptLogin   bool
+	hangOnLogin   bool
+	closeOnLogout bool
 	// Some negative client tests intentionally abort a TLS handshake.
 	ignoreServeError bool
 }
@@ -211,6 +226,9 @@ func serveIMAPTestConnection(connection net.Conn, options imapServerOptions) err
 				fmt.Fprintf(writer, "%s NO authentication failed\r\n", tag)
 			}
 		case "LOGOUT":
+			if options.closeOnLogout {
+				return nil
+			}
 			fmt.Fprintf(writer, "* BYE Logging out\r\n%s OK LOGOUT completed\r\n", tag)
 			return writer.Flush()
 		default:
