@@ -46,9 +46,13 @@ func (e Endpoint) Validate() error {
 }
 
 type Options struct {
-	SyncFlags     bool `json:"syncFlags"`
-	PreserveDates bool `json:"preserveDates"`
-	DryRun        bool `json:"dryRun"`
+	SyncFlags             bool     `json:"syncFlags"`
+	PreserveDates         bool     `json:"preserveDates"`
+	DryRun                bool     `json:"dryRun"`
+	Folders               []string `json:"folders,omitempty"`
+	DestinationSubfolder  string   `json:"destinationSubfolder,omitempty"`
+	StrictMirror          bool     `json:"strictMirror"`
+	StrictMirrorConfirmed bool     `json:"strictMirrorConfirmed"`
 }
 
 type Request struct {
@@ -64,7 +68,40 @@ func (r Request) Validate() error {
 	if err := r.Destination.Validate(); err != nil {
 		return fmt.Errorf("назначение: %w", err)
 	}
+	if sameMailbox(r.Source, r.Destination) {
+		return errors.New("источник и назначение совпадают; укажите другой почтовый ящик назначения")
+	}
+	if len(r.Options.Folders) > 500 {
+		return errors.New("можно выбрать не более 500 папок за один запуск")
+	}
+	seenFolders := make(map[string]struct{}, len(r.Options.Folders))
+	for _, folder := range r.Options.Folders {
+		if strings.TrimSpace(folder) == "" {
+			return errors.New("имя выбранной папки не может быть пустым")
+		}
+		if strings.ContainsRune(folder, '\x00') {
+			return errors.New("имя выбранной папки содержит недопустимый символ")
+		}
+		if _, duplicate := seenFolders[folder]; duplicate {
+			return fmt.Errorf("папка %q выбрана дважды", folder)
+		}
+		seenFolders[folder] = struct{}{}
+	}
+	if strings.ContainsRune(r.Options.DestinationSubfolder, '\x00') {
+		return errors.New("имя подпапки назначения содержит недопустимый символ")
+	}
+	if len(r.Options.DestinationSubfolder) > 512 {
+		return errors.New("имя подпапки назначения слишком длинное")
+	}
+	if r.Options.StrictMirror && !r.Options.StrictMirrorConfirmed {
+		return errors.New("строгое зеркало требует отдельного подтверждения удаления лишних писем в назначении")
+	}
 	return nil
+}
+
+func sameMailbox(source, destination Endpoint) bool {
+	return strings.EqualFold(strings.TrimSpace(source.Host), strings.TrimSpace(destination.Host)) &&
+		strings.EqualFold(strings.TrimSpace(source.Username), strings.TrimSpace(destination.Username))
 }
 
 type Event struct {
@@ -73,6 +110,7 @@ type Event struct {
 	Phase         string    `json:"phase,omitempty"`
 	CurrentFolder string    `json:"currentFolder,omitempty"`
 	Progress      int       `json:"progress,omitempty"`
+	Indeterminate bool      `json:"indeterminate,omitempty"`
 	Transferred   int64     `json:"transferred,omitempty"`
 	Skipped       int64     `json:"skipped,omitempty"`
 	Bytes         int64     `json:"bytes,omitempty"`
@@ -83,6 +121,15 @@ type Result struct {
 	Transferred int64 `json:"transferred"`
 	Skipped     int64 `json:"skipped"`
 	Bytes       int64 `json:"bytes"`
+}
+
+type Folder struct {
+	Name      string `json:"name"`
+	Delimiter string `json:"delimiter,omitempty"`
+}
+
+type FolderLister interface {
+	ListFolders(ctx context.Context, endpoint Endpoint) ([]Folder, error)
 }
 
 type Engine interface {

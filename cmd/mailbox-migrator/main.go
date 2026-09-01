@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -19,9 +20,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Anton-Babaskin/mailbox-migrator/internal/api"
-	"github.com/Anton-Babaskin/mailbox-migrator/internal/jobs"
-	"github.com/Anton-Babaskin/mailbox-migrator/internal/migrator"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/api"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/jobs"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
 )
 
 func main() {
@@ -30,25 +31,32 @@ func main() {
 		defer logFile.Close()
 	}
 
-	address := flag.String("addr", env("MM_ADDR", "127.0.0.1:8080"), "HTTP listen address")
-	imapsyncBinary := flag.String("imapsync", env("MM_IMAPSYNC_BIN", "imapsync"), "path to imapsync executable")
-	demo := flag.Bool("demo", envBool("MM_DEMO", false), "use the built-in demo migration engine")
-	openBrowser := flag.Bool("open", envBool("MM_OPEN_BROWSER", true), "open the interface in the default browser")
-	maxConcurrent := flag.Int("max-concurrent", envInt("MM_MAX_CONCURRENT", 2), "maximum number of concurrent migrations")
+	address := flag.String("addr", env("MOVEMAILBOX_ADDR", env("MM_ADDR", "127.0.0.1:8080")), "HTTP listen address")
+	imapsyncBinary := flag.String("imapsync", env("MOVEMAILBOX_IMAPSYNC_BIN", env("MM_IMAPSYNC_BIN", "imapsync")), "path to imapsync executable")
+	demo := flag.Bool("demo", envBool("MOVEMAILBOX_DEMO", envBool("MM_DEMO", false)), "use the built-in demo migration engine")
+	openBrowser := flag.Bool("open", envBool("MOVEMAILBOX_OPEN_BROWSER", envBool("MM_OPEN_BROWSER", true)), "open the interface in the default browser")
+	maxConcurrent := flag.Int("max-concurrent", envInt("MOVEMAILBOX_MAX_CONCURRENT", envInt("MM_MAX_CONCURRENT", 2)), "maximum number of concurrent migrations")
+	maxJobs := flag.Int("max-jobs", envInt("MOVEMAILBOX_MAX_JOBS", 256), "maximum number of queued and retained migration jobs")
+	historyTTL := flag.Duration("history-ttl", envDuration("MOVEMAILBOX_HISTORY_TTL", 24*time.Hour), "how long completed jobs remain in memory")
+	allowedHostsFlag := flag.String("allowed-hosts", env("MOVEMAILBOX_ALLOWED_HOSTS", ""), "comma-separated additional HTTP Host values allowed by the local API")
 	flag.Parse()
 
 	var engine migrator.Engine = migrator.ImapsyncEngine{Binary: *imapsyncBinary}
 	if *demo {
 		engine = migrator.DemoEngine{}
 	}
-	manager := jobs.NewManager(engine, *maxConcurrent)
+	manager := jobs.NewManagerWithConfig(engine, jobs.Config{
+		MaxConcurrent: *maxConcurrent,
+		MaxJobs:       *maxJobs,
+		CompletedTTL:  *historyTTL,
+	})
 
 	listener, publicURL, reused, err := acquireListener(*address, *openBrowser)
 	if err != nil {
-		log.Fatalf("не удалось запустить Mailbox Migrator: %v", err)
+		log.Fatalf("не удалось запустить %s: %v", api.ProductName, err)
 	}
 	if reused {
-		log.Printf("Mailbox Migrator уже запущен: %s", publicURL)
+		log.Printf("%s уже запущен: %s", api.ProductName, publicURL)
 		if err := openURL(publicURL); err != nil {
 			log.Printf("не удалось открыть браузер автоматически: %v", err)
 		}
@@ -57,7 +65,7 @@ func main() {
 	defer listener.Close()
 
 	server := &http.Server{
-		Handler:           api.New(engine, manager),
+		Handler:           api.New(engine, manager, api.Config{AllowedHosts: allowedHosts(listener, *allowedHostsFlag)}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       70 * time.Second,
 	}
@@ -70,7 +78,7 @@ func main() {
 		}
 		serveError <- err
 	}()
-	log.Printf("Mailbox Migrator запущен: %s (engine=%s)", publicURL, engine.Name())
+	log.Printf("%s запущен: %s (engine=%s)", api.ProductName, publicURL, engine.Name())
 	if *openBrowser {
 		if err := openURL(publicURL); err != nil {
 			log.Printf("не удалось открыть браузер автоматически: %v", err)
@@ -81,16 +89,22 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-stop:
-		log.Print("Останавливаем Mailbox Migrator")
+		log.Printf("Останавливаем %s", api.ProductName)
 	case err := <-serveError:
 		if err != nil {
-			log.Fatalf("ошибка HTTP-сервера: %v", err)
+			log.Printf("ошибка HTTP-сервера: %v", err)
 		}
-		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	_ = server.Shutdown(ctx)
+	managerStopped := make(chan error, 1)
+	go func() { managerStopped <- manager.Shutdown(ctx) }()
+	if err := server.Shutdown(ctx); err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		log.Printf("ошибка остановки HTTP-сервера: %v", err)
+	}
+	if err := <-managerStopped; err != nil {
+		log.Printf("не все миграции успели завершиться безопасно: %v", err)
+	}
 }
 
 func acquireListener(address string, interactive bool) (net.Listener, string, bool, error) {
@@ -145,7 +159,8 @@ func isExistingInstance(baseURL string) bool {
 	if err := json.NewDecoder(io.LimitReader(response.Body, 16*1024)).Decode(&health); err != nil {
 		return false
 	}
-	return health.Product == "mailbox-migrator" && health.Status == "ok"
+	knownProduct := health.Product == api.ProductID || health.Product == api.LegacyProductID
+	return knownProduct && health.Status == "ok"
 }
 
 func setupLogging() *os.File {
@@ -156,7 +171,7 @@ func setupLogging() *os.File {
 	if err != nil {
 		return nil
 	}
-	file, err := os.OpenFile(filepath.Join(filepath.Dir(executable), "mailbox-migrator.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	file, err := os.OpenFile(filepath.Join(filepath.Dir(executable), "movemailbox.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 	if err != nil {
 		return nil
 	}
@@ -178,6 +193,7 @@ func envBool(name string, fallback bool) bool {
 	}
 	parsed, err := strconv.ParseBool(value)
 	if err != nil {
+		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
 		return fallback
 	}
 	return parsed
@@ -190,6 +206,20 @@ func envInt(name string, fallback int) int {
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
+		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
+		return fallback
+	}
+	return parsed
+}
+
+func envDuration(name string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
 		return fallback
 	}
 	return parsed
@@ -205,6 +235,33 @@ func browserAddress(address string) string {
 	return address
 }
 
+func allowedHosts(listener net.Listener, configured string) []string {
+	hosts := make(map[string]struct{})
+	add := func(value string) {
+		if value = strings.TrimSpace(value); value != "" {
+			hosts[value] = struct{}{}
+		}
+	}
+	host, port, err := net.SplitHostPort(listener.Addr().String())
+	if err == nil {
+		add(net.JoinHostPort("127.0.0.1", port))
+		add(net.JoinHostPort("localhost", port))
+		add(net.JoinHostPort("::1", port))
+		host = strings.Trim(host, "[]")
+		if ip := net.ParseIP(host); ip == nil || !ip.IsUnspecified() {
+			add(net.JoinHostPort(host, port))
+		}
+	}
+	for _, value := range strings.Split(configured, ",") {
+		add(value)
+	}
+	result := make([]string, 0, len(hosts))
+	for value := range hosts {
+		result = append(result, value)
+	}
+	return result
+}
+
 func openURL(url string) error {
 	var command *exec.Cmd
 	switch runtime.GOOS {
@@ -215,5 +272,8 @@ func openURL(url string) error {
 	default:
 		command = exec.Command("xdg-open", url)
 	}
-	return command.Start()
+	if err := command.Start(); err != nil {
+		return err
+	}
+	return command.Process.Release()
 }

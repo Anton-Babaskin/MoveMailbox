@@ -21,6 +21,23 @@ func (DemoEngine) TestConnection(ctx context.Context, endpoint Endpoint, emit fu
 	return nil
 }
 
+func (DemoEngine) ListFolders(ctx context.Context, _ Endpoint) ([]Folder, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-time.After(350 * time.Millisecond):
+	}
+	return []Folder{
+		{Name: "INBOX", Delimiter: "/"},
+		{Name: "Sent", Delimiter: "/"},
+		{Name: "Drafts", Delimiter: "/"},
+		{Name: "Archive/2024", Delimiter: "/"},
+		{Name: "Archive/2025", Delimiter: "/"},
+		{Name: "Projects", Delimiter: "/"},
+		{Name: "Trash", Delimiter: "/"},
+	}, nil
+}
+
 func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)) (Result, error) {
 	folders := []struct {
 		name     string
@@ -35,7 +52,20 @@ func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)
 	}
 
 	result := Result{}
-	emit(Event{Type: "progress", Phase: "Подготовка", Progress: 3, Message: "Читаем структуру почтового ящика", Timestamp: time.Now()})
+	if len(request.Options.Folders) > 0 {
+		selected := make(map[string]struct{}, len(request.Options.Folders))
+		for _, name := range request.Options.Folders {
+			selected[name] = struct{}{}
+		}
+		filtered := folders[:0]
+		for _, folder := range folders {
+			if _, ok := selected[folder.name]; ok {
+				filtered = append(filtered, folder)
+			}
+		}
+		folders = filtered
+	}
+	emit(Event{Type: "progress", Phase: "preparing", Progress: 3, Message: "Читаем структуру почтового ящика", Timestamp: time.Now()})
 
 	for index, folder := range folders {
 		select {
@@ -49,7 +79,7 @@ func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)
 		progress := 12 + ((index + 1) * 84 / len(folders))
 		emit(Event{
 			Type:          "progress",
-			Phase:         "Копирование",
+			Phase:         "copying",
 			CurrentFolder: folder.name,
 			Progress:      progress,
 			Transferred:   result.Transferred,
@@ -60,6 +90,6 @@ func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)
 		})
 	}
 
-	emit(Event{Type: "progress", Phase: "Проверка", Progress: 100, Message: "Миграция проверена", Timestamp: time.Now()})
+	emit(Event{Type: "progress", Phase: "verifying", Progress: 100, Message: "Миграция проверена", Timestamp: time.Now()})
 	return result, nil
 }

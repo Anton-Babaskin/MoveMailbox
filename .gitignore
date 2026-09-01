@@ -3,6 +3,8 @@
 /dist/
 /mailbox-migrator
 /mailbox-migrator.exe
+/movemailbox
+/movemailbox.exe
 
 # Local configuration and data
 .env

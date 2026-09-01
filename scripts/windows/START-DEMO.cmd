@@ -3,17 +3,17 @@ setlocal
 cd /d "%~dp0"
 
 echo.
-echo  Mailbox Migrator Preview
+echo  MoveMailbox Preview
 echo  ------------------------
 echo  Starting safe demo mode. No real mail servers will be contacted.
 echo.
 
-"%~dp0mailbox-migrator.exe" --demo --open=true
+"%~dp0movemailbox.exe" --demo --open=true
 
 if errorlevel 1 (
   echo.
-  echo  Mailbox Migrator could not start.
-  echo  Open mailbox-migrator.log and send us its last lines.
+  echo  MoveMailbox could not start.
+  echo  Open movemailbox.log and send us its last lines.
   echo.
   pause
 )

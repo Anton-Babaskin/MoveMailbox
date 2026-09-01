@@ -1,4 +1,4 @@
-name: Release Windows preview
+name: Release MoveMailbox Windows preview
 
 on:
   push:
@@ -8,20 +8,39 @@ on:
 permissions:
   contents: write
 
+env:
+  GO_VERSION: "1.27.0"
+  GOTOOLCHAIN: local
+  GOVULNCHECK_VERSION: "v1.7.0"
+
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: "1.24.x"
-          cache: false
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
 
       - name: Verify source
+        shell: bash
         run: |
-          go test ./...
+          set -euo pipefail
+          unformatted="$(gofmt -l .)"
+          if [[ -n "${unformatted}" ]]; then
+            echo "The following files need gofmt:"
+            echo "${unformatted}"
+            exit 1
+          fi
+          go test -race ./...
           go vet ./...
+
+      - name: Scan reachable dependencies for vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} ./...
 
       - name: Build Windows preview
         env:
@@ -29,15 +48,16 @@ jobs:
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
-          package="mailbox-migrator-windows-amd64-${RELEASE_TAG}"
+          package="movemailbox-windows-amd64-${RELEASE_TAG}"
           mkdir -p "dist/${package}"
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build \
             -trimpath \
             -ldflags="-s -w -X github.com/Anton-Babaskin/mailbox-migrator/internal/api.Version=${version}" \
-            -o "dist/${package}/mailbox-migrator.exe" \
+            -o "dist/${package}/movemailbox.exe" \
             ./cmd/mailbox-migrator
           cp scripts/windows/START-DEMO.cmd "dist/${package}/"
           cp scripts/windows/START-DEMO-DEBUG.cmd "dist/${package}/"
+          cp scripts/windows/START-REAL.cmd "dist/${package}/"
           cp scripts/windows/README-RU.txt "dist/${package}/"
           cd dist
           zip -r "${package}.zip" "${package}"
@@ -55,6 +75,6 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             dist/*.zip \
             dist/*.zip.sha256 \
-            --title "Mailbox Migrator ${GITHUB_REF_NAME}" \
+            --title "MoveMailbox ${GITHUB_REF_NAME}" \
             --generate-notes \
             "${release_flags[@]}"
