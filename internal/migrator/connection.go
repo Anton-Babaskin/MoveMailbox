@@ -145,8 +145,14 @@ func withAuthenticatedIMAPClient(parent context.Context, endpoint Endpoint, base
 			return newConnectionError(ctx, ConnectionErrorProtocol, address, err)
 		}
 	}
-	if err := client.Logout().Wait(); err != nil {
-		return newConnectionError(ctx, ConnectionErrorProtocol, address, err)
+	// Authentication (and the optional operation above) already succeeded.
+	// Some IMAP servers close the socket immediately after their LOGOUT reply,
+	// which can race with the client's final tagged-response read. Treat logout
+	// as best-effort and rely on the deferred Close for cleanup, but never hide
+	// cancellation of the caller's operation.
+	_ = client.Logout().Wait()
+	if ctx.Err() != nil {
+		return newConnectionError(ctx, ConnectionErrorCanceled, address, ctx.Err())
 	}
 	return nil
 }

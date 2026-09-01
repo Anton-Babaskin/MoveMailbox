@@ -67,7 +67,9 @@ func main() {
 	server := &http.Server{
 		Handler:           api.New(engine, manager, api.Config{AllowedHosts: allowedHosts(listener, *allowedHostsFlag)}),
 		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       70 * time.Second,
+		MaxHeaderBytes:    32 << 10,
 	}
 
 	serveError := make(chan error, 1)

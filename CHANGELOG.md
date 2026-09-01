@@ -4,6 +4,8 @@ All notable changes to MoveMailbox are documented here.
 
 ## [Unreleased]
 
+## [0.3.0-preview] - 2026-09-01
+
 ### Changed
 
 - Renamed the product from Mailbox Migrator to MoveMailbox.
@@ -58,6 +60,14 @@ All notable changes to MoveMailbox are documented here.
   content types, returns structured errors and serves cache-validatable assets.
 - The embedded interface now supports Russian and English, accessible modal
   focus handling, bounded log rendering and reliable completed-job streams.
+- Successful IMAP checks no longer fail when a server closes immediately after
+  logout, and the connection-mode regression suite is stable under repetition.
+- Connection settings are locked and revalidated while a browser-side check is
+  in flight, preventing a stale verification result from authorizing changed
+  migration credentials.
+- API validation now bounds server names, usernames, passwords and folder names;
+  the HTTP server also limits request-read time and header size.
+- Every folder advertised by the demo engine now transfers representative data.
 
 ## [0.1.1-preview] - 2026-08-20
 
@@ -80,3 +90,4 @@ First public preview.
 - Windows startup diagnostics are written to `mailbox-migrator.log`.
 
 [0.1.1-preview]: https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.1.1-preview
+[0.3.0-preview]: https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.3.0-preview

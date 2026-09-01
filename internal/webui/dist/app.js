@@ -26,7 +26,7 @@ const translations = {
     checkBoth: "Сначала проверьте оба подключения", demoMode: "Демо-режим", engineReady: "{engine} готов", imapsyncMissing: "imapsync не найден", apiUnavailable: "API недоступен",
     checking: "Проверяем…", connected: "Подключено", connectionEstablished: "Соединение установлено", sourceReady: "Источник готов к миграции",
     destinationReady: "Сервер назначения готов принимать почту", connectionFailed: "Не удалось подключиться", connectionError: "Ошибка", verifyConnections: "Проверьте подключения",
-    verifyBeforeStart: "Перед миграцией подтвердите источник и назначение", migrationNotStarted: "Миграция не запущена", verificationRequired: "Требуется проверка",
+    verifyBeforeStart: "Перед миграцией подтвердите источник и назначение", migrationNotStarted: "Миграция не запущена", verificationRequired: "Требуется проверка", settingsChangedDuringCheck: "Настройки подключения изменились во время проверки. Проверьте подключение ещё раз.",
     logGap: "Часть технического журнала пропущена ({count} событий)", scanningFolders: "Сканируем папки", migrationCompletedBadge: " МИГРАЦИЯ ЗАВЕРШЕНА",
     migrationCancelledBadge: " МИГРАЦИЯ ОТМЕНЕНА", attentionBadge: " НУЖНО ВНИМАНИЕ", mailTransferred: "Почта успешно перенесена",
     migrationStopped: "Миграция остановлена", migrationFailed: "Миграция завершилась с ошибкой", migrationCompleted: "Миграция завершена",
@@ -66,7 +66,7 @@ const translations = {
     checkBoth: "Test both connections first", demoMode: "Demo mode", engineReady: "{engine} ready", imapsyncMissing: "imapsync not found", apiUnavailable: "API unavailable",
     checking: "Checking…", connected: "Connected", connectionEstablished: "Connection established", sourceReady: "Source is ready for migration",
     destinationReady: "Destination is ready to receive mail", connectionFailed: "Connection failed", connectionError: "Error", verifyConnections: "Test the connections",
-    verifyBeforeStart: "Verify both source and destination before migration", migrationNotStarted: "Migration was not started", verificationRequired: "Verification required",
+    verifyBeforeStart: "Verify both source and destination before migration", migrationNotStarted: "Migration was not started", verificationRequired: "Verification required", settingsChangedDuringCheck: "Connection settings changed during the test. Test the connection again.",
     logGap: "Part of the technical log was dropped ({count} events)", scanningFolders: "Scanning folders", migrationCompletedBadge: " MIGRATION COMPLETED",
     migrationCancelledBadge: " MIGRATION CANCELLED", attentionBadge: " ATTENTION REQUIRED", mailTransferred: "Mail transferred successfully",
     migrationStopped: "Migration stopped", migrationFailed: "Migration failed", migrationCompleted: "Migration completed",
@@ -345,6 +345,10 @@ function endpoint(side) {
   };
 }
 
+function sameEndpoint(left, right) {
+  return ["host", "port", "security", "username", "password"].every((field) => left[field] === right[field]);
+}
+
 function requestPayload() {
   return {
     source: endpoint("source"),
@@ -415,12 +419,17 @@ async function testConnection(side, button) {
   const status = byId(`${side}Status`);
   const fields = ["Host", "Port", "Username", "Password"].map((suffix) => byId(`${side}${suffix}`));
   if (fields.some((field) => !field.reportValidity())) return;
+  const testedEndpoint = endpoint(side);
+  const controls = [...button.closest(".connection-card").querySelectorAll("input, select")];
+  const previouslyDisabled = controls.map((control) => control.disabled);
+  controls.forEach((control) => { control.disabled = true; });
   button.classList.add("loading");
   button.disabled = true;
   status.className = "card-status";
   status.replaceChildren(document.createElement("i"), document.createTextNode(` ${t("checking")}`));
   try {
-    await api("/api/connections/test", { method: "POST", body: JSON.stringify(endpoint(side)) });
+    await api("/api/connections/test", { method: "POST", body: JSON.stringify(testedEndpoint) });
+    if (!sameEndpoint(testedEndpoint, endpoint(side))) throw new Error(t("settingsChangedDuringCheck"));
     state.verified[side] = true;
     status.className = "card-status success";
     status.replaceChildren(document.createElement("i"), document.createTextNode(` ${t("connected")}`));
@@ -431,6 +440,7 @@ async function testConnection(side, button) {
     status.replaceChildren(document.createElement("i"), document.createTextNode(` ${t("connectionError")}`));
     showToast(t("connectionFailed"), error.message, "error");
   } finally {
+    controls.forEach((control, index) => { control.disabled = previouslyDisabled[index]; });
     button.classList.remove("loading");
     button.disabled = false;
     setLaunchState();
