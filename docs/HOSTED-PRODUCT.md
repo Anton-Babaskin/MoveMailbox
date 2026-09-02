@@ -66,6 +66,7 @@ period is a development baseline, not a hosted-service sizing decision.
 
 1. Stabilize Windows demo and one real local imapsync migration.
 2. Add SQLite locally, PostgreSQL in hosted mode, behind one store interface.
+   **SQLite history and the store boundary are implemented; PostgreSQL remains.**
 3. Add accounts and a durable queue.
 4. Run the worker on a dedicated server or VM with imapsync installed.
 5. Add a payment provider and configurable migration credits.

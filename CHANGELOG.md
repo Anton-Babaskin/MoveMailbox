@@ -4,6 +4,22 @@ All notable changes to MoveMailbox are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added credential-free SQLite job history with schema versioning, bounded
+  snapshots and recovery after application restarts.
+- Added storage health reporting and a persistent Docker data volume.
+
+### Changed
+
+- Raised the minimum Go version to 1.25 and selected the current pure-Go SQLite
+  dependency line so known fixed Windows dependency vulnerabilities are not
+  retained in release binaries.
+- Interrupted jobs are restored as failed after restart because mailbox
+  passwords are intentionally never written to the history database.
+- Technical event messages and folder display values are length-bounded before
+  entering browser or persistent history.
+
 ## [0.3.0-preview] - 2026-09-01
 
 ### Changed

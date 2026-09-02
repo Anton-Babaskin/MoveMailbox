@@ -19,6 +19,7 @@ services:
       MOVEMAILBOX_MAX_CONCURRENT: ${MOVEMAILBOX_MAX_CONCURRENT:-2}
       MOVEMAILBOX_MAX_JOBS: ${MOVEMAILBOX_MAX_JOBS:-256}
       MOVEMAILBOX_HISTORY_TTL: ${MOVEMAILBOX_HISTORY_TTL:-24h}
+      MOVEMAILBOX_DATABASE: /data/movemailbox.db
       MOVEMAILBOX_OPEN_BROWSER: "false"
       MOVEMAILBOX_ALLOWED_HOSTS: ${MOVEMAILBOX_ALLOWED_HOSTS:-}
     read_only: true
@@ -26,6 +27,8 @@ services:
       # imapsync uses these paths for transient runtime and HOME/work data.
       - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
       - /var/tmp:size=256m,mode=1777,noexec,nosuid,nodev
+    volumes:
+      - movemailbox-data:/data
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -33,3 +36,6 @@ services:
     pids_limit: ${MOVEMAILBOX_PIDS_LIMIT:-256}
     cpus: ${MOVEMAILBOX_CPU_LIMIT:-2.0}
     mem_limit: ${MOVEMAILBOX_MEMORY_LIMIT:-1g}
+
+volumes:
+  movemailbox-data:

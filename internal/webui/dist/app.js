@@ -36,7 +36,7 @@ const translations = {
     phaseVerifying: "Проверка результата", httpError: "Ошибка HTTP {status}", close: "Закрыть", switchLanguage: "Switch to English",
     errorHostDenied: "Недопустимый адрес сервера", errorCrossSite: "Межсайтовый запрос отклонён", errorJSONRequired: "Требуется JSON-запрос",
     errorJobNotFound: "Задание не найдено", errorJobFinished: "Задание уже завершено", errorJobLimit: "Очередь миграций заполнена",
-    errorEngineUnavailable: "Движок миграции недоступен", errorManagerStopping: "MoveMailbox завершает работу", errorInvalidRequest: "Некорректный запрос",
+    errorEngineUnavailable: "Движок миграции недоступен", errorManagerStopping: "MoveMailbox завершает работу", errorPersistenceUnavailable: "История заданий временно недоступна", errorInvalidRequest: "Некорректный запрос",
     installImapsync: "Запустите приложение с установленным imapsync или в демо-режиме",
     homeLabel: "MoveMailbox — на главную",
     byteUnits: ["Б", "КБ", "МБ", "ГБ", "ТБ"], locale: "ru-RU",
@@ -76,7 +76,7 @@ const translations = {
     phaseVerifying: "Verifying result", httpError: "HTTP error {status}", close: "Close", switchLanguage: "Переключить на русский",
     errorHostDenied: "The server address is not allowed", errorCrossSite: "Cross-site request denied", errorJSONRequired: "A JSON request is required",
     errorJobNotFound: "Migration job not found", errorJobFinished: "Migration job has already finished", errorJobLimit: "The migration queue is full",
-    errorEngineUnavailable: "Migration engine is unavailable", errorManagerStopping: "MoveMailbox is shutting down", errorInvalidRequest: "Invalid request",
+    errorEngineUnavailable: "Migration engine is unavailable", errorManagerStopping: "MoveMailbox is shutting down", errorPersistenceUnavailable: "Migration history is temporarily unavailable", errorInvalidRequest: "Invalid request",
     installImapsync: "Start the app with imapsync installed or use demo mode",
     homeLabel: "MoveMailbox — home",
     byteUnits: ["B", "KB", "MB", "GB", "TB"], locale: "en-US",
@@ -170,6 +170,7 @@ async function api(path, options = {}) {
       "job.limit_reached": "errorJobLimit",
       "engine.unavailable": "errorEngineUnavailable",
       "manager.shutting_down": "errorManagerStopping",
+      "storage.unavailable": "errorPersistenceUnavailable",
       "validation.request": "errorInvalidRequest",
     })[code];
     const serverDetail = typeof payload?.error === "string" ? payload.error : payload?.error?.message;

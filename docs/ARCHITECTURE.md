@@ -47,10 +47,19 @@ exceed `MOVEMAILBOX_MAX_JOBS`, and terminal in-memory history expires after
 from growing forever; they are not substitutes for durable hosted queues,
 per-tenant quotas or back-pressure shared across workers.
 
+Local history is also written to a versioned SQLite store. Persisted snapshots
+contain job status, mailbox identifiers, counters and bounded events, but the
+store interface cannot receive a migration request or credentials. A queued or
+running snapshot found after process restart is therefore marked failed rather
+than resumed. SQLite is the desktop/self-hosted implementation of the store
+boundary; the hosted edition will use PostgreSQL and a separate credential
+envelope service behind the same job lifecycle.
+
 ## Build and container trust
 
-- The module's minimum language version remains distinct from its reproducible
-  build toolchain: CI and Docker use the exact toolchain named in `go.mod`.
+- The module's minimum Go version remains distinct from its reproducible build
+  toolchain: Go 1.25 is required by the current SQLite/security dependency set,
+  while CI and Docker use the exact Go 1.27 toolchain named in `go.mod`.
 - GitHub Actions are referenced by immutable commit SHA with the human-readable
   release tag retained in a comment.
 - Docker stages retain readable tags but are locked to registry digests. The
