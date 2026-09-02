@@ -27,6 +27,7 @@ LABEL org.opencontainers.image.title="MoveMailbox" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.licenses="NOASSERTION"
 
+USER root
 COPY --from=builder --chown=nobody:nogroup /out/movemailbox /usr/local/bin/movemailbox
 RUN mkdir -p /data && chown nobody:nogroup /data
 
