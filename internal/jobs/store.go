@@ -6,6 +6,18 @@ import (
 	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
 )
 
+// MigrationWorker is the credential boundary used by hosted mode. Prepare
+// must persist only encrypted request material; Run opens it outside the API
+// process, and Delete removes it on every terminal path.
+type MigrationWorker interface {
+	Prepare(context.Context, string, migrator.Request) error
+	Run(context.Context, string, func(migrator.Event)) (migrator.Result, error)
+	Recoverable(context.Context, string) (bool, error)
+	Delete(context.Context, string) error
+	CleanupExpired(context.Context) (int64, error)
+	Close() error
+}
+
 // Snapshot is the credential-free state persisted for one migration job.
 // Requests are intentionally absent: IMAP passwords must remain runtime-only.
 type Snapshot struct {

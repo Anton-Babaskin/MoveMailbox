@@ -131,9 +131,12 @@ and applies configurable CPU, memory, and process limits.
 The upstream imapsync image is currently built for `linux/amd64`, so the Compose
 service declares that platform explicitly. Protected guest sessions can be
 enabled with `MOVEMAILBOX_PUBLIC_MODE=true`, a unique session secret, HTTPS and
-an explicit `MOVEMAILBOX_ALLOWED_HOSTS` value. This gateway layer is not yet a
-public-launch approval: encrypted worker credential envelopes are still being
-built.
+an explicit `MOVEMAILBOX_ALLOWED_HOSTS` value. Public mode also requires a
+random credential master key and durable SQLite: migration credentials are
+stored only as authenticated ciphertext and opened by a one-job worker process.
+This is still not a public-launch approval; the hosted deployment must move the
+master key into an independently isolated worker service before accepting real
+customers.
 
 ## How it works
 
@@ -172,6 +175,9 @@ from the source.
 | `--max-active-per-session` | `MOVEMAILBOX_MAX_ACTIVE_PER_SESSION` | `1` | active migrations per public guest session |
 | `--session-rate` | `MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE` | `120` | request limit for one public session per minute |
 | `--ip-rate` | `MOVEMAILBOX_IP_REQUESTS_PER_MINUTE` | `600` | request limit for a directly connected client IP per minute |
+| `--credential-ttl` | `MOVEMAILBOX_CREDENTIAL_TTL` | `24h` | maximum encrypted credential-envelope lifetime |
+| `--worker-lease-ttl` | `MOVEMAILBOX_WORKER_LEASE_TTL` | `2h` | renewable exclusive worker lease |
+| — | `MOVEMAILBOX_MASTER_KEY` | empty | base64 for at least 32 random bytes; required in public mode |
 
 Legacy `MM_*` variables remain supported during the preview transition.
 Loopback hostnames are allowed automatically. Do not use wildcards in
@@ -185,6 +191,9 @@ configure the HTTPS proxy to enforce its own IP limit before forwarding traffic.
 It accepts public hostnames and public IP addresses on standard IMAP ports 143
 and 993, while rejecting private, loopback, link-local and reserved targets.
 The unrestricted manual-port option remains available in local/self-hosted mode.
+Generate the preview master key with a cryptographically secure secret manager
+or a command such as `openssl rand -base64 32`; never commit it or back it up
+with the SQLite database. Changing it invalidates every pending envelope.
 
 ## Development
 
@@ -201,8 +210,10 @@ and a hardened Docker build.
 ```text
 cmd/mailbox-migrator/   process entry point
 internal/api/           local HTTP API and security headers
+internal/credentials/   authenticated encrypted envelopes and leases
 internal/jobs/          queue, lifecycle, events, cancellation, history
 internal/migrator/      IMAP preflight and imapsync integration
+internal/worker/        isolated worker protocol and process runner
 internal/webui/dist/    embedded browser interface
 scripts/windows/        Windows launchers and release helpers
 ```

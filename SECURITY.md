@@ -5,8 +5,9 @@
 MoveMailbox is currently intended for local and trusted-network use. Do
 not expose the preview directly to the public internet. Public mode now adds
 signed guest sessions, CSRF protection, request limits and job ownership, but
-it does not yet include persistent encrypted secret storage, isolated workers
-or shared multi-instance limits.
+it is not yet approved for public traffic. Authenticated encrypted credential
+envelopes and one-job worker processes are implemented; independently deployed
+workers, external key isolation and shared multi-instance limits remain.
 
 The Docker Compose profile is defense in depth for trusted deployments, not a
 public-hosting security boundary. It binds to loopback, runs as a non-root user,
@@ -49,11 +50,26 @@ while real credentials are present. In a hosted edition this in-memory
 handoff is not a substitute for encrypted durable secret storage with short
 retention and per-job access controls.
 
-The local SQLite database stores credential-free migration metadata: mailbox
-identifiers, job state, counters and bounded diagnostic events. The persistence
-interface cannot receive the migration request, and regression tests scan the
-database files to ensure test passwords are absent. Treat mailbox identifiers
-and logs as private metadata and protect the database file and backups anyway.
+In public mode, credential-bearing connection tests, folder reads and
+migrations cross an encrypted worker boundary. Migration requests are sealed
+with AES-256-GCM under a per-job key derived from a random external master key.
+Only ciphertext, expiry metadata and renewable exclusive leases enter SQLite.
+The worker clears `MOVEMAILBOX_MASTER_KEY` before launching imapsync, and normal
+completion, failure or cancellation deletes the envelope. A hard kill can leave
+ciphertext until its TTL; expiry cleanup removes it automatically.
+
+The current preview starts the worker as a child process, so the API host still
+receives the master key at startup. This reduces credential lifetime and process
+exposure but is not the final hosted key boundary. Before public launch, run the
+worker under a separate service identity and give only that service access to
+the decrypting key or KMS operation.
+
+The local SQLite database stores credential-free migration metadata. In public
+mode the same database may additionally contain authenticated ciphertext and
+lease metadata, never plaintext requests. Regression and end-to-end tests scan
+the database, WAL and shared-memory files for test passwords. Treat mailbox
+identifiers, ciphertext and logs as private metadata and protect the database
+file and backups anyway.
 
 ## Safe shutdown and updates
 
