@@ -28,12 +28,19 @@ func TestHealthIdentifiesMoveMailbox(t *testing.T) {
 		Product string `json:"product"`
 		Name    string `json:"name"`
 		Version string `json:"version"`
+		Storage struct {
+			Kind    string `json:"kind"`
+			Healthy bool   `json:"healthy"`
+		} `json:"storage"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&health); err != nil {
 		t.Fatal(err)
 	}
 	if health.Product != ProductID || health.Name != ProductName || health.Version != Version {
 		t.Fatalf("unexpected health identity: %+v", health)
+	}
+	if health.Storage.Kind != "memory" || !health.Storage.Healthy {
+		t.Fatalf("unexpected storage health: %+v", health.Storage)
 	}
 }
 

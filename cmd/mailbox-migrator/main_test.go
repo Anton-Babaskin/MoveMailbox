@@ -2,9 +2,22 @@ package main
 
 import (
 	"net"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
+
+func TestDefaultDatabasePathUsesPrivateApplicationDirectory(t *testing.T) {
+	configDirectory, err := os.UserConfigDir()
+	if err != nil {
+		t.Skipf("user config directory unavailable: %v", err)
+	}
+	want := filepath.Join(configDirectory, "MoveMailbox", "movemailbox.db")
+	if path := defaultDatabasePath(); path != want {
+		t.Fatalf("defaultDatabasePath() = %q, want %q", path, want)
+	}
+}
 
 func TestBrowserAddress(t *testing.T) {
 	tests := map[string]string{

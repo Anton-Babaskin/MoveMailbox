@@ -37,7 +37,8 @@ func main() {
 	openBrowser := flag.Bool("open", envBool("MOVEMAILBOX_OPEN_BROWSER", envBool("MM_OPEN_BROWSER", true)), "open the interface in the default browser")
 	maxConcurrent := flag.Int("max-concurrent", envInt("MOVEMAILBOX_MAX_CONCURRENT", envInt("MM_MAX_CONCURRENT", 2)), "maximum number of concurrent migrations")
 	maxJobs := flag.Int("max-jobs", envInt("MOVEMAILBOX_MAX_JOBS", 256), "maximum number of queued and retained migration jobs")
-	historyTTL := flag.Duration("history-ttl", envDuration("MOVEMAILBOX_HISTORY_TTL", 24*time.Hour), "how long completed jobs remain in memory")
+	historyTTL := flag.Duration("history-ttl", envDuration("MOVEMAILBOX_HISTORY_TTL", 24*time.Hour), "how long completed job history is retained")
+	databasePath := flag.String("database", env("MOVEMAILBOX_DATABASE", defaultDatabasePath()), "SQLite history path, or 'off' to keep history in memory")
 	allowedHostsFlag := flag.String("allowed-hosts", env("MOVEMAILBOX_ALLOWED_HOSTS", ""), "comma-separated additional HTTP Host values allowed by the local API")
 	flag.Parse()
 
@@ -45,12 +46,6 @@ func main() {
 	if *demo {
 		engine = migrator.DemoEngine{}
 	}
-	manager := jobs.NewManagerWithConfig(engine, jobs.Config{
-		MaxConcurrent: *maxConcurrent,
-		MaxJobs:       *maxJobs,
-		CompletedTTL:  *historyTTL,
-	})
-
 	listener, publicURL, reused, err := acquireListener(*address, *openBrowser)
 	if err != nil {
 		log.Fatalf("не удалось запустить %s: %v", api.ProductName, err)
@@ -63,6 +58,27 @@ func main() {
 		return
 	}
 	defer listener.Close()
+
+	managerConfig := jobs.Config{
+		MaxConcurrent: *maxConcurrent,
+		MaxJobs:       *maxJobs,
+		CompletedTTL:  *historyTTL,
+	}
+	var manager *jobs.Manager
+	if strings.EqualFold(strings.TrimSpace(*databasePath), "off") {
+		manager = jobs.NewManagerWithConfig(engine, managerConfig)
+		log.Printf("История заданий хранится только в памяти")
+	} else {
+		store, openErr := jobs.OpenSQLiteStore(*databasePath)
+		if openErr != nil {
+			log.Fatalf("не удалось открыть историю заданий: %v", openErr)
+		}
+		manager, err = jobs.NewManagerWithStore(engine, managerConfig, store)
+		if err != nil {
+			log.Fatalf("не удалось восстановить историю заданий: %v", err)
+		}
+		log.Printf("История заданий: SQLite (%s)", *databasePath)
+	}
 
 	server := &http.Server{
 		Handler:           api.New(engine, manager, api.Config{AllowedHosts: allowedHosts(listener, *allowedHostsFlag)}),
@@ -179,6 +195,16 @@ func setupLogging() *os.File {
 	}
 	log.SetOutput(io.MultiWriter(os.Stderr, file))
 	return file
+}
+
+func defaultDatabasePath() string {
+	if configDirectory, err := os.UserConfigDir(); err == nil {
+		return filepath.Join(configDirectory, "MoveMailbox", "movemailbox.db")
+	}
+	if executable, err := os.Executable(); err == nil {
+		return filepath.Join(filepath.Dir(executable), "movemailbox.db")
+	}
+	return "movemailbox.db"
 }
 
 func env(name, fallback string) string {

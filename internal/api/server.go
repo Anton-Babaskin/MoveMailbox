@@ -62,6 +62,7 @@ func New(engine migrator.Engine, manager *jobs.Manager, config Config) http.Hand
 }
 
 func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
+	storageKind, storageHealthy := s.manager.StorageStatus()
 	writeJSON(w, http.StatusOK, map[string]any{
 		"product":   ProductID,
 		"name":      ProductName,
@@ -69,6 +70,10 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 		"engine":    s.engine.Name(),
 		"available": s.engine.Available(),
 		"version":   Version,
+		"storage": map[string]any{
+			"kind":    storageKind,
+			"healthy": storageHealthy,
+		},
 	})
 }
 
@@ -376,6 +381,8 @@ func writeManagerError(w http.ResponseWriter, err error) {
 		writeErrorCode(w, http.StatusServiceUnavailable, "engine.unavailable", err.Error())
 	case errors.Is(err, jobs.ErrManagerShuttingDown):
 		writeErrorCode(w, http.StatusServiceUnavailable, "manager.shutting_down", err.Error())
+	case errors.Is(err, jobs.ErrPersistenceUnavailable):
+		writeErrorCode(w, http.StatusServiceUnavailable, "storage.unavailable", "история заданий временно недоступна")
 	default:
 		writeErrorCode(w, http.StatusBadRequest, "validation.request", err.Error())
 	}

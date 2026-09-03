@@ -1,18 +1,23 @@
 # Hosted product direction
 
-MoveMailbox should keep one migration core while offering two editions:
+MoveMailbox should keep one migration core while presenting three clear product
+lanes:
 
-1. **Community edition** — free desktop/self-hosted build with an optional
-   donation link.
-2. **Hosted edition** — a paid service where our server continues the migration
-   after the customer closes the browser.
+1. **Desktop and self-hosted** — free and unlimited on the user's computer or
+   server, with an optional donation link.
+2. **Online transfer** — starts as a guest, is free up to a configurable mailbox
+   size, then uses a one-time payment instead of a subscription.
+3. **Business** — batch migrations, saved history, team access, invoices and
+   support; offered as a quote until usage data justifies fixed plans.
+
+Donations support the free local edition; they are not a fourth pricing plan.
 
 The marketing site and the migration application should use the same brand but
 run as separate deployable components:
 
 ```text
 movemailbox.com      static marketing, guides, SEO, donations
-app.movemailbox.com  authentication, billing, job dashboard
+app.movemailbox.com  guest transfers, optional accounts, billing, dashboard
 api/worker               Go job manager and isolated imapsync processes
 PostgreSQL               users, jobs, payments and audit metadata
 ```
@@ -23,7 +28,7 @@ Suggested initial positioning:
 
 - Local desktop and self-hosted use: free, unlimited, donations welcome.
 - Hosted connection test and dry run: free.
-- First hosted mailbox up to 3 GB: free or pay-what-you-want.
+- First hosted mailbox up to 5 GB: free.
 - Standard hosted mailbox up to 25 GB: draft price USD 5.90.
 - Large hosted mailbox up to 100 GB: draft price USD 11.90.
 - Business batches: quote or volume credits, starting around USD 2.90 per
@@ -40,7 +45,9 @@ mail providers and continued development.
 
 Before accepting real public migrations:
 
-- account authentication and verified email;
+- automatic protected guest sessions and strict job ownership;
+- optional verified email for recovery and notifications;
+- account authentication for paid history and business features;
 - PostgreSQL-backed durable jobs;
 - encrypted credentials with a short lifetime and per-job keys;
 - credentials deleted automatically after completion or expiry;
@@ -66,7 +73,8 @@ period is a development baseline, not a hosted-service sizing decision.
 
 1. Stabilize Windows demo and one real local imapsync migration.
 2. Add SQLite locally, PostgreSQL in hosted mode, behind one store interface.
-3. Add accounts and a durable queue.
+   **SQLite history and the store boundary are implemented; PostgreSQL remains.**
+3. Add guest sessions and ownership, then optional accounts and a durable queue.
 4. Run the worker on a dedicated server or VM with imapsync installed.
 5. Add a payment provider and configurable migration credits.
 6. Publish the marketing site, security page, guides and status page.

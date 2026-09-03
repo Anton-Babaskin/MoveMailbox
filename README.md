@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml/badge.svg)](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Anton-Babaskin/MoveMailbox?include_prereleases&label=release)](https://github.com/Anton-Babaskin/MoveMailbox/releases)
-[![Go](https://img.shields.io/badge/Go-1.23%2B-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Go](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go&logoColor=white)](go.mod)
 [![Powered by imapsync](https://img.shields.io/badge/engine-imapsync-0f9f79)](https://imapsync.lamiral.info/)
 
 </div>
@@ -34,6 +34,8 @@ history.
   result under a destination subfolder, preserve dates and flags, or run dry.
 - **Visible work:** Server-Sent Events stream progress, folder names, metrics,
   logs, completion, and cancellation state into the UI.
+- **Durable local history:** credential-free SQLite snapshots survive restarts;
+  interrupted jobs are marked failed and can be safely started again.
 - **Local-first security:** passwords are supplied only to the child `imapsync`
   process through dedicated environment variables and are not stored by the app.
 - **Portable deployment:** one Go binary for the web UI and API, plus Docker and
@@ -84,10 +86,13 @@ confirmation action. The API also rejects unconfirmed strict-mirror requests.
 Keep the small console window open while the app is running. Diagnostics are
 written to `movemailbox.log` next to the executable. If port `8080` is occupied,
 MoveMailbox opens the existing instance or selects another free local port.
+Migration history is stored in `%AppData%\MoveMailbox\movemailbox.db` by default.
+The database contains mailbox identifiers, status, counters and bounded logs,
+but never IMAP passwords. Use `--database` to select another location.
 
 ### Go demo
 
-The module uses Go 1.23 language features and declares a reproducible Go
+The module requires Go 1.25 or newer and declares a reproducible Go
 toolchain in `go.mod`.
 
 ```bash
@@ -119,7 +124,8 @@ docker compose up --build
 
 Compose publishes MoveMailbox only on `127.0.0.1:8080`. The service runs with a
 read-only root filesystem, drops Linux capabilities, uses memory-backed working
-directories, and applies configurable CPU, memory, and process limits.
+directories, persists credential-free history in the `movemailbox-data` volume,
+and applies configurable CPU, memory, and process limits.
 
 The upstream imapsync image is currently built for `linux/amd64`, so the Compose
 service declares that platform explicitly. Add authentication, HTTPS, and an
@@ -152,7 +158,8 @@ from the source.
 | `--imapsync` | `MOVEMAILBOX_IMAPSYNC_BIN` | `imapsync` | imapsync executable |
 | `--max-concurrent` | `MOVEMAILBOX_MAX_CONCURRENT` | `2` | simultaneous migrations |
 | `--max-jobs` | `MOVEMAILBOX_MAX_JOBS` | `256` | queued and retained jobs |
-| `--history-ttl` | `MOVEMAILBOX_HISTORY_TTL` | `24h` | completed-job retention in memory |
+| `--history-ttl` | `MOVEMAILBOX_HISTORY_TTL` | `24h` | completed-job history retention |
+| `--database` | `MOVEMAILBOX_DATABASE` | platform default | SQLite history path; use `off` for memory-only history |
 | `--demo` | `MOVEMAILBOX_DEMO` | `false` | use the safe simulated engine |
 | `--open` | `MOVEMAILBOX_OPEN_BROWSER` | `true` | open the default browser |
 | `--allowed-hosts` | `MOVEMAILBOX_ALLOWED_HOSTS` | empty | additional exact HTTP `Host` values |
@@ -185,7 +192,9 @@ scripts/windows/        Windows launchers and release helpers
 
 Architecture and hosted-service boundaries are documented in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/HOSTED-PRODUCT.md](docs/HOSTED-PRODUCT.md).
+[docs/HOSTED-PRODUCT.md](docs/HOSTED-PRODUCT.md). The agreed MVP scope is in
+[docs/MVP.md](docs/MVP.md). Public-launch stages and exit
+criteria live in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Security and responsible use
 
@@ -198,7 +207,7 @@ Architecture and hosted-service boundaries are documented in
 
 ## Roadmap
 
-- SQLite job persistence and resumable history.
+- ✅ SQLite job persistence and restart-safe history.
 - Authentication, encrypted credential envelopes, audit logs, and hosted workers.
 - Signed Windows, macOS, and Linux desktop packages.
 - CSV bulk migrations, reusable provider profiles, and scheduling.

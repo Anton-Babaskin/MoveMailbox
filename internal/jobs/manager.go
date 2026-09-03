@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
 )
@@ -35,11 +36,12 @@ const (
 )
 
 var (
-	ErrJobNotFound         = errors.New("задание не найдено")
-	ErrJobFinished         = errors.New("задание уже завершено")
-	ErrManagerShuttingDown = errors.New("менеджер заданий завершает работу")
-	ErrJobLimitReached     = errors.New("достигнут лимит заданий")
-	ErrEngineUnavailable   = errors.New("движок миграции недоступен")
+	ErrJobNotFound            = errors.New("задание не найдено")
+	ErrJobFinished            = errors.New("задание уже завершено")
+	ErrManagerShuttingDown    = errors.New("менеджер заданий завершает работу")
+	ErrJobLimitReached        = errors.New("достигнут лимит заданий")
+	ErrEngineUnavailable      = errors.New("движок миграции недоступен")
+	ErrPersistenceUnavailable = errors.New("хранилище истории недоступно")
 )
 
 const (
@@ -48,10 +50,15 @@ const (
 	defaultEventHistoryLimit = 256
 	defaultSubscriberBuffer  = 32
 	viewEventHistoryLimit    = 160
+	defaultPersistInterval   = time.Second
+	storeOperationTimeout    = 5 * time.Second
+	maxEventMessageLength    = 4096
+	maxCurrentFolderLength   = 1024
+	maxEndpointDisplayLength = 2048
 )
 
-// Config controls concurrency and bounded in-memory job history. Zero values
-// select conservative defaults. A negative CompletedTTL disables TTL eviction.
+// Config controls concurrency and bounded job history. Zero values select
+// conservative defaults. A negative CompletedTTL disables TTL eviction.
 type Config struct {
 	MaxConcurrent     int
 	MaxJobs           int
@@ -59,6 +66,7 @@ type Config struct {
 	EventHistoryLimit int
 	SubscriberBuffer  int
 	CleanupInterval   time.Duration
+	PersistInterval   time.Duration
 }
 
 type View struct {
@@ -91,11 +99,12 @@ type StreamEvent struct {
 }
 
 type record struct {
-	view        View
-	request     migrator.Request
-	cancel      context.CancelFunc
-	history     []StreamEvent
-	subscribers map[*subscriber]struct{}
+	view          View
+	request       migrator.Request
+	cancel        context.CancelFunc
+	history       []StreamEvent
+	subscribers   map[*subscriber]struct{}
+	lastPersisted time.Time
 }
 
 type subscriber struct {
@@ -120,6 +129,10 @@ type Manager struct {
 	eventHistoryLimit int
 	subscriberBuffer  int
 	cleanupInterval   time.Duration
+	persistInterval   time.Duration
+	store             Store
+	storeErr          error
+	storeClosed       bool
 
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -133,6 +146,17 @@ func NewManager(engine migrator.Engine, maxConcurrent int) *Manager {
 }
 
 func NewManagerWithConfig(engine migrator.Engine, config Config) *Manager {
+	manager, err := NewManagerWithStore(engine, config, memoryStore{})
+	if err != nil {
+		panic(err)
+	}
+	return manager
+}
+
+// NewManagerWithStore restores credential-free history before accepting work.
+// Jobs that were non-terminal at the previous process exit are marked failed:
+// credentials are deliberately never persisted, so they cannot be resumed.
+func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*Manager, error) {
 	if config.MaxConcurrent < 1 {
 		config.MaxConcurrent = 1
 	}
@@ -151,6 +175,12 @@ func NewManagerWithConfig(engine migrator.Engine, config Config) *Manager {
 	if config.CleanupInterval <= 0 {
 		config.CleanupInterval = cleanupInterval(config.CompletedTTL)
 	}
+	if config.PersistInterval <= 0 {
+		config.PersistInterval = defaultPersistInterval
+	}
+	if store == nil {
+		store = memoryStore{}
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	manager := &Manager{
@@ -162,13 +192,28 @@ func NewManagerWithConfig(engine migrator.Engine, config Config) *Manager {
 		eventHistoryLimit: config.EventHistoryLimit,
 		subscriberBuffer:  config.SubscriberBuffer,
 		cleanupInterval:   config.CleanupInterval,
+		persistInterval:   config.PersistInterval,
+		store:             store,
 		ctx:               ctx,
 		cancel:            cancel,
 		now:               time.Now,
 	}
+	loadContext, loadCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+	snapshots, err := store.Load(loadContext)
+	loadCancel()
+	if err != nil {
+		cancel()
+		_ = store.Close()
+		return nil, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
+	}
+	if err := manager.restore(snapshots); err != nil {
+		cancel()
+		_ = store.Close()
+		return nil, err
+	}
 	manager.wg.Add(1)
 	go manager.cleanupLoop()
-	return manager
+	return manager, nil
 }
 
 func (m *Manager) Start(request migrator.Request) (View, error) {
@@ -192,6 +237,11 @@ func (m *Manager) Start(request migrator.Request) (View, error) {
 	}
 	m.evictLocked(m.now(), true)
 	if len(m.jobs) >= m.maxJobs {
+		if m.storeErr != nil {
+			storeErr := m.storeErr
+			m.mu.Unlock()
+			return View{}, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, storeErr)
+		}
 		m.mu.Unlock()
 		return View{}, ErrJobLimitReached
 	}
@@ -214,6 +264,12 @@ func (m *Manager) Start(request migrator.Request) (View, error) {
 		subscribers: make(map[*subscriber]struct{}),
 	}
 	m.jobs[view.ID] = record
+	if err := m.persistLocked(record, true); err != nil {
+		delete(m.jobs, view.ID)
+		cancel()
+		m.mu.Unlock()
+		return View{}, err
+	}
 	m.wg.Add(1)
 	m.mu.Unlock()
 
@@ -242,6 +298,13 @@ func (m *Manager) List() []View {
 	}
 	sort.Slice(views, func(i, j int) bool { return views[i].CreatedAt.After(views[j].CreatedAt) })
 	return views
+}
+
+// StorageStatus reports whether credential-free history persistence is healthy.
+func (m *Manager) StorageStatus() (kind string, healthy bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.store.Kind(), m.storeErr == nil
 }
 
 func (m *Manager) Cancel(id string) error {
@@ -318,6 +381,17 @@ func (m *Manager) Shutdown(ctx context.Context) error {
 	}()
 	select {
 	case <-done:
+		m.mu.Lock()
+		if m.storeClosed {
+			m.mu.Unlock()
+			return nil
+		}
+		m.storeClosed = true
+		store := m.store
+		m.mu.Unlock()
+		if err := store.Close(); err != nil {
+			return fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
+		}
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
@@ -347,6 +421,7 @@ func (m *Manager) run(ctx context.Context, id string) {
 	record.view.StartedAt = &now
 	request := record.request
 	clearRequest(&record.request)
+	_ = m.persistLocked(record, true)
 	m.mu.Unlock()
 	defer clearRequest(&request)
 
@@ -370,6 +445,8 @@ func (m *Manager) publish(id string, event migrator.Event) {
 	if event.Timestamp.IsZero() {
 		event.Timestamp = m.now()
 	}
+	event.Message = truncateUTF8(event.Message, maxEventMessageLength)
+	event.CurrentFolder = truncateUTF8(event.CurrentFolder, maxCurrentFolderLength)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	record, ok := m.jobs[id]
@@ -417,6 +494,7 @@ func (m *Manager) finishLocked(record *record, status Status, result migrator.Re
 	record.view.Skipped = result.Skipped
 	record.view.Bytes = result.Bytes
 	record.view.Error = errorMessage
+	record.view.Error = truncateUTF8(record.view.Error, maxEventMessageLength)
 	switch status {
 	case StatusCompleted:
 		record.view.Progress = 100
@@ -433,13 +511,25 @@ func (m *Manager) finishLocked(record *record, status Status, result migrator.Re
 		Transferred: result.Transferred,
 		Skipped:     result.Skipped,
 		Bytes:       result.Bytes,
-		Message:     errorMessage,
+		Message:     record.view.Error,
 		Timestamp:   now,
 	}
 	m.appendEventLocked(record, event)
+	_ = m.persistLocked(record, true)
 }
 
 func (m *Manager) appendEventLocked(record *record, event migrator.Event) {
+	m.appendEventStateLocked(record, event)
+	_ = m.persistLocked(record, false)
+	for subscriber := range record.subscribers {
+		select {
+		case subscriber.notify <- struct{}{}:
+		default:
+		}
+	}
+}
+
+func (m *Manager) appendEventStateLocked(record *record, event migrator.Event) {
 	record.view.Sequence++
 	envelope := StreamEvent{Sequence: record.view.Sequence, Event: event}
 	record.history = append(record.history, envelope)
@@ -449,12 +539,6 @@ func (m *Manager) appendEventLocked(record *record, event migrator.Event) {
 	record.view.RecentEvents = append(record.view.RecentEvents, event)
 	if len(record.view.RecentEvents) > viewEventHistoryLimit {
 		record.view.RecentEvents = append([]migrator.Event(nil), record.view.RecentEvents[len(record.view.RecentEvents)-viewEventHistoryLimit:]...)
-	}
-	for subscriber := range record.subscribers {
-		select {
-		case subscriber.notify <- struct{}{}:
-		default:
-		}
 	}
 }
 
@@ -609,6 +693,115 @@ func (m *Manager) detachSubscriber(subscriber *subscriber) {
 	m.mu.Unlock()
 }
 
+func (m *Manager) restore(snapshots []Snapshot) error {
+	now := m.now()
+	for _, snapshot := range snapshots {
+		view := cloneView(snapshot.View)
+		if strings.TrimSpace(view.ID) == "" || view.CreatedAt.IsZero() || !knownStatus(view.Status) {
+			return fmt.Errorf("%w: повреждена запись задания %q", ErrPersistenceUnavailable, view.ID)
+		}
+		if terminal(view.Status) && view.FinishedAt == nil {
+			return fmt.Errorf("%w: завершённое задание %q не имеет времени завершения", ErrPersistenceUnavailable, view.ID)
+		}
+		if view.FinishedAt != nil && view.FinishedAt.Before(view.CreatedAt) {
+			return fmt.Errorf("%w: задание %q имеет неверные временные метки", ErrPersistenceUnavailable, view.ID)
+		}
+		if _, duplicate := m.jobs[view.ID]; duplicate {
+			return fmt.Errorf("%w: повторяется идентификатор задания %q", ErrPersistenceUnavailable, view.ID)
+		}
+		history := append([]StreamEvent(nil), snapshot.History...)
+		if len(history) > m.eventHistoryLimit {
+			history = append([]StreamEvent(nil), history[len(history)-m.eventHistoryLimit:]...)
+		}
+		if len(view.RecentEvents) > viewEventHistoryLimit {
+			view.RecentEvents = append([]migrator.Event(nil), view.RecentEvents[len(view.RecentEvents)-viewEventHistoryLimit:]...)
+		}
+		view.Source = truncateUTF8(view.Source, maxEndpointDisplayLength)
+		view.Destination = truncateUTF8(view.Destination, maxEndpointDisplayLength)
+		view.CurrentFolder = truncateUTF8(view.CurrentFolder, maxCurrentFolderLength)
+		view.Error = truncateUTF8(view.Error, maxEventMessageLength)
+		for index := range view.RecentEvents {
+			view.RecentEvents[index] = sanitizeStoredEvent(view.RecentEvents[index])
+		}
+		previousSequence := uint64(0)
+		for index := range history {
+			if history[index].Sequence == 0 || history[index].Sequence <= previousSequence {
+				return fmt.Errorf("%w: задание %q имеет неверную последовательность событий", ErrPersistenceUnavailable, view.ID)
+			}
+			previousSequence = history[index].Sequence
+			history[index].Event = sanitizeStoredEvent(history[index].Event)
+		}
+		if len(history) > 0 && history[len(history)-1].Sequence > view.Sequence {
+			view.Sequence = history[len(history)-1].Sequence
+		}
+		record := &record{
+			view:          view,
+			history:       history,
+			cancel:        func() {},
+			subscribers:   make(map[*subscriber]struct{}),
+			lastPersisted: now,
+		}
+		m.jobs[view.ID] = record
+		if !terminal(view.Status) {
+			record.view.Status = StatusFailed
+			record.view.Phase = PhaseFailed
+			record.view.Error = "Миграция прервана перезапуском приложения; пароли не сохранялись"
+			record.view.FinishedAt = &now
+			m.appendEventStateLocked(record, migrator.Event{
+				Type:      "finished",
+				Phase:     PhaseFailed,
+				Progress:  record.view.Progress,
+				Message:   record.view.Error,
+				Timestamp: now,
+			})
+			if err := m.persistLocked(record, true); err != nil {
+				return err
+			}
+		}
+	}
+	m.evictLocked(now, false)
+	if m.storeErr != nil {
+		return fmt.Errorf("%w: %v", ErrPersistenceUnavailable, m.storeErr)
+	}
+	for len(m.jobs) > m.maxJobs {
+		before := len(m.jobs)
+		m.evictLocked(now, true)
+		if len(m.jobs) == before {
+			return fmt.Errorf("%w: невозможно применить лимит сохранённой истории", ErrPersistenceUnavailable)
+		}
+	}
+	return nil
+}
+
+func (m *Manager) persistLocked(record *record, force bool) error {
+	now := m.now()
+	if !force && !record.lastPersisted.IsZero() && now.Sub(record.lastPersisted) < m.persistInterval {
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+	err := m.store.Save(ctx, cloneSnapshot(record.view, record.history))
+	cancel()
+	if err != nil {
+		m.storeErr = err
+		return fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
+	}
+	record.lastPersisted = now
+	m.storeErr = nil
+	return nil
+}
+
+func (m *Manager) deleteStoredLocked(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+	err := m.store.Delete(ctx, id)
+	cancel()
+	if err != nil {
+		m.storeErr = err
+		return err
+	}
+	m.storeErr = nil
+	return nil
+}
+
 func (m *Manager) cleanupLoop() {
 	defer m.wg.Done()
 	ticker := time.NewTicker(m.cleanupInterval)
@@ -647,16 +840,48 @@ func (m *Manager) evictLocked(now time.Time, makeRoom bool) {
 	}
 }
 
-func (m *Manager) removeRecordLocked(id string) {
+func (m *Manager) removeRecordLocked(id string) bool {
 	record, ok := m.jobs[id]
 	if !ok {
-		return
+		return false
+	}
+	if err := m.deleteStoredLocked(id); err != nil {
+		return false
 	}
 	clearRequest(&record.request)
+	record.cancel()
 	for subscriber := range record.subscribers {
 		subscriber.once.Do(func() { close(subscriber.done) })
 	}
 	delete(m.jobs, id)
+	return true
+}
+
+func knownStatus(status Status) bool {
+	switch status {
+	case StatusQueued, StatusRunning, StatusCompleted, StatusFailed, StatusCancelled:
+		return true
+	default:
+		return false
+	}
+}
+
+func truncateUTF8(value string, limit int) string {
+	if limit < 1 || len(value) <= limit {
+		return value
+	}
+	cut := limit
+	for cut > 0 && !utf8.RuneStart(value[cut]) {
+		cut--
+	}
+	return value[:cut] + "…"
+}
+
+func sanitizeStoredEvent(event migrator.Event) migrator.Event {
+	event.Message = truncateUTF8(event.Message, maxEventMessageLength)
+	event.CurrentFolder = truncateUTF8(event.CurrentFolder, maxCurrentFolderLength)
+	event.Progress = clampProgress(event.Progress)
+	return event
 }
 
 func (m *Manager) uniqueIDLocked() string {
