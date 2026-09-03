@@ -4,7 +4,7 @@ This roadmap turns the local preview into a hosted product through small,
 reviewable releases. A stage is complete only when its exit criteria pass; a
 marketing launch date must not bypass a security gate.
 
-## 1. Durable local core — in progress
+## 1. Durable local core — complete
 
 - versioned SQLite implementation behind a job `Store` interface;
 - credential-free job snapshots and bounded diagnostic events;
@@ -15,17 +15,23 @@ marketing launch date must not bypass a security gate.
 Exit criteria: green race-enabled CI, hardened Docker smoke test and a real
 Windows restart test with history restored and no password bytes in SQLite.
 
-## 2. Public gateway and accounts
+## 2. Public gateway and identity — next
 
-- user accounts with verified email and recovery flow;
-- short-lived server-side sessions in `HttpOnly`, `Secure`, `SameSite` cookies;
+- automatic guest sessions, with no login wall before a free migration;
+- short-lived sessions in `HttpOnly`, `Secure`, `SameSite` cookies;
 - CSRF tokens for every state-changing browser request;
-- global, per-IP and per-account rate/concurrency limits;
+- global, per-IP and per-session rate/concurrency limits;
 - ownership checks on every job, event stream and cancellation request;
+- optional verified email for recovery and completion notifications;
+- accounts required only for paid history, purchases and business teams;
 - login, security and administrative audit events without credentials.
 
 Exit criteria: an anonymous client cannot enumerate or mutate jobs, cross-user
 access tests pass, and the application is safe behind an HTTPS reverse proxy.
+
+The identity model is progressive: a visitor first receives an opaque guest
+session, may attach a verified email without interrupting a job, and only needs
+a full account when buying or using business features.
 
 ## 3. Secure credential envelopes and workers
 

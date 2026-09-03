@@ -192,7 +192,8 @@ scripts/windows/        Windows launchers and release helpers
 
 Architecture and hosted-service boundaries are documented in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/HOSTED-PRODUCT.md](docs/HOSTED-PRODUCT.md). Public-launch stages and exit
+[docs/HOSTED-PRODUCT.md](docs/HOSTED-PRODUCT.md). The agreed MVP scope is in
+[docs/MVP.md](docs/MVP.md). Public-launch stages and exit
 criteria live in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Security and responsible use
