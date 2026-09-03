@@ -37,6 +37,8 @@ const translations = {
     errorHostDenied: "Недопустимый адрес сервера", errorCrossSite: "Межсайтовый запрос отклонён", errorJSONRequired: "Требуется JSON-запрос",
     errorJobNotFound: "Задание не найдено", errorJobFinished: "Задание уже завершено", errorJobLimit: "Очередь миграций заполнена",
     errorEngineUnavailable: "Движок миграции недоступен", errorManagerStopping: "MoveMailbox завершает работу", errorPersistenceUnavailable: "История заданий временно недоступна", errorInvalidRequest: "Некорректный запрос",
+    errorCSRF: "Защищённая сессия устарела. Обновите страницу", errorRateLimited: "Слишком много запросов. Подождите минуту", errorSessionJobLimit: "В этой сессии уже идёт миграция",
+    errorTargetDenied: "Онлайн-режим разрешает только публичные IMAP-серверы на портах 143 и 993",
     installImapsync: "Запустите приложение с установленным imapsync или в демо-режиме",
     homeLabel: "MoveMailbox — на главную",
     byteUnits: ["Б", "КБ", "МБ", "ГБ", "ТБ"], locale: "ru-RU",
@@ -77,6 +79,8 @@ const translations = {
     errorHostDenied: "The server address is not allowed", errorCrossSite: "Cross-site request denied", errorJSONRequired: "A JSON request is required",
     errorJobNotFound: "Migration job not found", errorJobFinished: "Migration job has already finished", errorJobLimit: "The migration queue is full",
     errorEngineUnavailable: "Migration engine is unavailable", errorManagerStopping: "MoveMailbox is shutting down", errorPersistenceUnavailable: "Migration history is temporarily unavailable", errorInvalidRequest: "Invalid request",
+    errorCSRF: "The protected session expired. Reload the page", errorRateLimited: "Too many requests. Wait a minute", errorSessionJobLimit: "A migration is already active in this session",
+    errorTargetDenied: "Online mode only allows public IMAP servers on ports 143 and 993",
     installImapsync: "Start the app with imapsync installed or use demo mode",
     homeLabel: "MoveMailbox — home",
     byteUnits: ["B", "KB", "MB", "GB", "TB"], locale: "en-US",
@@ -115,6 +119,9 @@ const state = {
   availableFolders: [],
   selectedFolders: [],
   strictMirror: false,
+  csrfToken: "",
+  sessionMode: "local",
+  sessionRefreshTimer: null,
 };
 
 const MAX_LOG_LINES = 2000;
@@ -152,9 +159,12 @@ const elements = {
 };
 
 async function api(path, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (!["GET", "HEAD", "OPTIONS"].includes(method) && state.csrfToken) headers["X-CSRF-Token"] = state.csrfToken;
   const response = await fetch(path, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers,
   });
   let payload = null;
   try { payload = await response.json(); } catch { /* empty body */ }
@@ -164,10 +174,14 @@ async function api(path, options = {}) {
       "request.host.denied": "errorHostDenied",
       "request.cross_site": "errorCrossSite",
       "request.origin.denied": "errorCrossSite",
+      "request.csrf.invalid": "errorCSRF",
+      "request.rate_limited": "errorRateLimited",
+      "connection.target.denied": "errorTargetDenied",
       "request.json.required": "errorJSONRequired",
       "job.not_found": "errorJobNotFound",
       "job.finished": "errorJobFinished",
       "job.limit_reached": "errorJobLimit",
+      "session.job_limit_reached": "errorSessionJobLimit",
       "engine.unavailable": "errorEngineUnavailable",
       "manager.shutting_down": "errorManagerStopping",
       "storage.unavailable": "errorPersistenceUnavailable",
@@ -181,6 +195,18 @@ async function api(path, options = {}) {
     throw error;
   }
   return payload;
+}
+
+async function loadSession() {
+  const session = await api("/api/session");
+  state.sessionMode = session.mode || "local";
+  state.csrfToken = session.csrfToken || "";
+  clearTimeout(state.sessionRefreshTimer);
+  if (state.sessionMode === "guest" && session.expiresAt) {
+    const remaining = new Date(session.expiresAt).getTime() - Date.now();
+    const delay = Math.max(60_000, Math.min(6 * 60 * 60 * 1000, remaining / 2));
+    state.sessionRefreshTimer = setTimeout(() => loadSession().catch(() => {}), delay);
+  }
 }
 
 function showToast(title, message, type = "success") {
@@ -881,5 +907,15 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-applyLocale();
-loadHealth();
+async function initialize() {
+  applyLocale();
+  try {
+    await loadSession();
+  } catch (error) {
+    showToast(t("apiUnavailable"), error.message, "error");
+    return;
+  }
+  await loadHealth();
+}
+
+initialize();

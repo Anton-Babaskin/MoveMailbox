@@ -3,15 +3,28 @@
 ## Preview status
 
 MoveMailbox is currently intended for local and trusted-network use. Do
-not expose the preview directly to the public internet: it does not yet include
-user authentication, persistent encrypted secret storage or tenant isolation.
+not expose the preview directly to the public internet. Public mode now adds
+signed guest sessions, CSRF protection, request limits and job ownership, but
+it does not yet include persistent encrypted secret storage, isolated workers
+or shared multi-instance limits.
 
 The Docker Compose profile is defense in depth for trusted deployments, not a
 public-hosting security boundary. It binds to loopback, runs as a non-root user,
 uses a read-only root filesystem, drops Linux capabilities and places `/tmp`
 and `/var/tmp` on memory-backed filesystems. A public service still requires an
-authenticated HTTPS gateway, request and tenant limits, isolated workers and a
-durable queue.
+trusted HTTPS gateway, proxy-level abuse limits, isolated workers and a durable
+queue.
+
+The public-mode cookie is `HttpOnly`, `Secure`, `SameSite=Lax` and signed with
+`MOVEMAILBOX_SESSION_SECRET`. Use at least 32 random bytes, keep it outside the
+repository and rotate it after suspected exposure; rotation invalidates guest
+sessions. The application does not trust `X-Forwarded-For`, so the reverse proxy
+must enforce client-IP limits itself.
+
+Public mode rejects private, loopback, link-local and reserved IP targets and
+limits connections to IMAP ports 143/993. Public literal IPs are supported. DNS
+can change after validation, so production workers must also run behind an
+egress policy that blocks internal networks and cloud metadata services.
 
 The API validates the HTTP `Host` header. Loopback hosts are added
 automatically; a reverse proxy or custom domain must be listed exactly with

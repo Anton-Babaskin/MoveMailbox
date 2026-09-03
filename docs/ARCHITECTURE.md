@@ -41,6 +41,20 @@ loopback entries. Custom domains belong in `MOVEMAILBOX_ALLOWED_HOSTS`; this
 allowlist complements origin/request checks and must also be enforced by the
 fronting reverse proxy.
 
+In public mode the API assigns an opaque guest identity in a signed
+`HttpOnly`, `Secure`, `SameSite=Lax` cookie. State-changing requests also need a
+session-derived CSRF token, and job reads, event streams and cancellation are
+matched against an owner stored in the credential-free snapshot. Requests are
+bounded per session and direct peer IP; forwarded IP headers are intentionally
+ignored because only the HTTPS proxy can authenticate them.
+
+Public connection requests resolve hostnames before use and reject any answer
+that is private, loopback, link-local or reserved. Literal public IP addresses
+remain supported, but only ports 143 and 993 are accepted. This application
+check reduces server-side request-forgery risk; the hosted worker still needs an
+egress firewall because a hostname can change between validation and imapsync's
+own DNS lookup.
+
 The local job manager is deliberately bounded: queued plus retained jobs cannot
 exceed `MOVEMAILBOX_MAX_JOBS`, and terminal in-memory history expires after
 `MOVEMAILBOX_HISTORY_TTL`. These controls prevent an unattended preview process
@@ -79,9 +93,10 @@ Wails layer; this keeps desktop and hosted editions compatible.
 ## Before public hosting
 
 The preview intentionally binds to loopback by default. A hosted business
-edition still needs authentication, encrypted persistent secrets, CSRF
-protection, audit logging, per-tenant limits and an HTTPS reverse proxy before
-it is safe to expose publicly.
+edition still needs encrypted short-lived credential envelopes, isolated
+workers, audit logging, durable shared limits and an HTTPS reverse proxy before
+it is safe to expose publicly. Guest session ownership and CSRF protection are
+implemented, but do not by themselves make the preview production-ready.
 
 Deployments should drain running jobs before restart. Normal process/container
 shutdown must receive a grace period for job cancellation and child-process

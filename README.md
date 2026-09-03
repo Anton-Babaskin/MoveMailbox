@@ -128,9 +128,11 @@ directories, persists credential-free history in the `movemailbox-data` volume,
 and applies configurable CPU, memory, and process limits.
 
 The upstream imapsync image is currently built for `linux/amd64`, so the Compose
-service declares that platform explicitly. Add authentication, HTTPS, and an
-explicit `MOVEMAILBOX_ALLOWED_HOSTS` value before placing the app behind a
-reverse proxy.
+service declares that platform explicitly. Protected guest sessions can be
+enabled with `MOVEMAILBOX_PUBLIC_MODE=true`, a unique session secret, HTTPS and
+an explicit `MOVEMAILBOX_ALLOWED_HOSTS` value. This gateway layer is not yet a
+public-launch approval: encrypted worker credential envelopes are still being
+built.
 
 ## How it works
 
@@ -163,11 +165,25 @@ from the source.
 | `--demo` | `MOVEMAILBOX_DEMO` | `false` | use the safe simulated engine |
 | `--open` | `MOVEMAILBOX_OPEN_BROWSER` | `true` | open the default browser |
 | `--allowed-hosts` | `MOVEMAILBOX_ALLOWED_HOSTS` | empty | additional exact HTTP `Host` values |
+| `--public` | `MOVEMAILBOX_PUBLIC_MODE` | `false` | protected guest sessions behind HTTPS |
+| — | `MOVEMAILBOX_SESSION_SECRET` | empty | secret of at least 32 random bytes; required in public mode |
+| `--session-ttl` | `MOVEMAILBOX_SESSION_TTL` | `24h` | guest session lifetime |
+| `--max-active-per-session` | `MOVEMAILBOX_MAX_ACTIVE_PER_SESSION` | `1` | active migrations per public guest session |
+| `--session-rate` | `MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE` | `120` | request limit for one public session per minute |
+| `--ip-rate` | `MOVEMAILBOX_IP_REQUESTS_PER_MINUTE` | `600` | request limit for a directly connected client IP per minute |
 
 Legacy `MM_*` variables remain supported during the preview transition.
 Loopback hostnames are allowed automatically. Do not use wildcards in
 `MOVEMAILBOX_ALLOWED_HOSTS`; include a non-default port when the reverse proxy
 forwards one.
+
+Public mode issues a signed `HttpOnly`, `Secure`, `SameSite=Lax` guest cookie,
+requires a CSRF token for state changes and returns only jobs owned by that
+session. The application deliberately ignores forwarded client-IP headers;
+configure the HTTPS proxy to enforce its own IP limit before forwarding traffic.
+It accepts public hostnames and public IP addresses on standard IMAP ports 143
+and 993, while rejecting private, loopback, link-local and reserved targets.
+The unrestricted manual-port option remains available in local/self-hosted mode.
 
 ## Development
 
@@ -198,8 +214,8 @@ criteria live in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Security and responsible use
 
-- Keep the local service bound to loopback unless a trusted reverse proxy adds
-  authentication and HTTPS.
+- Keep the local service bound to loopback. A hosted pilot additionally needs
+  public mode, trusted HTTPS and the remaining worker/credential security gates.
 - Use provider app passwords or OAuth credentials where available.
 - Verify migrated counts and folders before deleting or disabling the source.
 - Report vulnerabilities privately through

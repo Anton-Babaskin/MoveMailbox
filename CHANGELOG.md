@@ -9,6 +9,12 @@ All notable changes to MoveMailbox are documented here.
 - Added credential-free SQLite job history with schema versioning, bounded
   snapshots and recovery after application restarts.
 - Added storage health reporting and a persistent Docker data volume.
+- Added an opt-in public gateway with signed guest sessions, CSRF protection,
+  per-session/direct-IP request limits and job ownership isolation.
+- Added a per-session active migration limit and persisted credential-free job
+  ownership across restarts.
+- Public mode now accepts only publicly routed IMAP hosts/IP addresses on ports
+  143/993, blocking private-network and cloud-metadata targets.
 
 ### Changed
 
