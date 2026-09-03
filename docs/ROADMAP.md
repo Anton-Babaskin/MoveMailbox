@@ -23,16 +23,18 @@ Windows restart test with history restored and no password bytes in SQLite.
 - global, per-IP and per-session rate/concurrency limits;
 - ownership checks on every job, event stream and cancellation request;
 - public-target validation for hostnames/IP addresses and IMAP ports;
-- optional verified email for recovery and completion notifications;
-- accounts required only for paid history, purchases and business teams;
+- optional verified email for free recovery and completion notifications;
+- passwordless email verification for one-time paid transfers;
+- accounts required only for persistent paid history and business teams;
 - login, security and administrative audit events without credentials.
 
 Exit criteria: an anonymous client cannot enumerate or mutate jobs, cross-user
 access tests pass, and the application is safe behind an HTTPS reverse proxy.
 
-The identity model is progressive: a visitor first receives an opaque guest
-session, may attach a verified email without interrupting a job, and only needs
-a full account when buying or using business features.
+The identity model is progressive: a visitor receives an opaque guest session
+without seeing a login screen, may attach a verified email without interrupting
+a free job, and can pay for a one-time transfer through a magic link. A full
+account is needed only for persistent paid history or business features.
 
 ## 3. Secure credential envelopes and workers
 

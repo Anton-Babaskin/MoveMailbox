@@ -17,7 +17,7 @@ run as separate deployable components:
 
 ```text
 movemailbox.com      static marketing, guides, SEO, donations
-app.movemailbox.com  guest transfers, optional accounts, billing, dashboard
+app.movemailbox.com  no-registration guest transfers, billing, business accounts
 api/worker               Go job manager and isolated imapsync processes
 PostgreSQL               users, jobs, payments and audit metadata
 ```
@@ -46,8 +46,9 @@ mail providers and continued development.
 Before accepting real public migrations:
 
 - automatic protected guest sessions and strict job ownership;
-- optional verified email for recovery and notifications;
-- account authentication for paid history and business features;
+- optional verified email for free recovery and notifications;
+- passwordless email verification for one-time paid transfers;
+- account authentication only for persistent paid history and business features;
 - PostgreSQL-backed durable jobs;
 - encrypted credentials with a short lifetime and per-job keys;
 - credentials deleted automatically after completion or expiry;

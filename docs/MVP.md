@@ -22,13 +22,15 @@ failed-provider rate before fixed business plans are published.
 
 Opening the online tool creates an opaque guest session automatically. The
 session owns its jobs and is protected by secure cookies, CSRF checks and rate
-limits. A visitor should not encounter a registration form before entering IMAP
-details.
+limits. The free flow never shows a MoveMailbox sign-in or registration wall:
+the visitor enters only the credentials required by the source and destination
+mailboxes.
 
-A verified email is optional for job recovery and completion notification. A
-full account is required only when the customer purchases a transfer, wants
-persistent history, or joins a business workspace. Credentials must never be
-placed in the session, browser storage, logs, analytics or account profile.
+A verified email is optional for free job recovery and completion notification.
+A one-time paid transfer may use a passwordless email magic link for payment and
+recovery. A full MoveMailbox account is reserved for persistent paid history and
+business workspaces. Mailbox credentials must never be placed in the session,
+browser storage, logs, analytics or account profile.
 
 ## MVP completion gate
 
