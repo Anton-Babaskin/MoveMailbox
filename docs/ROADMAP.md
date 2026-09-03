@@ -36,13 +36,22 @@ without seeing a login screen, may attach a verified email without interrupting
 a free job, and can pay for a one-time transfer through a magic link. A full
 account is needed only for persistent paid history or business features.
 
-## 3. Secure credential envelopes and workers
+## 3. Secure credential envelopes and workers — in progress
 
-- separate API and worker processes;
-- per-job authenticated encryption for IMAP credentials;
-- a master key supplied by an external secret manager, never the database;
-- short credential expiry and guaranteed deletion after completion/cancel;
-- leased jobs with bounded retries, graceful draining and stuck-job recovery;
+Implemented in the current slice:
+
+- AES-256-GCM envelopes with a derived per-job key and authenticated metadata;
+- ciphertext-only SQLite storage, expiry cleanup and renewable exclusive leases;
+- a separate one-job worker process with a redacted JSON-lines protocol;
+- connection tests and folder discovery through transient encrypted workers;
+- deletion after normal completion, failure and cancellation;
+- tamper, wrong-key, expiry, concurrent-lease and plaintext-leak tests.
+
+Remaining before this stage is complete:
+
+- move the worker from an API child process to an independently deployed service;
+- allow only the worker service/KMS identity to decrypt envelopes;
+- bounded retries, graceful draining and stuck-job recovery across hard restarts;
 - isolated non-root worker containers with CPU, memory, PID and wall-time limits.
 
 Exit criteria: database and backup dumps cannot decrypt credentials, only the

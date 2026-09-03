@@ -21,11 +21,16 @@ import (
 	"time"
 
 	"github.com/Anton-Babaskin/MoveMailbox/internal/api"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/credentials"
 	"github.com/Anton-Babaskin/MoveMailbox/internal/jobs"
 	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/worker"
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "worker" {
+		os.Exit(runWorker(os.Args[2:]))
+	}
 	logFile := setupLogging()
 	if logFile != nil {
 		defer logFile.Close()
@@ -45,6 +50,8 @@ func main() {
 	sessionTTL := flag.Duration("session-ttl", envDuration("MOVEMAILBOX_SESSION_TTL", 24*time.Hour), "guest session lifetime in public mode")
 	sessionRate := flag.Int("session-rate", envInt("MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE", 120), "requests per minute for one guest session")
 	ipRate := flag.Int("ip-rate", envInt("MOVEMAILBOX_IP_REQUESTS_PER_MINUTE", 600), "requests per minute for one direct client IP")
+	credentialTTL := flag.Duration("credential-ttl", envDuration("MOVEMAILBOX_CREDENTIAL_TTL", 24*time.Hour), "maximum lifetime of an encrypted migration credential envelope")
+	workerLeaseTTL := flag.Duration("worker-lease-ttl", envDuration("MOVEMAILBOX_WORKER_LEASE_TTL", 2*time.Hour), "exclusive lease duration for one isolated migration worker")
 	flag.Parse()
 	apiConfig := api.Config{
 		PublicMode:               *publicMode,
@@ -87,6 +94,9 @@ func main() {
 	}
 	var manager *jobs.Manager
 	if strings.EqualFold(strings.TrimSpace(*databasePath), "off") {
+		if *publicMode {
+			log.Fatal("публичный режим требует SQLite для зашифрованных credential envelopes")
+		}
 		manager = jobs.NewManagerWithConfig(engine, managerConfig)
 		log.Printf("История заданий хранится только в памяти")
 	} else {
@@ -94,7 +104,27 @@ func main() {
 		if openErr != nil {
 			log.Fatalf("не удалось открыть историю заданий: %v", openErr)
 		}
-		manager, err = jobs.NewManagerWithStore(engine, managerConfig, store)
+		if *publicMode {
+			processRunner, workerErr := worker.NewProcessRunner(worker.ProcessConfig{
+				DatabasePath:   *databasePath,
+				ImapsyncBinary: *imapsyncBinary,
+				MasterKey:      os.Getenv("MOVEMAILBOX_MASTER_KEY"),
+				CredentialTTL:  *credentialTTL,
+				LeaseTTL:       *workerLeaseTTL,
+				Demo:           *demo,
+			})
+			if workerErr != nil {
+				_ = store.Close()
+				log.Fatalf("не удалось настроить защищённый worker: %v", workerErr)
+			}
+			// Child workers receive the retained key explicitly. Remove the
+			// inherited environment entry so unrelated subprocesses cannot see it.
+			_ = os.Unsetenv("MOVEMAILBOX_MASTER_KEY")
+			engine = processRunner
+			manager, err = jobs.NewManagerWithWorker(engine, processRunner, managerConfig, store)
+		} else {
+			manager, err = jobs.NewManagerWithStore(engine, managerConfig, store)
+		}
 		if err != nil {
 			log.Fatalf("не удалось восстановить историю заданий: %v", err)
 		}
@@ -120,7 +150,7 @@ func main() {
 	}()
 	log.Printf("%s запущен: %s (engine=%s)", api.ProductName, publicURL, engine.Name())
 	if *publicMode {
-		log.Printf("Публичный режим: защищённые гостевые сессии включены")
+		log.Printf("Публичный режим: гостевые сессии и изолированные encrypted-envelope workers включены")
 	}
 	if *openBrowser {
 		if err := openURL(publicURL); err != nil {
@@ -148,6 +178,67 @@ func main() {
 	if err := <-managerStopped; err != nil {
 		log.Printf("не все миграции успели завершиться безопасно: %v", err)
 	}
+}
+
+func runWorker(arguments []string) int {
+	flags := flag.NewFlagSet("worker", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	jobID := flags.String("job-id", "", "credential envelope job ID")
+	workerID := flags.String("worker-id", "", "worker lease owner ID")
+	operation := flags.String("operation", "migrate", "isolated worker operation")
+	envelopeID := flags.String("envelope-id", "", "transient credential envelope ID")
+	databasePath := flags.String("database", "", "credential envelope SQLite path")
+	imapsyncBinary := flags.String("imapsync", "imapsync", "path to imapsync executable")
+	demo := flags.Bool("demo", false, "use the built-in demo migration engine")
+	leaseTTL := flags.Duration("lease-ttl", 2*time.Hour, "exclusive credential lease duration")
+	if err := flags.Parse(arguments); err != nil || flags.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "invalid isolated worker arguments")
+		return 2
+	}
+	masterKey, err := credentials.ParseMasterKey(os.Getenv("MOVEMAILBOX_MASTER_KEY"))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
+	// The worker needs the master key to open the envelope, but imapsync and
+	// any helpers it launches must never inherit it.
+	_ = os.Unsetenv("MOVEMAILBOX_MASTER_KEY")
+	defer func() {
+		for index := range masterKey {
+			masterKey[index] = 0
+		}
+	}()
+	var engine migrator.Engine = migrator.ImapsyncEngine{Binary: *imapsyncBinary}
+	if *demo {
+		engine = migrator.DemoEngine{}
+	}
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	if *operation == "migrate" {
+		err = worker.Execute(ctx, worker.ExecuteConfig{
+			JobID:        *jobID,
+			WorkerID:     *workerID,
+			DatabasePath: *databasePath,
+			MasterKey:    masterKey,
+			LeaseTTL:     *leaseTTL,
+			Engine:       engine,
+			Output:       os.Stdout,
+		})
+	} else {
+		err = worker.ExecuteTransient(ctx, worker.TransientConfig{
+			EnvelopeID: *envelopeID,
+			Operation:  *operation,
+			MasterKey:  masterKey,
+			Engine:     engine,
+			Input:      os.Stdin,
+			Output:     os.Stdout,
+		})
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	return 0
 }
 
 func acquireListener(address string, interactive bool) (net.Listener, string, bool, error) {

@@ -105,6 +105,7 @@ type record struct {
 	view          View
 	ownerID       string
 	request       migrator.Request
+	context       context.Context
 	cancel        context.CancelFunc
 	history       []StreamEvent
 	subscribers   map[*subscriber]struct{}
@@ -136,6 +137,7 @@ type Manager struct {
 	persistInterval   time.Duration
 	maxActivePerOwner int
 	store             Store
+	worker            MigrationWorker
 	storeErr          error
 	storeClosed       bool
 
@@ -158,10 +160,24 @@ func NewManagerWithConfig(engine migrator.Engine, config Config) *Manager {
 	return manager
 }
 
-// NewManagerWithStore restores credential-free history before accepting work.
-// Jobs that were non-terminal at the previous process exit are marked failed:
-// credentials are deliberately never persisted, so they cannot be resumed.
+// NewManagerWithStore restores credential-free local history before accepting
+// work. Non-terminal jobs cannot resume because direct mode never persists a
+// migration request.
 func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*Manager, error) {
+	return newManager(engine, nil, config, store)
+}
+
+// NewManagerWithWorker enables durable encrypted request envelopes and runs
+// migrations outside the API process. The engine remains available to the API
+// for connection tests and folder discovery.
+func NewManagerWithWorker(engine migrator.Engine, worker MigrationWorker, config Config, store Store) (*Manager, error) {
+	if worker == nil {
+		return nil, errors.New("migration worker is required")
+	}
+	return newManager(engine, worker, config, store)
+}
+
+func newManager(engine migrator.Engine, worker MigrationWorker, config Config, store Store) (*Manager, error) {
 	if config.MaxConcurrent < 1 {
 		config.MaxConcurrent = 1
 	}
@@ -200,6 +216,7 @@ func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*M
 		persistInterval:   config.PersistInterval,
 		maxActivePerOwner: config.MaxActivePerOwner,
 		store:             store,
+		worker:            worker,
 		ctx:               ctx,
 		cancel:            cancel,
 		now:               time.Now,
@@ -209,16 +226,27 @@ func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*M
 	loadCancel()
 	if err != nil {
 		cancel()
+		if worker != nil {
+			_ = worker.Close()
+		}
 		_ = store.Close()
 		return nil, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
 	}
-	if err := manager.restore(snapshots); err != nil {
+	resumeIDs, err := manager.restore(snapshots)
+	if err != nil {
 		cancel()
+		if worker != nil {
+			_ = worker.Close()
+		}
 		_ = store.Close()
 		return nil, err
 	}
 	manager.wg.Add(1)
 	go manager.cleanupLoop()
+	for _, id := range resumeIDs {
+		manager.wg.Add(1)
+		go manager.run(manager.jobs[id].context, id)
+	}
 	return manager, nil
 }
 
@@ -281,8 +309,21 @@ func (m *Manager) start(ownerID string, request migrator.Request) (View, error) 
 
 	ctx, cancel := context.WithCancel(m.ctx)
 	now := m.now()
+	jobID := m.uniqueIDLocked()
+	if m.worker != nil {
+		prepareContext, prepareCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+		err := m.worker.Prepare(prepareContext, jobID, request)
+		prepareCancel()
+		if err != nil {
+			cancel()
+			clearRequest(&request)
+			m.mu.Unlock()
+			return View{}, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
+		}
+		clearRequest(&request)
+	}
 	view := View{
-		ID:          m.uniqueIDLocked(),
+		ID:          jobID,
 		Status:      StatusQueued,
 		Engine:      m.engine.Name(),
 		Source:      request.Source.Username + " @ " + request.Source.Host,
@@ -294,6 +335,7 @@ func (m *Manager) start(ownerID string, request migrator.Request) (View, error) 
 		view:        view,
 		ownerID:     ownerID,
 		request:     request,
+		context:     ctx,
 		cancel:      cancel,
 		subscribers: make(map[*subscriber]struct{}),
 	}
@@ -301,6 +343,11 @@ func (m *Manager) start(ownerID string, request migrator.Request) (View, error) 
 	if err := m.persistLocked(record, true); err != nil {
 		delete(m.jobs, view.ID)
 		cancel()
+		if m.worker != nil {
+			cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+			_ = m.worker.Delete(cleanupContext, view.ID)
+			cleanupCancel()
+		}
 		m.mu.Unlock()
 		return View{}, err
 	}
@@ -360,6 +407,15 @@ func (m *Manager) StorageStatus() (kind string, healthy bool) {
 	return m.store.Kind(), m.storeErr == nil
 }
 
+// ExecutionMode distinguishes the local in-process engine from the encrypted
+// isolated-worker path used by public deployments.
+func (m *Manager) ExecutionMode() string {
+	if m.worker != nil {
+		return "isolated-worker"
+	}
+	return "in-process"
+}
+
 func (m *Manager) Cancel(id string) error {
 	return m.cancelJob("", id, false)
 }
@@ -383,6 +439,11 @@ func (m *Manager) cancelJob(ownerID, id string, enforceOwner bool) error {
 	m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена")
 	m.mu.Unlock()
 	cancel()
+	if m.worker != nil {
+		cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+		_ = m.worker.Delete(cleanupContext, id)
+		cleanupCancel()
+	}
 	return nil
 }
 
@@ -428,11 +489,13 @@ func (m *Manager) subscribeFrom(ownerID, id string, afterSequence uint64, enforc
 // than once. If an engine ignores cancellation, the supplied context bounds
 // how long Shutdown waits.
 func (m *Manager) Shutdown(ctx context.Context) error {
+	cleanupIDs := make([]string, 0)
 	m.mu.Lock()
 	if !m.shuttingDown {
 		m.shuttingDown = true
-		for _, record := range m.jobs {
+		for id, record := range m.jobs {
 			if !terminal(record.view.Status) {
+				cleanupIDs = append(cleanupIDs, id)
 				record.cancel()
 				m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена: приложение завершает работу")
 			} else {
@@ -442,6 +505,13 @@ func (m *Manager) Shutdown(ctx context.Context) error {
 		m.cancel()
 	}
 	m.mu.Unlock()
+	if m.worker != nil {
+		for _, id := range cleanupIDs {
+			cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+			_ = m.worker.Delete(cleanupContext, id)
+			cleanupCancel()
+		}
+	}
 
 	done := make(chan struct{})
 	go func() {
@@ -458,10 +528,16 @@ func (m *Manager) Shutdown(ctx context.Context) error {
 		m.storeClosed = true
 		store := m.store
 		m.mu.Unlock()
+		var closeErrors []error
 		if err := store.Close(); err != nil {
-			return fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err)
+			closeErrors = append(closeErrors, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, err))
 		}
-		return nil
+		if m.worker != nil {
+			if err := m.worker.Close(); err != nil {
+				closeErrors = append(closeErrors, fmt.Errorf("close migration worker: %w", err))
+			}
+		}
+		return errors.Join(closeErrors...)
 	case <-ctx.Done():
 		return ctx.Err()
 	}
@@ -495,10 +571,23 @@ func (m *Manager) run(ctx context.Context, id string) {
 	defer clearRequest(&request)
 
 	m.publish(id, migrator.Event{Type: "status", Phase: PhasePreparing, Message: "Миграция запущена", Timestamp: now})
-	result, err := m.engine.Migrate(ctx, request, func(event migrator.Event) {
-		event.Message = scrubSecrets(event.Message, request)
-		m.publish(id, event)
-	})
+	var result migrator.Result
+	var err error
+	if m.worker != nil {
+		defer func() {
+			cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+			_ = m.worker.Delete(cleanupContext, id)
+			cleanupCancel()
+		}()
+		result, err = m.worker.Run(ctx, id, func(event migrator.Event) {
+			m.publish(id, event)
+		})
+	} else {
+		result, err = m.engine.Migrate(ctx, request, func(event migrator.Event) {
+			event.Message = scrubSecrets(event.Message, request)
+			m.publish(id, event)
+		})
+	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) || ctx.Err() != nil {
 			m.finish(id, StatusCancelled, result, "Миграция отменена")
@@ -766,25 +855,26 @@ func (m *Manager) detachSubscriber(subscriber *subscriber) {
 	m.mu.Unlock()
 }
 
-func (m *Manager) restore(snapshots []Snapshot) error {
+func (m *Manager) restore(snapshots []Snapshot) ([]string, error) {
 	now := m.now()
+	resumeIDs := make([]string, 0)
 	for _, snapshot := range snapshots {
 		view := cloneView(snapshot.View)
 		ownerID := strings.TrimSpace(snapshot.OwnerID)
 		if len(ownerID) > 256 {
-			return fmt.Errorf("%w: задание %q имеет неверного владельца", ErrPersistenceUnavailable, view.ID)
+			return nil, fmt.Errorf("%w: задание %q имеет неверного владельца", ErrPersistenceUnavailable, view.ID)
 		}
 		if strings.TrimSpace(view.ID) == "" || view.CreatedAt.IsZero() || !knownStatus(view.Status) {
-			return fmt.Errorf("%w: повреждена запись задания %q", ErrPersistenceUnavailable, view.ID)
+			return nil, fmt.Errorf("%w: повреждена запись задания %q", ErrPersistenceUnavailable, view.ID)
 		}
 		if terminal(view.Status) && view.FinishedAt == nil {
-			return fmt.Errorf("%w: завершённое задание %q не имеет времени завершения", ErrPersistenceUnavailable, view.ID)
+			return nil, fmt.Errorf("%w: завершённое задание %q не имеет времени завершения", ErrPersistenceUnavailable, view.ID)
 		}
 		if view.FinishedAt != nil && view.FinishedAt.Before(view.CreatedAt) {
-			return fmt.Errorf("%w: задание %q имеет неверные временные метки", ErrPersistenceUnavailable, view.ID)
+			return nil, fmt.Errorf("%w: задание %q имеет неверные временные метки", ErrPersistenceUnavailable, view.ID)
 		}
 		if _, duplicate := m.jobs[view.ID]; duplicate {
-			return fmt.Errorf("%w: повторяется идентификатор задания %q", ErrPersistenceUnavailable, view.ID)
+			return nil, fmt.Errorf("%w: повторяется идентификатор задания %q", ErrPersistenceUnavailable, view.ID)
 		}
 		history := append([]StreamEvent(nil), snapshot.History...)
 		if len(history) > m.eventHistoryLimit {
@@ -803,7 +893,7 @@ func (m *Manager) restore(snapshots []Snapshot) error {
 		previousSequence := uint64(0)
 		for index := range history {
 			if history[index].Sequence == 0 || history[index].Sequence <= previousSequence {
-				return fmt.Errorf("%w: задание %q имеет неверную последовательность событий", ErrPersistenceUnavailable, view.ID)
+				return nil, fmt.Errorf("%w: задание %q имеет неверную последовательность событий", ErrPersistenceUnavailable, view.ID)
 			}
 			previousSequence = history[index].Sequence
 			history[index].Event = sanitizeStoredEvent(history[index].Event)
@@ -811,19 +901,41 @@ func (m *Manager) restore(snapshots []Snapshot) error {
 		if len(history) > 0 && history[len(history)-1].Sequence > view.Sequence {
 			view.Sequence = history[len(history)-1].Sequence
 		}
+		jobContext, jobCancel := context.WithCancel(m.ctx)
 		record := &record{
 			view:          view,
 			ownerID:       ownerID,
 			history:       history,
-			cancel:        func() {},
+			context:       jobContext,
+			cancel:        jobCancel,
 			subscribers:   make(map[*subscriber]struct{}),
 			lastPersisted: now,
 		}
 		m.jobs[view.ID] = record
 		if !terminal(view.Status) {
+			if m.worker != nil {
+				recoveryContext, recoveryCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+				recoverable, recoveryErr := m.worker.Recoverable(recoveryContext, view.ID)
+				recoveryCancel()
+				if recoveryErr != nil {
+					return nil, fmt.Errorf("%w: cannot inspect credential envelope for job %q: %v", ErrPersistenceUnavailable, view.ID, recoveryErr)
+				}
+				if recoverable {
+					record.view.Status = StatusQueued
+					record.view.Phase = PhaseQueued
+					record.view.StartedAt = nil
+					record.view.Error = ""
+					record.view.FinishedAt = nil
+					resumeIDs = append(resumeIDs, view.ID)
+					if err := m.persistLocked(record, true); err != nil {
+						return nil, err
+					}
+					continue
+				}
+			}
 			record.view.Status = StatusFailed
 			record.view.Phase = PhaseFailed
-			record.view.Error = "Миграция прервана перезапуском приложения; пароли не сохранялись"
+			record.view.Error = "Миграция прервана перезапуском приложения; защищённые данные задания недоступны"
 			record.view.FinishedAt = &now
 			m.appendEventStateLocked(record, migrator.Event{
 				Type:      "finished",
@@ -833,22 +945,22 @@ func (m *Manager) restore(snapshots []Snapshot) error {
 				Timestamp: now,
 			})
 			if err := m.persistLocked(record, true); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 	m.evictLocked(now, false)
 	if m.storeErr != nil {
-		return fmt.Errorf("%w: %v", ErrPersistenceUnavailable, m.storeErr)
+		return nil, fmt.Errorf("%w: %v", ErrPersistenceUnavailable, m.storeErr)
 	}
 	for len(m.jobs) > m.maxJobs {
 		before := len(m.jobs)
 		m.evictLocked(now, true)
 		if len(m.jobs) == before {
-			return fmt.Errorf("%w: невозможно применить лимит сохранённой истории", ErrPersistenceUnavailable)
+			return nil, fmt.Errorf("%w: невозможно применить лимит сохранённой истории", ErrPersistenceUnavailable)
 		}
 	}
-	return nil
+	return resumeIDs, nil
 }
 
 func (m *Manager) persistLocked(record *record, force bool) error {
@@ -887,6 +999,11 @@ func (m *Manager) cleanupLoop() {
 	for {
 		select {
 		case <-ticker.C:
+			if m.worker != nil {
+				cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+				_, _ = m.worker.CleanupExpired(cleanupContext)
+				cleanupCancel()
+			}
 			m.mu.Lock()
 			m.evictLocked(m.now(), false)
 			m.mu.Unlock()
@@ -927,6 +1044,11 @@ func (m *Manager) removeRecordLocked(id string) bool {
 		return false
 	}
 	clearRequest(&record.request)
+	if m.worker != nil {
+		cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+		_ = m.worker.Delete(cleanupContext, id)
+		cleanupCancel()
+	}
 	record.cancel()
 	for subscriber := range record.subscribers {
 		subscriber.once.Do(func() { close(subscriber.done) })

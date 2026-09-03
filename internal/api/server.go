@@ -105,6 +105,7 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 		"engine":    s.engine.Name(),
 		"available": s.engine.Available(),
 		"version":   Version,
+		"execution": s.manager.ExecutionMode(),
 		"storage": map[string]any{
 			"kind":    storageKind,
 			"healthy": storageHealthy,

@@ -15,6 +15,11 @@ All notable changes to MoveMailbox are documented here.
   ownership across restarts.
 - Public mode now accepts only publicly routed IMAP hosts/IP addresses on ports
   143/993, blocking private-network and cloud-metadata targets.
+- Added AES-256-GCM credential envelopes with per-job derived keys, expiry and
+  renewable exclusive SQLite leases.
+- Added a separate one-job worker process for migrations, connection tests and
+  folder discovery; its structured protocol is redacted and never includes
+  mailbox passwords or the master key.
 
 ### Changed
 
