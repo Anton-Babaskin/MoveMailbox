@@ -40,7 +40,22 @@ func main() {
 	historyTTL := flag.Duration("history-ttl", envDuration("MOVEMAILBOX_HISTORY_TTL", 24*time.Hour), "how long completed job history is retained")
 	databasePath := flag.String("database", env("MOVEMAILBOX_DATABASE", defaultDatabasePath()), "SQLite history path, or 'off' to keep history in memory")
 	allowedHostsFlag := flag.String("allowed-hosts", env("MOVEMAILBOX_ALLOWED_HOSTS", ""), "comma-separated additional HTTP Host values allowed by the local API")
+	publicMode := flag.Bool("public", envBool("MOVEMAILBOX_PUBLIC_MODE", false), "enable protected guest sessions for deployment behind HTTPS")
+	maxActivePerSession := flag.Int("max-active-per-session", envInt("MOVEMAILBOX_MAX_ACTIVE_PER_SESSION", 1), "maximum active migrations for one guest session in public mode")
+	sessionTTL := flag.Duration("session-ttl", envDuration("MOVEMAILBOX_SESSION_TTL", 24*time.Hour), "guest session lifetime in public mode")
+	sessionRate := flag.Int("session-rate", envInt("MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE", 120), "requests per minute for one guest session")
+	ipRate := flag.Int("ip-rate", envInt("MOVEMAILBOX_IP_REQUESTS_PER_MINUTE", 600), "requests per minute for one direct client IP")
 	flag.Parse()
+	apiConfig := api.Config{
+		PublicMode:               *publicMode,
+		SessionSecret:            os.Getenv("MOVEMAILBOX_SESSION_SECRET"),
+		SessionTTL:               *sessionTTL,
+		SessionRequestsPerMinute: *sessionRate,
+		IPRequestsPerMinute:      *ipRate,
+	}
+	if err := apiConfig.Validate(); err != nil {
+		log.Fatalf("неверная конфигурация публичного режима: %v", err)
+	}
 
 	var engine migrator.Engine = migrator.ImapsyncEngine{Binary: *imapsyncBinary}
 	if *demo {
@@ -64,6 +79,12 @@ func main() {
 		MaxJobs:       *maxJobs,
 		CompletedTTL:  *historyTTL,
 	}
+	if *publicMode {
+		if *maxActivePerSession < 1 {
+			*maxActivePerSession = 1
+		}
+		managerConfig.MaxActivePerOwner = *maxActivePerSession
+	}
 	var manager *jobs.Manager
 	if strings.EqualFold(strings.TrimSpace(*databasePath), "off") {
 		manager = jobs.NewManagerWithConfig(engine, managerConfig)
@@ -80,8 +101,9 @@ func main() {
 		log.Printf("История заданий: SQLite (%s)", *databasePath)
 	}
 
+	apiConfig.AllowedHosts = allowedHosts(listener, *allowedHostsFlag)
 	server := &http.Server{
-		Handler:           api.New(engine, manager, api.Config{AllowedHosts: allowedHosts(listener, *allowedHostsFlag)}),
+		Handler:           api.New(engine, manager, apiConfig),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       70 * time.Second,
@@ -97,6 +119,9 @@ func main() {
 		serveError <- err
 	}()
 	log.Printf("%s запущен: %s (engine=%s)", api.ProductName, publicURL, engine.Name())
+	if *publicMode {
+		log.Printf("Публичный режим: защищённые гостевые сессии включены")
+	}
 	if *openBrowser {
 		if err := openURL(publicURL); err != nil {
 			log.Printf("не удалось открыть браузер автоматически: %v", err)

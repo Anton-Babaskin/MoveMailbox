@@ -40,6 +40,8 @@ var (
 	ErrJobFinished            = errors.New("задание уже завершено")
 	ErrManagerShuttingDown    = errors.New("менеджер заданий завершает работу")
 	ErrJobLimitReached        = errors.New("достигнут лимит заданий")
+	ErrOwnerJobLimitReached   = errors.New("достигнут лимит активных заданий для этой сессии")
+	ErrOwnerRequired          = errors.New("не указан владелец задания")
 	ErrEngineUnavailable      = errors.New("движок миграции недоступен")
 	ErrPersistenceUnavailable = errors.New("хранилище истории недоступно")
 )
@@ -67,6 +69,7 @@ type Config struct {
 	SubscriberBuffer  int
 	CleanupInterval   time.Duration
 	PersistInterval   time.Duration
+	MaxActivePerOwner int
 }
 
 type View struct {
@@ -100,6 +103,7 @@ type StreamEvent struct {
 
 type record struct {
 	view          View
+	ownerID       string
 	request       migrator.Request
 	cancel        context.CancelFunc
 	history       []StreamEvent
@@ -130,6 +134,7 @@ type Manager struct {
 	subscriberBuffer  int
 	cleanupInterval   time.Duration
 	persistInterval   time.Duration
+	maxActivePerOwner int
 	store             Store
 	storeErr          error
 	storeClosed       bool
@@ -193,6 +198,7 @@ func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*M
 		subscriberBuffer:  config.SubscriberBuffer,
 		cleanupInterval:   config.CleanupInterval,
 		persistInterval:   config.PersistInterval,
+		maxActivePerOwner: config.MaxActivePerOwner,
 		store:             store,
 		ctx:               ctx,
 		cancel:            cancel,
@@ -217,6 +223,21 @@ func NewManagerWithStore(engine migrator.Engine, config Config, store Store) (*M
 }
 
 func (m *Manager) Start(request migrator.Request) (View, error) {
+	return m.start("", request)
+}
+
+// StartFor creates a job owned by an opaque authenticated session identifier.
+// Ownership is persisted separately from credentials and never appears in the
+// public job view.
+func (m *Manager) StartFor(ownerID string, request migrator.Request) (View, error) {
+	ownerID = strings.TrimSpace(ownerID)
+	if ownerID == "" || len(ownerID) > 256 {
+		return View{}, ErrOwnerRequired
+	}
+	return m.start(ownerID, request)
+}
+
+func (m *Manager) start(ownerID string, request migrator.Request) (View, error) {
 	if err := request.Validate(); err != nil {
 		return View{}, err
 	}
@@ -245,6 +266,18 @@ func (m *Manager) Start(request migrator.Request) (View, error) {
 		m.mu.Unlock()
 		return View{}, ErrJobLimitReached
 	}
+	if m.maxActivePerOwner > 0 {
+		active := 0
+		for _, existing := range m.jobs {
+			if existing.ownerID == ownerID && !terminal(existing.view.Status) {
+				active++
+			}
+		}
+		if active >= m.maxActivePerOwner {
+			m.mu.Unlock()
+			return View{}, ErrOwnerJobLimitReached
+		}
+	}
 
 	ctx, cancel := context.WithCancel(m.ctx)
 	now := m.now()
@@ -259,6 +292,7 @@ func (m *Manager) Start(request migrator.Request) (View, error) {
 	}
 	record := &record{
 		view:        view,
+		ownerID:     ownerID,
 		request:     request,
 		cancel:      cancel,
 		subscribers: make(map[*subscriber]struct{}),
@@ -278,22 +312,41 @@ func (m *Manager) Start(request migrator.Request) (View, error) {
 }
 
 func (m *Manager) Get(id string) (View, bool) {
+	return m.get("", id, false)
+}
+
+func (m *Manager) GetFor(ownerID, id string) (View, bool) {
+	return m.get(strings.TrimSpace(ownerID), id, true)
+}
+
+func (m *Manager) get(ownerID, id string, enforceOwner bool) (View, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.evictLocked(m.now(), false)
 	record, ok := m.jobs[id]
-	if !ok {
+	if !ok || (enforceOwner && (ownerID == "" || record.ownerID != ownerID)) {
 		return View{}, false
 	}
 	return cloneView(record.view), true
 }
 
 func (m *Manager) List() []View {
+	return m.list("", false)
+}
+
+func (m *Manager) ListFor(ownerID string) []View {
+	return m.list(strings.TrimSpace(ownerID), true)
+}
+
+func (m *Manager) list(ownerID string, enforceOwner bool) []View {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.evictLocked(m.now(), false)
 	views := make([]View, 0, len(m.jobs))
 	for _, record := range m.jobs {
+		if enforceOwner && (ownerID == "" || record.ownerID != ownerID) {
+			continue
+		}
 		views = append(views, cloneView(record.view))
 	}
 	sort.Slice(views, func(i, j int) bool { return views[i].CreatedAt.After(views[j].CreatedAt) })
@@ -308,9 +361,17 @@ func (m *Manager) StorageStatus() (kind string, healthy bool) {
 }
 
 func (m *Manager) Cancel(id string) error {
+	return m.cancelJob("", id, false)
+}
+
+func (m *Manager) CancelFor(ownerID, id string) error {
+	return m.cancelJob(strings.TrimSpace(ownerID), id, true)
+}
+
+func (m *Manager) cancelJob(ownerID, id string, enforceOwner bool) error {
 	m.mu.Lock()
 	record, ok := m.jobs[id]
-	if !ok {
+	if !ok || (enforceOwner && (ownerID == "" || record.ownerID != ownerID)) {
 		m.mu.Unlock()
 		return ErrJobNotFound
 	}
@@ -344,7 +405,15 @@ func (m *Manager) Subscribe(id string) (<-chan migrator.Event, func(), bool) {
 // afterSequence, then continues streaming live events. Event sequences are
 // monotonically increasing within a job.
 func (m *Manager) SubscribeFrom(id string, afterSequence uint64) (<-chan StreamEvent, func(), bool) {
-	subscriber, ok := m.addSubscriber(id, afterSequence, true)
+	return m.subscribeFrom("", id, afterSequence, false)
+}
+
+func (m *Manager) SubscribeFromFor(ownerID, id string, afterSequence uint64) (<-chan StreamEvent, func(), bool) {
+	return m.subscribeFrom(strings.TrimSpace(ownerID), id, afterSequence, true)
+}
+
+func (m *Manager) subscribeFrom(ownerID, id string, afterSequence uint64, enforceOwner bool) (<-chan StreamEvent, func(), bool) {
+	subscriber, ok := m.addSubscriberFor(ownerID, id, afterSequence, true, enforceOwner)
 	if !ok {
 		channel := make(chan StreamEvent)
 		close(channel)
@@ -543,13 +612,17 @@ func (m *Manager) appendEventStateLocked(record *record, event migrator.Event) {
 }
 
 func (m *Manager) addSubscriber(id string, after uint64, stream bool) (*subscriber, bool) {
+	return m.addSubscriberFor("", id, after, stream, false)
+}
+
+func (m *Manager) addSubscriberFor(ownerID, id string, after uint64, stream, enforceOwner bool) (*subscriber, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.shuttingDown {
 		return nil, false
 	}
 	record, ok := m.jobs[id]
-	if !ok {
+	if !ok || (enforceOwner && (ownerID == "" || record.ownerID != ownerID)) {
 		return nil, false
 	}
 	subscriber := &subscriber{
@@ -697,6 +770,10 @@ func (m *Manager) restore(snapshots []Snapshot) error {
 	now := m.now()
 	for _, snapshot := range snapshots {
 		view := cloneView(snapshot.View)
+		ownerID := strings.TrimSpace(snapshot.OwnerID)
+		if len(ownerID) > 256 {
+			return fmt.Errorf("%w: задание %q имеет неверного владельца", ErrPersistenceUnavailable, view.ID)
+		}
 		if strings.TrimSpace(view.ID) == "" || view.CreatedAt.IsZero() || !knownStatus(view.Status) {
 			return fmt.Errorf("%w: повреждена запись задания %q", ErrPersistenceUnavailable, view.ID)
 		}
@@ -736,6 +813,7 @@ func (m *Manager) restore(snapshots []Snapshot) error {
 		}
 		record := &record{
 			view:          view,
+			ownerID:       ownerID,
 			history:       history,
 			cancel:        func() {},
 			subscribers:   make(map[*subscriber]struct{}),
@@ -779,7 +857,7 @@ func (m *Manager) persistLocked(record *record, force bool) error {
 		return nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), storeOperationTimeout)
-	err := m.store.Save(ctx, cloneSnapshot(record.view, record.history))
+	err := m.store.Save(ctx, cloneSnapshot(record.ownerID, record.view, record.history))
 	cancel()
 	if err != nil {
 		m.storeErr = err

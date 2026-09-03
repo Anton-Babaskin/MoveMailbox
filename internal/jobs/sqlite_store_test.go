@@ -21,6 +21,7 @@ func TestSQLiteStoreRoundTripAndDelete(t *testing.T) {
 	}
 	now := time.Now().UTC().Truncate(time.Millisecond)
 	snapshot := Snapshot{
+		OwnerID: "guest-round-trip",
 		View: View{
 			ID: "job-round-trip", Status: StatusCompleted, Engine: "demo",
 			Source: "source@example.test @ source.example", Destination: "destination@example.test @ destination.example",
@@ -45,7 +46,7 @@ func TestSQLiteStoreRoundTripAndDelete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(loaded) != 1 || loaded[0].View.ID != snapshot.View.ID || loaded[0].View.Transferred != 42 {
+	if len(loaded) != 1 || loaded[0].OwnerID != snapshot.OwnerID || loaded[0].View.ID != snapshot.View.ID || loaded[0].View.Transferred != 42 {
 		t.Fatalf("loaded snapshots = %+v", loaded)
 	}
 	if len(loaded[0].History) != 1 || loaded[0].History[0].Event.Type != "finished" {
@@ -83,7 +84,7 @@ func TestManagerRestoresHistoryAndNeverPersistsPasswords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	view, err := manager.Start(request)
+	view, err := manager.StartFor("guest-persisted", request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,9 +117,12 @@ func TestManagerRestoresHistoryAndNeverPersistsPasswords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	restored, ok := restoredManager.Get(view.ID)
+	restored, ok := restoredManager.GetFor("guest-persisted", view.ID)
 	if !ok || restored.Status != StatusFailed || restored.Sequence != failed.Sequence {
 		t.Fatalf("restored view = %+v, exists=%v", restored, ok)
+	}
+	if _, ok := restoredManager.GetFor("different-guest", view.ID); ok {
+		t.Fatal("restored job was visible to a different owner")
 	}
 	shutdownManager(t, restoredManager)
 }

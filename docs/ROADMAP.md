@@ -15,13 +15,14 @@ marketing launch date must not bypass a security gate.
 Exit criteria: green race-enabled CI, hardened Docker smoke test and a real
 Windows restart test with history restored and no password bytes in SQLite.
 
-## 2. Public gateway and identity — next
+## 2. Public gateway and identity — in progress
 
 - automatic guest sessions, with no login wall before a free migration;
 - short-lived sessions in `HttpOnly`, `Secure`, `SameSite` cookies;
 - CSRF tokens for every state-changing browser request;
 - global, per-IP and per-session rate/concurrency limits;
 - ownership checks on every job, event stream and cancellation request;
+- public-target validation for hostnames/IP addresses and IMAP ports;
 - optional verified email for recovery and completion notifications;
 - accounts required only for paid history, purchases and business teams;
 - login, security and administrative audit events without credentials.

@@ -24,12 +24,20 @@ import (
 )
 
 type Server struct {
-	engine  migrator.Engine
-	manager *jobs.Manager
+	engine       migrator.Engine
+	manager      *jobs.Manager
+	publicMode   bool
+	targetPolicy endpointTargetPolicy
 }
 
 type Config struct {
-	AllowedHosts []string
+	AllowedHosts             []string
+	PublicMode               bool
+	SessionSecret            string
+	SessionTTL               time.Duration
+	SessionRequestsPerMinute int
+	IPRequestsPerMinute      int
+	PublicIMAPPorts          []int
 }
 
 const (
@@ -42,9 +50,19 @@ const (
 var Version = "0.3.0-preview"
 
 func New(engine migrator.Engine, manager *jobs.Manager, config Config) http.Handler {
-	server := &Server{engine: engine, manager: manager}
+	config = config.withDefaults()
+	if err := config.Validate(); err != nil {
+		panic(err)
+	}
+	server := &Server{
+		engine:       engine,
+		manager:      manager,
+		publicMode:   config.PublicMode,
+		targetPolicy: newEndpointTargetPolicy(config.PublicIMAPPorts),
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", server.health)
+	mux.HandleFunc("GET /api/session", server.session)
 	mux.HandleFunc("POST /api/connections/test", server.testConnection)
 	mux.HandleFunc("POST /api/connections/folders", server.listFolders)
 	mux.HandleFunc("GET /api/jobs", server.listJobs)
@@ -58,7 +76,24 @@ func New(engine migrator.Engine, manager *jobs.Manager, config Config) http.Hand
 		panic(err)
 	}
 	mux.Handle("/", staticHandler(assets))
-	return securityHeaders(requestGuard(config.AllowedHosts, mux))
+	var handler http.Handler = mux
+	if config.PublicMode {
+		handler = newGuestGateway(config).wrap(handler)
+	}
+	return securityHeaders(requestGuard(config.AllowedHosts, handler))
+}
+
+func (s *Server) session(w http.ResponseWriter, r *http.Request) {
+	principal, ok := principalFromRequest(r)
+	if !s.publicMode || !ok {
+		writeJSON(w, http.StatusOK, map[string]any{"mode": "local", "csrfToken": ""})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"mode":      "guest",
+		"csrfToken": principal.csrfToken,
+		"expiresAt": principal.expiresAt,
+	})
 }
 
 func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
@@ -86,6 +121,9 @@ func (s *Server) testConnection(w http.ResponseWriter, r *http.Request) {
 		writeErrorCode(w, http.StatusBadRequest, "validation.endpoint", err.Error())
 		return
 	}
+	if !s.allowEndpoint(w, r, endpoint) {
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 45*time.Second)
 	defer cancel()
 	logs := make([]string, 0, 4)
@@ -111,6 +149,9 @@ func (s *Server) listFolders(w http.ResponseWriter, r *http.Request) {
 		writeErrorCode(w, http.StatusBadRequest, "validation.endpoint", err.Error())
 		return
 	}
+	if !s.allowEndpoint(w, r, endpoint) {
+		return
+	}
 	lister, ok := s.engine.(migrator.FolderLister)
 	if !ok {
 		writeErrorCode(w, http.StatusNotImplemented, "folders.unsupported", "движок не поддерживает получение списка папок")
@@ -132,7 +173,20 @@ func (s *Server) startJob(w http.ResponseWriter, r *http.Request) {
 	if err := decodeJSON(w, r, &request); err != nil {
 		return
 	}
-	view, err := s.manager.Start(request)
+	if err := request.Validate(); err != nil {
+		writeErrorCode(w, http.StatusBadRequest, "validation.request", err.Error())
+		return
+	}
+	if !s.allowEndpoint(w, r, request.Source) || !s.allowEndpoint(w, r, request.Destination) {
+		return
+	}
+	var view jobs.View
+	var err error
+	if ownerID, protected := s.owner(r); protected {
+		view, err = s.manager.StartFor(ownerID, request)
+	} else {
+		view, err = s.manager.Start(request)
+	}
 	if err != nil {
 		writeManagerError(w, err)
 		return
@@ -140,12 +194,22 @@ func (s *Server) startJob(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, view)
 }
 
-func (s *Server) listJobs(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) listJobs(w http.ResponseWriter, r *http.Request) {
+	if ownerID, protected := s.owner(r); protected {
+		writeJSON(w, http.StatusOK, s.manager.ListFor(ownerID))
+		return
+	}
 	writeJSON(w, http.StatusOK, s.manager.List())
 }
 
 func (s *Server) getJob(w http.ResponseWriter, r *http.Request) {
-	view, ok := s.manager.Get(r.PathValue("id"))
+	var view jobs.View
+	var ok bool
+	if ownerID, protected := s.owner(r); protected {
+		view, ok = s.manager.GetFor(ownerID, r.PathValue("id"))
+	} else {
+		view, ok = s.manager.Get(r.PathValue("id"))
+	}
 	if !ok {
 		writeErrorCode(w, http.StatusNotFound, "job.not_found", "задание не найдено")
 		return
@@ -154,7 +218,13 @@ func (s *Server) getJob(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) cancelJob(w http.ResponseWriter, r *http.Request) {
-	if err := s.manager.Cancel(r.PathValue("id")); err != nil {
+	var err error
+	if ownerID, protected := s.owner(r); protected {
+		err = s.manager.CancelFor(ownerID, r.PathValue("id"))
+	} else {
+		err = s.manager.Cancel(r.PathValue("id"))
+	}
+	if err != nil {
 		writeManagerError(w, err)
 		return
 	}
@@ -172,13 +242,25 @@ func (s *Server) jobEvents(w http.ResponseWriter, r *http.Request) {
 		}
 		afterSequence = parsed
 	}
-	events, unsubscribe, ok := s.manager.SubscribeFrom(r.PathValue("id"), afterSequence)
+	var events <-chan jobs.StreamEvent
+	var unsubscribe func()
+	var ok bool
+	if ownerID, protected := s.owner(r); protected {
+		events, unsubscribe, ok = s.manager.SubscribeFromFor(ownerID, r.PathValue("id"), afterSequence)
+	} else {
+		events, unsubscribe, ok = s.manager.SubscribeFrom(r.PathValue("id"), afterSequence)
+	}
 	if !ok {
 		writeErrorCode(w, http.StatusNotFound, "job.not_found", "задание не найдено")
 		return
 	}
 	defer unsubscribe()
-	view, _ := s.manager.Get(r.PathValue("id"))
+	var view jobs.View
+	if ownerID, protected := s.owner(r); protected {
+		view, _ = s.manager.GetFor(ownerID, r.PathValue("id"))
+	} else {
+		view, _ = s.manager.Get(r.PathValue("id"))
+	}
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		writeErrorCode(w, http.StatusInternalServerError, "stream.unsupported", "потоковые события не поддерживаются")
@@ -221,6 +303,30 @@ func (s *Server) jobEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (s *Server) owner(r *http.Request) (string, bool) {
+	if !s.publicMode {
+		return "", false
+	}
+	principal, ok := principalFromRequest(r)
+	if !ok {
+		return "", true
+	}
+	return principal.id, true
+}
+
+func (s *Server) allowEndpoint(w http.ResponseWriter, r *http.Request, endpoint migrator.Endpoint) bool {
+	if !s.publicMode {
+		return true
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	if err := s.targetPolicy.validate(ctx, endpoint.Host, endpoint.Port); err != nil {
+		writeErrorCode(w, http.StatusForbidden, "connection.target.denied", errPublicTargetDenied.Error())
+		return false
+	}
+	return true
 }
 
 func writeSSEWithID(w http.ResponseWriter, eventName string, id uint64, value any) {
@@ -377,6 +483,8 @@ func writeManagerError(w http.ResponseWriter, err error) {
 		writeErrorCode(w, http.StatusConflict, "job.finished", err.Error())
 	case errors.Is(err, jobs.ErrJobLimitReached):
 		writeErrorCode(w, http.StatusTooManyRequests, "job.limit_reached", err.Error())
+	case errors.Is(err, jobs.ErrOwnerJobLimitReached):
+		writeErrorCode(w, http.StatusTooManyRequests, "session.job_limit_reached", err.Error())
 	case errors.Is(err, jobs.ErrEngineUnavailable):
 		writeErrorCode(w, http.StatusServiceUnavailable, "engine.unavailable", err.Error())
 	case errors.Is(err, jobs.ErrManagerShuttingDown):

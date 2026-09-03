@@ -113,6 +113,52 @@ func TestStartRejectsUnavailableEngine(t *testing.T) {
 	}
 }
 
+func TestOwnedJobsAreIsolatedAndConcurrencyIsPerOwner(t *testing.T) {
+	engine := &controlledEngine{
+		available: true,
+		started:   make(chan migrator.Request, 2),
+		release:   make(chan struct{}),
+	}
+	manager := newTestManager(t, engine, Config{MaxConcurrent: 2, MaxActivePerOwner: 1})
+	first, err := manager.StartFor("guest-alice", validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-engine.started
+	if _, err := manager.StartFor("guest-alice", validRequest()); !errors.Is(err, ErrOwnerJobLimitReached) {
+		t.Fatalf("second StartFor(alice) error = %v, want ErrOwnerJobLimitReached", err)
+	}
+	second, err := manager.StartFor("guest-bob", validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-engine.started
+
+	if _, ok := manager.GetFor("guest-bob", first.ID); ok {
+		t.Fatal("bob could read alice's job")
+	}
+	if views := manager.ListFor("guest-alice"); len(views) != 1 || views[0].ID != first.ID {
+		t.Fatalf("alice list = %+v", views)
+	}
+	if err := manager.CancelFor("guest-bob", first.ID); !errors.Is(err, ErrJobNotFound) {
+		t.Fatalf("bob CancelFor(alice job) error = %v, want ErrJobNotFound", err)
+	}
+	if _, _, ok := manager.SubscribeFromFor("guest-bob", first.ID, 0); ok {
+		t.Fatal("bob could subscribe to alice's job")
+	}
+	if _, ok := manager.GetFor("guest-bob", second.ID); !ok {
+		t.Fatal("bob could not read his own job")
+	}
+	close(engine.release)
+}
+
+func TestStartForRequiresOwner(t *testing.T) {
+	manager := newTestManager(t, &controlledEngine{available: true}, Config{})
+	if _, err := manager.StartFor("  ", validRequest()); !errors.Is(err, ErrOwnerRequired) {
+		t.Fatalf("StartFor(empty) error = %v, want ErrOwnerRequired", err)
+	}
+}
+
 func TestNormalizePhaseUsesStableCodes(t *testing.T) {
 	tests := map[string]string{
 		"Подключение":        PhaseConnecting,
