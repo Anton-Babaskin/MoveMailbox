@@ -4,9 +4,9 @@ const translations = {
   ru: {
     history: "История", checkingEngine: "Проверяем движок…", heroTitle: "Перенесите почту.", heroAccent: "Спокойно и красиво.",
     heroDescription: "Подключите два почтовых ящика — мы аккуратно перенесём папки, письма, даты и флаги. Без консоли и сложных инструкций.",
-    passwordsNotStored: "Пароли не сохраняются", oneWay: "Только в одну сторону", canCancel: "Можно отменить", from: "ОТКУДА", source: "Источник",
+    passwordsNotStored: "Пароли не сохраняются", oneWay: "Только в одну сторону", canCancel: "Можно отменить", accountNotRequired: "Без регистрации MoveMailbox", from: "ОТКУДА", source: "Источник",
     to: "КУДА", destination: "Назначение", notChecked: "Не проверено", imapServer: "IMAP-сервер или IP-адрес", port: "Порт", security: "Защита соединения",
-    plainSecurity: "Без шифрования — небезопасно", username: "Логин", password: "Пароль или пароль приложения", loginPlaceholder: "Введите логин", passwordPlaceholder: "Введите пароль",
+    plainSecurity: "Без шифрования — небезопасно", username: "Логин почтового ящика", password: "Пароль или пароль приложения", loginPlaceholder: "Например: name@example.com", passwordPlaceholder: "Введите пароль",
     connectionOptions: "Настройки подключения", automaticRecommended: "Автоматически — рекомендуется", autoPort: "Автоматически", manualPort: "Вручную", migrationOptions: "Опции миграции", swapMailboxes: "Поменять источник и назначение", testConnection: "Проверить подключение",
     saveFlags: "Сохранить флаги", flagsDescription: "Прочитано, важное, отвечено", saveDates: "Сохранить даты", datesDescription: "Исходное время получения",
     dryRun: "Пробный запуск", dryRunDescription: "Ничего не копировать", folderSelection: "Выбор папок", allFolders: "Все папки", selectedFolders: "Выбрано папок: {count}",
@@ -46,9 +46,9 @@ const translations = {
   en: {
     history: "History", checkingEngine: "Checking engine…", heroTitle: "Move your email.", heroAccent: "Calmly and clearly.",
     heroDescription: "Connect two mailboxes and MoveMailbox will carefully copy folders, messages, dates, and flags — without a console or complex instructions.",
-    passwordsNotStored: "Passwords are not stored", oneWay: "One-way copy", canCancel: "Cancellation supported", from: "FROM", source: "Source",
+    passwordsNotStored: "Passwords are not stored", oneWay: "One-way copy", canCancel: "Cancellation supported", accountNotRequired: "No MoveMailbox account required", from: "FROM", source: "Source",
     to: "TO", destination: "Destination", notChecked: "Not checked", imapServer: "IMAP server or IP address", port: "Port", security: "Connection security",
-    plainSecurity: "No encryption — unsafe", username: "Username", password: "Password or app password", loginPlaceholder: "Enter login name", passwordPlaceholder: "Enter password",
+    plainSecurity: "No encryption — unsafe", username: "Mailbox username", password: "Password or app password", loginPlaceholder: "For example: name@example.com", passwordPlaceholder: "Enter password",
     connectionOptions: "Connection settings", automaticRecommended: "Automatic — recommended", autoPort: "Automatic", manualPort: "Manual", migrationOptions: "Migration options", swapMailboxes: "Swap source and destination", testConnection: "Test connection",
     saveFlags: "Preserve flags", flagsDescription: "Read, important, answered", saveDates: "Preserve dates", datesDescription: "Original received time",
     dryRun: "Dry run", dryRunDescription: "Do not copy anything", folderSelection: "Folder selection", allFolders: "All folders", selectedFolders: "Folders selected: {count}",

@@ -42,6 +42,7 @@
           <span><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg> <span data-i18n="passwordsNotStored">Пароли не сохраняются</span></span>
           <span><svg viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></svg> <span data-i18n="oneWay">Только в одну сторону</span></span>
           <span><svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 7v5l3 2"/></svg> <span data-i18n="canCancel">Можно отменить</span></span>
+          <span><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg> <span data-i18n="accountNotRequired">Без регистрации MoveMailbox</span></span>
         </div>
       </section>
 
@@ -56,7 +57,7 @@
               </div>
 
               <label class="field server-field"><span data-i18n="imapServer">IMAP-сервер или IP-адрес</span><input id="sourceHost" name="sourceHost" placeholder="imap.example.com / 203.0.113.10" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>
-              <label class="field"><span data-i18n="username">Логин</span><input id="sourceUsername" name="sourceUsername" type="text" placeholder="Введите логин" data-placeholder-i18n="loginPlaceholder" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+              <label class="field"><span data-i18n="username">Логин почтового ящика</span><input id="sourceUsername" name="sourceUsername" type="text" placeholder="Например: name@example.com" data-placeholder-i18n="loginPlaceholder" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
               <label class="field password-field"><span data-i18n="password">Пароль или пароль приложения</span><input id="sourcePassword" name="sourcePassword" type="password" placeholder="Введите пароль" data-placeholder-i18n="passwordPlaceholder" autocomplete="current-password" required><button class="reveal-button" type="button" data-target="sourcePassword" aria-label="Показать пароль"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></label>
               <details class="connection-options" data-side="source">
                 <summary><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg><span data-i18n="connectionOptions">Настройки подключения</span><small data-i18n="automaticRecommended">Автоматически — рекомендуется</small><svg class="chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></summary>
@@ -82,7 +83,7 @@
               </div>
 
               <label class="field server-field"><span data-i18n="imapServer">IMAP-сервер или IP-адрес</span><input id="destinationHost" name="destinationHost" placeholder="imap.new-server.com / 203.0.113.20" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>
-              <label class="field"><span data-i18n="username">Логин</span><input id="destinationUsername" name="destinationUsername" type="text" placeholder="Введите логин" data-placeholder-i18n="loginPlaceholder" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+              <label class="field"><span data-i18n="username">Логин почтового ящика</span><input id="destinationUsername" name="destinationUsername" type="text" placeholder="Например: name@example.com" data-placeholder-i18n="loginPlaceholder" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
               <label class="field password-field"><span data-i18n="password">Пароль или пароль приложения</span><input id="destinationPassword" name="destinationPassword" type="password" placeholder="Введите пароль" data-placeholder-i18n="passwordPlaceholder" autocomplete="new-password" required><button class="reveal-button" type="button" data-target="destinationPassword" aria-label="Показать пароль"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></label>
               <details class="connection-options" data-side="destination">
                 <summary><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg><span data-i18n="connectionOptions">Настройки подключения</span><small data-i18n="automaticRecommended">Автоматически — рекомендуется</small><svg class="chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></summary>

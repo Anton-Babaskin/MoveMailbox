@@ -26,7 +26,8 @@ history.
 
 ## Why MoveMailbox
 
-- **Simple by default:** enter a server or IP address, login, and password.
+- **Simple by default:** enter a server or IP address, mailbox username, and
+  app password. The free hosted flow does not require a MoveMailbox account.
 - **Automatic connection settings:** port `993` for SSL/TLS and `143` for
   STARTTLS, with a manual override when a provider needs something different.
 - **Safe preflight:** source and destination are tested before migration starts.
@@ -47,7 +48,7 @@ history.
 | --- | --- | --- |
 | Windows/local client | Personal migrations and IT work without a cloud size limit | Preview releases available |
 | Docker/Linux | Administrators and self-hosted infrastructure | Ready for controlled private deployment |
-| Hosted at movemailbox.com | Occasional browser-based migration, planned free tier up to 5 GB | Interface demo; protected backend in development |
+| Hosted at movemailbox.com | Occasional browser-based migration without registration, planned free tier up to 5 GB | Interface demo; protected backend in development |
 
 ## Migration controls
 
