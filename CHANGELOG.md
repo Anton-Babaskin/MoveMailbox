@@ -8,6 +8,8 @@ All notable changes to MoveMailbox are documented here.
 
 - Require certificate-chain and peer-name verification in imapsync for both
   mailboxes, on TLS and STARTTLS, instead of relying on permissive defaults.
+- Reject unencrypted IMAP at the public API boundary, including connection
+  tests, folder discovery and job creation. Local compatibility mode is unchanged.
 
 ### Added
 

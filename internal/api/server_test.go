@@ -196,6 +196,37 @@ func TestPublicModeRejectsPrivateIMAPTargets(t *testing.T) {
 	}
 }
 
+func TestPublicModeRejectsPlainIMAPBeforeConnecting(t *testing.T) {
+	handler, _ := newPublicTestHandler(t, migrator.DemoEngine{}, Config{})
+	cookie, csrf := createGuestSession(t, handler)
+	for _, path := range []string{"/api/connections/test", "/api/connections/folders"} {
+		request := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{"host":"8.8.8.8","port":143,"security":"plain","username":"test","password":"test"}`))
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("X-CSRF-Token", csrf)
+		request.AddCookie(cookie)
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if response.Code != http.StatusForbidden || !strings.Contains(response.Body.String(), "connection.tls.required") {
+			t.Fatalf("%s status=%d body=%s", path, response.Code, response.Body.String())
+		}
+	}
+}
+
+func TestEndpointEncryptionPolicyKeepsLocalCompatibility(t *testing.T) {
+	for _, public := range []bool{false, true} {
+		for _, mode := range []migrator.SecurityMode{migrator.SecurityPlain, migrator.SecurityTLS, migrator.SecurityStartTLS} {
+			s := &Server{publicMode: public, targetPolicy: newEndpointTargetPolicy([]int{143, 993})}
+			r := httptest.NewRequest(http.MethodPost, "/", nil)
+			w := httptest.NewRecorder()
+			got := s.allowEndpoint(w, r, migrator.Endpoint{Host: "8.8.8.8", Port: 143, Security: mode})
+			want := !public || mode != migrator.SecurityPlain
+			if got != want {
+				t.Fatalf("public=%v mode=%s allowed=%v want=%v", public, mode, got, want)
+			}
+		}
+	}
+}
+
 func TestStaticAssetsUseETag(t *testing.T) {
 	handler := newTestHandler(migrator.DemoEngine{})
 	firstRequest := httptest.NewRequest(http.MethodGet, "/app.js", nil)

@@ -2,6 +2,7 @@ const byId = (id) => document.getElementById(id);
 
 const translations = {
   ru: {
+    errorTLSRequired: "Онлайн-перенос требует TLS или STARTTLS. Соединение без шифрования запрещено.",
     jobCompleted: "Задание завершено",
     runMode: "Режим запуска", modeCopy: "Перенос писем", modeLogin: "Только проверить доступ", modeSizes: "Только показать размеры папок", modeFolders: "Только создать папки — без писем",
     history: "История", checkingEngine: "Проверяем движок…", heroTitle: "Перенесите почту.", heroAccent: "Спокойно и красиво.",
@@ -46,6 +47,7 @@ const translations = {
     byteUnits: ["Б", "КБ", "МБ", "ГБ", "ТБ"], locale: "ru-RU",
   },
   en: {
+    errorTLSRequired: "Online transfers require TLS or STARTTLS. Unencrypted connections are not allowed.",
     jobCompleted: "Task completed",
     runMode: "Run mode", modeCopy: "Copy messages", modeLogin: "Check credentials only", modeSizes: "Show folder sizes only", modeFolders: "Create folders only — no messages",
     history: "History", checkingEngine: "Checking engine…", heroTitle: "Move your email.", heroAccent: "Calmly and clearly.",
@@ -181,6 +183,7 @@ async function api(path, options = {}) {
       "request.csrf.invalid": "errorCSRF",
       "request.rate_limited": "errorRateLimited",
       "connection.target.denied": "errorTargetDenied",
+      "connection.tls.required": "errorTLSRequired",
       "request.json.required": "errorJSONRequired",
       "job.not_found": "errorJobNotFound",
       "job.finished": "errorJobFinished",
