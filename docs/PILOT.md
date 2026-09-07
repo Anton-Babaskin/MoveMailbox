@@ -16,6 +16,13 @@ The real backend also completed `justLogin` and `dryRun` jobs against both
 servers with zero transferred messages and zero bytes; no dry-run destination
 folder was left behind.
 
+An authorized strict-mirror check was then isolated to
+`MoveMailbox-Strict-20260907.INBOX`: one destination-only synthetic message
+was added, the dry-run left both messages intact, and the confirmed live run
+finished with one message remaining. The remaining Message-ID matched the
+source; the extra destination-only message was removed. No source message was
+deleted. This is the only destructive test recorded in the pilot.
+
 ## Prepare
 
 - Install the exact candidate build and record its commit/version and imapsync
