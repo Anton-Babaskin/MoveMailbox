@@ -65,6 +65,7 @@ def run(binary, image, directory):
         "MOVEMAILBOX_IP_REQUESTS_PER_MINUTE": "12000",
         "MOVEMAILBOX_WORKER_URL": f"http://{prefix}-worker:8090" if image else f"http://127.0.0.1:{ports['worker']}",
         "MOVEMAILBOX_WORKER_ALLOW_HTTP": "true" if image else "false",
+        "MOVEMAILBOX_ALLOWED_HOSTS": f"127.0.0.1:{ports['api']}",
     }
     for name in ports:
         (directory / name).mkdir()
@@ -108,6 +109,10 @@ def run(binary, image, directory):
         if image:
             container = prefix + "-" + name
             if container in containers:
+                logs = subprocess.run(["docker", "logs", container], capture_output=True, timeout=10)
+                if logs.returncode:
+                    raise RuntimeError("cannot read disposable container logs")
+                (directory / name / f"container-{time.time_ns()}.log").write_bytes(logs.stdout + logs.stderr)
                 # docker rm --force kills the whole container namespace, including children.
                 command(["docker", "rm", "--force", container]); containers.remove(container)
         elif name in process:
