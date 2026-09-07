@@ -12,6 +12,9 @@ Observed pilot result: both directions completed with one synthetic message;
 the repeat completed with zero new messages and the destination count remained
 one. Mail-in-a-Box uses `.` as its hierarchy delimiter, and the adapter created
 `MoveMailbox-Pilot.INBOX` / `MoveMailbox-Pilot-Reverse.INBOX` correctly.
+The real backend also completed `justLogin` and `dryRun` jobs against both
+servers with zero transferred messages and zero bytes; no dry-run destination
+folder was left behind.
 
 ## Prepare
 
