@@ -105,6 +105,8 @@ func (runner *ProcessRunner) Name() string {
 	return "imapsync-isolated-worker"
 }
 
+func (*ProcessRunner) ExecutionMode() string { return "embedded-worker" }
+
 func (runner *ProcessRunner) Available() bool {
 	if info, err := os.Stat(runner.config.Executable); err != nil || info.IsDir() {
 		return false

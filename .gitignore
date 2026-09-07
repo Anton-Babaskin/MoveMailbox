@@ -8,6 +8,9 @@
 
 # Local configuration and data
 .env
+.env.*
+!.env.example
+*.db.lock
 *.db
 *.db-shm
 *.db-wal

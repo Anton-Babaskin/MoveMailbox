@@ -1,12 +1,51 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"net"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/Anton-Babaskin/MoveMailbox/internal/credentials"
 )
+
+func TestKeygenProducesMatchingWorkerSecrets(t *testing.T) {
+	var output bytes.Buffer
+	if code := runKeygen(&output); code != 0 {
+		t.Fatalf("runKeygen code = %d", code)
+	}
+	values := make(map[string]string)
+	for _, line := range bytes.Split(bytes.TrimSpace(output.Bytes()), []byte{'\n'}) {
+		parts := bytes.SplitN(line, []byte{'='}, 2)
+		if len(parts) != 2 {
+			t.Fatalf("invalid keygen line %q", line)
+		}
+		values[string(parts[0])] = string(parts[1])
+	}
+	publicKey, err := credentials.ParseRecipientPublicKey(values["MOVEMAILBOX_WORKER_PUBLIC_KEY"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	privateKey, err := credentials.ParseRecipientPrivateKey(values["MOVEMAILBOX_WORKER_PRIVATE_KEY"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	opener, err := credentials.NewRecipientOpener(privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer opener.Destroy()
+	if !bytes.Equal(publicKey, opener.PublicKey()) {
+		t.Fatal("keygen public key does not match private key")
+	}
+	token, err := base64.StdEncoding.DecodeString(values["MOVEMAILBOX_WORKER_TOKEN"])
+	if err != nil || len(token) != 32 {
+		t.Fatalf("worker token length=%d error=%v", len(token), err)
+	}
+}
 
 func TestDefaultDatabasePathUsesPrivateApplicationDirectory(t *testing.T) {
 	configDirectory, err := os.UserConfigDir()

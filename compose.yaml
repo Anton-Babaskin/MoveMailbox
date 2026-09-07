@@ -28,9 +28,13 @@ services:
       MOVEMAILBOX_MAX_ACTIVE_PER_SESSION: ${MOVEMAILBOX_MAX_ACTIVE_PER_SESSION:-1}
       MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE: ${MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE:-120}
       MOVEMAILBOX_IP_REQUESTS_PER_MINUTE: ${MOVEMAILBOX_IP_REQUESTS_PER_MINUTE:-600}
-      MOVEMAILBOX_MASTER_KEY: ${MOVEMAILBOX_MASTER_KEY:-}
       MOVEMAILBOX_CREDENTIAL_TTL: ${MOVEMAILBOX_CREDENTIAL_TTL:-24h}
       MOVEMAILBOX_WORKER_LEASE_TTL: ${MOVEMAILBOX_WORKER_LEASE_TTL:-2h}
+      MOVEMAILBOX_WORKER_URL: ${MOVEMAILBOX_WORKER_URL:-http://movemailbox-worker:8090}
+      # Opt-in is restricted to the private, non-published Compose network.
+      MOVEMAILBOX_WORKER_ALLOW_HTTP: ${MOVEMAILBOX_WORKER_ALLOW_HTTP:-true}
+      MOVEMAILBOX_WORKER_PUBLIC_KEY: ${MOVEMAILBOX_WORKER_PUBLIC_KEY:-}
+      MOVEMAILBOX_WORKER_TOKEN: ${MOVEMAILBOX_WORKER_TOKEN:-}
     read_only: true
     tmpfs:
       # imapsync uses these paths for transient runtime and HOME/work data.
@@ -46,5 +50,52 @@ services:
     cpus: ${MOVEMAILBOX_CPU_LIMIT:-2.0}
     mem_limit: ${MOVEMAILBOX_MEMORY_LIMIT:-1g}
 
+  movemailbox-worker:
+    profiles: ["hosted"]
+    build:
+      context: .
+      args:
+        VERSION: ${MOVEMAILBOX_BUILD_VERSION:-dev}
+    image: movemailbox:local
+    platform: linux/amd64
+    user: "nobody:nogroup"
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 1m
+    command: ["worker-service"]
+    environment:
+      MOVEMAILBOX_WORKER_ADDR: 0.0.0.0:8090
+      MOVEMAILBOX_WORKER_DATABASE: /worker-data/worker.db
+      MOVEMAILBOX_WORKER_PRIVATE_KEY: ${MOVEMAILBOX_WORKER_PRIVATE_KEY:-}
+      MOVEMAILBOX_WORKER_TOKEN: ${MOVEMAILBOX_WORKER_TOKEN:-}
+      MOVEMAILBOX_WORKER_MAX_CONCURRENT: ${MOVEMAILBOX_WORKER_MAX_CONCURRENT:-2}
+      MOVEMAILBOX_WORKER_MAX_ATTEMPTS: ${MOVEMAILBOX_WORKER_MAX_ATTEMPTS:-3}
+      MOVEMAILBOX_WORKER_MAX_JOBS: ${MOVEMAILBOX_WORKER_MAX_JOBS:-1024}
+      MOVEMAILBOX_WORKER_JOB_TIMEOUT: ${MOVEMAILBOX_WORKER_JOB_TIMEOUT:-24h}
+      # Container termination kills all imapsync children before the next start.
+      MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED: "true"
+      MOVEMAILBOX_WORKER_LEASE_TTL: ${MOVEMAILBOX_WORKER_LEASE_TTL:-30s}
+      MOVEMAILBOX_DEMO: ${MOVEMAILBOX_DEMO:-false}
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+      - /var/tmp:size=256m,mode=1777,noexec,nosuid,nodev
+    volumes:
+      - movemailbox-worker-data:/worker-data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: ${MOVEMAILBOX_WORKER_PIDS_LIMIT:-256}
+    cpus: ${MOVEMAILBOX_WORKER_CPU_LIMIT:-2.0}
+    mem_limit: ${MOVEMAILBOX_WORKER_MEMORY_LIMIT:-1g}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8090/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
 volumes:
   movemailbox-data:
+  movemailbox-worker-data:

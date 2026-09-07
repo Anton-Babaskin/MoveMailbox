@@ -44,6 +44,7 @@ var (
 	ErrOwnerRequired          = errors.New("не указан владелец задания")
 	ErrEngineUnavailable      = errors.New("движок миграции недоступен")
 	ErrPersistenceUnavailable = errors.New("хранилище истории недоступно")
+	ErrStopUnconfirmed        = errors.New("worker не подтвердил остановку; повторите после восстановления связи")
 )
 
 const (
@@ -410,6 +411,9 @@ func (m *Manager) StorageStatus() (kind string, healthy bool) {
 // ExecutionMode distinguishes the local in-process engine from the encrypted
 // isolated-worker path used by public deployments.
 func (m *Manager) ExecutionMode() string {
+	if reporter, ok := m.worker.(interface{ ExecutionMode() string }); ok {
+		return reporter.ExecutionMode()
+	}
 	if m.worker != nil {
 		return "isolated-worker"
 	}
@@ -434,6 +438,23 @@ func (m *Manager) cancelJob(ownerID, id string, enforceOwner bool) error {
 	if terminal(record.view.Status) {
 		m.mu.Unlock()
 		return ErrJobFinished
+	}
+	if m.workerSurvivesShutdown() {
+		// Do not report a successful stop until the independent worker has
+		// durably accepted it. On network failure leave the job observable.
+		m.mu.Unlock()
+		cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
+		err := m.worker.Delete(cleanupContext, id)
+		cleanupCancel()
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrStopUnconfirmed, err)
+		}
+		m.mu.Lock()
+		record, ok = m.jobs[id]
+		if !ok || terminal(record.view.Status) {
+			m.mu.Unlock()
+			return nil
+		}
 	}
 	cancel := record.cancel
 	m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена")
@@ -484,20 +505,25 @@ func (m *Manager) subscribeFrom(ownerID, id string, afterSequence uint64, enforc
 	return subscriber.stream, func() { m.removeSubscriber(subscriber) }, true
 }
 
-// Shutdown rejects new work, cancels queued and active jobs, clears all stored
-// credentials and waits for manager-owned goroutines. It is safe to call more
-// than once. If an engine ignores cancellation, the supplied context bounds
-// how long Shutdown waits.
+// Shutdown rejects new work and waits for manager-owned goroutines. Local work
+// is cancelled and deleted; durable remote jobs are detached so a restarted
+// API can reconnect to them. It is safe to call more than once.
 func (m *Manager) Shutdown(ctx context.Context) error {
 	cleanupIDs := make([]string, 0)
+	preserveRemoteJobs := m.workerSurvivesShutdown()
 	m.mu.Lock()
 	if !m.shuttingDown {
 		m.shuttingDown = true
 		for id, record := range m.jobs {
 			if !terminal(record.view.Status) {
-				cleanupIDs = append(cleanupIDs, id)
 				record.cancel()
-				m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена: приложение завершает работу")
+				if preserveRemoteJobs {
+					clearRequest(&record.request)
+					_ = m.persistLocked(record, true)
+				} else {
+					cleanupIDs = append(cleanupIDs, id)
+					m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена: приложение завершает работу")
+				}
 			} else {
 				clearRequest(&record.request)
 			}
@@ -550,6 +576,9 @@ func (m *Manager) run(ctx context.Context, id string) {
 	case m.queue <- struct{}{}:
 		defer func() { <-m.queue }()
 	case <-ctx.Done():
+		if m.shuttingDownWithDurableWorker() {
+			return
+		}
 		m.finish(id, StatusCancelled, migrator.Result{}, "Миграция отменена")
 		return
 	}
@@ -575,6 +604,18 @@ func (m *Manager) run(ctx context.Context, id string) {
 	var err error
 	if m.worker != nil {
 		defer func() {
+			if m.shuttingDownWithDurableWorker() {
+				return
+			}
+			if m.workerSurvivesShutdown() {
+				m.mu.Lock()
+				record, exists := m.jobs[id]
+				durable := exists && terminal(record.view.Status) && m.persistLocked(record, true) == nil
+				m.mu.Unlock()
+				if !durable {
+					return
+				}
+			}
 			cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), storeOperationTimeout)
 			_ = m.worker.Delete(cleanupContext, id)
 			cleanupCancel()
@@ -590,6 +631,9 @@ func (m *Manager) run(ctx context.Context, id string) {
 	}
 	if err != nil {
 		if errors.Is(err, context.Canceled) || ctx.Err() != nil {
+			if m.shuttingDownWithDurableWorker() {
+				return
+			}
 			m.finish(id, StatusCancelled, result, "Миграция отменена")
 			return
 		}
@@ -597,6 +641,17 @@ func (m *Manager) run(ctx context.Context, id string) {
 		return
 	}
 	m.finish(id, StatusCompleted, result, "")
+}
+
+func (m *Manager) workerSurvivesShutdown() bool {
+	survivor, ok := m.worker.(ShutdownSurvivor)
+	return ok && survivor.SurvivesManagerShutdown()
+}
+
+func (m *Manager) shuttingDownWithDurableWorker() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.shuttingDown && m.workerSurvivesShutdown()
 }
 
 func (m *Manager) publish(id string, event migrator.Event) {

@@ -492,6 +492,8 @@ func writeManagerError(w http.ResponseWriter, err error) {
 		writeErrorCode(w, http.StatusServiceUnavailable, "manager.shutting_down", err.Error())
 	case errors.Is(err, jobs.ErrPersistenceUnavailable):
 		writeErrorCode(w, http.StatusServiceUnavailable, "storage.unavailable", "история заданий временно недоступна")
+	case errors.Is(err, jobs.ErrStopUnconfirmed):
+		writeErrorCode(w, http.StatusServiceUnavailable, "worker.stop_unconfirmed", jobs.ErrStopUnconfirmed.Error())
 	default:
 		writeErrorCode(w, http.StatusBadRequest, "validation.request", err.Error())
 	}

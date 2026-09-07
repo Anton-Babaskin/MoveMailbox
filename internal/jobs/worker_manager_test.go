@@ -16,6 +16,8 @@ type fakeMigrationWorker struct {
 	recoverable map[string]bool
 	deleted     map[string]bool
 	closed      bool
+	deleteErr   error
+	survives    bool
 	started     chan string
 	release     chan struct{}
 }
@@ -91,6 +93,9 @@ func (worker *fakeMigrationWorker) Recoverable(_ context.Context, id string) (bo
 func (worker *fakeMigrationWorker) Delete(_ context.Context, id string) error {
 	worker.mu.Lock()
 	defer worker.mu.Unlock()
+	if worker.deleteErr != nil {
+		return worker.deleteErr
+	}
 	delete(worker.prepared, id)
 	delete(worker.recoverable, id)
 	worker.deleted[id] = true
@@ -105,6 +110,8 @@ func (worker *fakeMigrationWorker) Close() error {
 	worker.closed = true
 	return nil
 }
+
+func (worker *fakeMigrationWorker) SurvivesManagerShutdown() bool { return worker.survives }
 
 func TestManagerWorkerPathClearsRequestBeforeExecution(t *testing.T) {
 	worker := newFakeMigrationWorker()
@@ -186,9 +193,130 @@ func TestManagerClosesWorkerWhenHistoryLoadFails(t *testing.T) {
 	}
 }
 
+func TestManagerDetachesDurableWorkerJobAcrossAPIRestart(t *testing.T) {
+	store := &snapshotTestStore{}
+	worker := newFakeMigrationWorker()
+	worker.survives = true
+	worker.started = make(chan string, 1)
+	worker.release = make(chan struct{})
+	manager, err := NewManagerWithWorker(&controlledEngine{available: true}, worker, Config{MaxConcurrent: 1, CompletedTTL: -1}, store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	view, err := manager.Start(validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-worker.started:
+	case <-time.After(time.Second):
+		t.Fatal("durable worker did not start")
+	}
+	shutdownManager(t, manager)
+	worker.mu.Lock()
+	deleted := worker.deleted[view.ID]
+	worker.mu.Unlock()
+	if deleted {
+		t.Fatal("API shutdown deleted a durable remote worker job")
+	}
+	if len(store.snapshots) != 1 || terminal(store.snapshots[0].View.Status) {
+		t.Fatalf("persisted durable job = %+v", store.snapshots)
+	}
+
+	resumedWorker := newFakeMigrationWorker()
+	resumedWorker.survives = true
+	resumedWorker.recoverable[view.ID] = true
+	resumed, err := NewManagerWithWorker(&controlledEngine{available: true}, resumedWorker, Config{MaxConcurrent: 1, CompletedTTL: -1}, store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completed := waitForStatus(t, resumed, view.ID, StatusCompleted)
+	if completed.Transferred != 3 {
+		t.Fatalf("resumed durable job = %+v", completed)
+	}
+	shutdownManager(t, resumed)
+}
+
 type snapshotTestStore struct {
 	memoryStore
 	snapshots []Snapshot
+}
+
+func TestRemoteStopIsNotReportedUntilWorkerConfirms(t *testing.T) {
+	worker := newFakeMigrationWorker()
+	worker.survives = true
+	worker.started = make(chan string, 1)
+	worker.release = make(chan struct{})
+	worker.deleteErr = errors.New("network unavailable")
+	manager, err := NewManagerWithWorker(&controlledEngine{available: true}, worker, Config{MaxConcurrent: 1, CompletedTTL: -1}, memoryStore{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownManager(t, manager) })
+	view, err := manager.Start(validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-worker.started:
+	case <-time.After(time.Second):
+		t.Fatal("worker did not start")
+	}
+	if err := manager.Cancel(view.ID); !errors.Is(err, ErrStopUnconfirmed) {
+		t.Fatalf("stop = %v", err)
+	}
+	current, _ := manager.Get(view.ID)
+	if current.Status != StatusRunning {
+		t.Fatal("reported cancellation without worker acknowledgement")
+	}
+	worker.mu.Lock()
+	worker.deleteErr = nil
+	worker.mu.Unlock()
+	if err := manager.Cancel(view.ID); err != nil {
+		t.Fatal(err)
+	}
+	waitForStatus(t, manager, view.ID, StatusCancelled)
+}
+
+type terminalFailingStore struct {
+	memoryStore
+	writes chan struct{}
+}
+
+func (store terminalFailingStore) Save(_ context.Context, snapshot Snapshot) error {
+	if terminal(snapshot.View.Status) {
+		store.writes <- struct{}{}
+		return errors.New("disk unavailable")
+	}
+	return nil
+}
+
+func TestRemoteResultRemainsIfAPITerminalSnapshotCannotBeSaved(t *testing.T) {
+	worker := newFakeMigrationWorker()
+	worker.survives = true
+	store := terminalFailingStore{writes: make(chan struct{}, 8)}
+	manager, err := NewManagerWithWorker(&controlledEngine{available: true}, worker, Config{MaxConcurrent: 1, CompletedTTL: -1}, store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { shutdownManager(t, manager) })
+	view, err := manager.Start(validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for attempt := 0; attempt < 2; attempt++ {
+		select {
+		case <-store.writes:
+		case <-time.After(time.Second):
+			t.Fatal("terminal snapshot save was not attempted")
+		}
+	}
+	worker.mu.Lock()
+	deleted := worker.deleted[view.ID]
+	worker.mu.Unlock()
+	if deleted {
+		t.Fatal("worker result removed before durable API acknowledgement")
+	}
 }
 
 type loadFailingWorkerStore struct{ memoryStore }

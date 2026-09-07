@@ -20,14 +20,28 @@ All notable changes to MoveMailbox are documented here.
 - Added a separate one-job worker process for migrations, connection tests and
   folder discovery; its structured protocol is redacted and never includes
   mailbox passwords or the master key.
+- Added an independently deployable authenticated worker service with a separate
+  durable queue, bounded retries, API reconnect support and isolated Compose
+  resources.
+- Added X25519 recipient envelopes with HKDF-SHA256 and AES-256-GCM, allowing
+  the API to submit jobs without holding any key capable of decrypting them.
+- Added atomic prepare/activate admission, replay-resistant cancellation,
+  a single-service database lock and bounded queue/event retention.
+- Added a demo hard-kill drill for native processes and two hardened CI
+  containers, including API reconnect, worker retry and strict-mirror protection.
 
 ### Changed
 
 - Raised the minimum Go version to 1.25 and selected the current pure-Go SQLite
   dependency line so known fixed Windows dependency vulnerabilities are not
   retained in release binaries.
-- Interrupted jobs are restored as failed after restart because mailbox
-  passwords are intentionally never written to the history database.
+- Interrupted local jobs are restored as failed; independent hosted jobs can
+  reconnect to their worker record without resubmitting passwords.
+- Strict mirror never automatically retries after a failed/interrupted attempt.
+- Worker HTTP redirects are refused; non-loopback plaintext transport requires
+  an explicit private-network opt-in, and tokens cannot be passed as CLI flags.
+- Corrected a race between worker status reads and event-sequence reads, and
+  preserved observable jobs during transient worker transport failures.
 - Technical event messages and folder display values are length-bounded before
   entering browser or persistent history.
 

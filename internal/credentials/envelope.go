@@ -34,16 +34,18 @@ var (
 // ciphertext is safe to persist, while the master key must remain outside the
 // database and backups.
 type Envelope struct {
-	Version    int       `json:"version"`
-	KeyID      string    `json:"keyId"`
-	JobID      string    `json:"jobId"`
-	CreatedAt  time.Time `json:"createdAt"`
-	ExpiresAt  time.Time `json:"expiresAt"`
-	Nonce      []byte    `json:"nonce"`
-	Ciphertext []byte    `json:"ciphertext"`
+	Version            int       `json:"version"`
+	KeyID              string    `json:"keyId"`
+	JobID              string    `json:"jobId"`
+	CreatedAt          time.Time `json:"createdAt"`
+	ExpiresAt          time.Time `json:"expiresAt"`
+	EphemeralPublicKey []byte    `json:"ephemeralPublicKey,omitempty"`
+	Nonce              []byte    `json:"nonce"`
+	Ciphertext         []byte    `json:"ciphertext"`
 }
 
 func (envelope Envelope) Clone() Envelope {
+	envelope.EphemeralPublicKey = append([]byte(nil), envelope.EphemeralPublicKey...)
 	envelope.Nonce = append([]byte(nil), envelope.Nonce...)
 	envelope.Ciphertext = append([]byte(nil), envelope.Ciphertext...)
 	return envelope

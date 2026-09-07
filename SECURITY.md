@@ -6,15 +6,16 @@ MoveMailbox is currently intended for local and trusted-network use. Do
 not expose the preview directly to the public internet. Public mode now adds
 signed guest sessions, CSRF protection, request limits and job ownership, but
 it is not yet approved for public traffic. Authenticated encrypted credential
-envelopes and one-job worker processes are implemented; independently deployed
-workers, external key isolation and shared multi-instance limits remain.
+envelopes, an independently deployable worker and API/worker key isolation are
+implemented; trusted HTTPS, egress enforcement, operations and shared
+multi-instance limits remain launch gates.
 
 The Docker Compose profile is defense in depth for trusted deployments, not a
 public-hosting security boundary. It binds to loopback, runs as a non-root user,
 uses a read-only root filesystem, drops Linux capabilities and places `/tmp`
 and `/var/tmp` on memory-backed filesystems. A public service still requires an
-trusted HTTPS gateway, proxy-level abuse limits, isolated workers and a durable
-queue.
+trusted HTTPS gateway, proxy-level abuse limits, worker egress filtering and
+operational monitoring.
 
 The public-mode cookie is `HttpOnly`, `Secure`, `SameSite=Lax` and signed with
 `MOVEMAILBOX_SESSION_SECRET`. Use at least 32 random bytes, keep it outside the
@@ -50,26 +51,54 @@ while real credentials are present. In a hosted edition this in-memory
 handoff is not a substitute for encrypted durable secret storage with short
 retention and per-job access controls.
 
-In public mode, credential-bearing connection tests, folder reads and
-migrations cross an encrypted worker boundary. Migration requests are sealed
-with AES-256-GCM under a per-job key derived from a random external master key.
-Only ciphertext, expiry metadata and renewable exclusive leases enter SQLite.
-The worker clears `MOVEMAILBOX_MASTER_KEY` before launching imapsync, and normal
-completion, failure or cancellation deletes the envelope. A hard kill can leave
-ciphertext until its TTL; expiry cleanup removes it automatically.
+In the hosted topology, credential-bearing connection tests, folder reads and
+migrations cross an authenticated worker-service boundary. The API has only an
+X25519 public recipient key. It creates an ephemeral key for each envelope,
+derives an AES-256-GCM key with HKDF-SHA256 and authenticates the job ID, key ID
+and expiry metadata. Only the worker container receives the matching private
+key. The API does not retain the ephemeral private key. A database dump and the
+API's long-lived public key cannot decrypt envelopes. A compromised live API
+can still capture newly entered passwords and holds the internal service token;
+recipient encryption does not make the API safe to compromise.
 
-The current preview starts the worker as a child process, so the API host still
-receives the master key at startup. This reduces credential lifetime and process
-exposure but is not the final hosted key boundary. Before public launch, run the
-worker under a separate service identity and give only that service access to
-the decrypting key or KMS operation.
+The worker keeps its ciphertext queue, bounded events and terminal results in a
+separate SQLite volume. An OS-level database lock admits one service process;
+renewable per-job leases coordinate credential use. Normal
+completion, final failure or cancellation deletes the envelope; a hard stop
+leaves only expiring ciphertext. Accepted work survives API restarts, and an
+interrupted non-destructive worker attempt is retried at most the configured
+number of times when whole-process-tree recovery is enabled (as in Compose).
+Native daemons default to failing interrupted attempts for manual review because
+killing a parent does not necessarily stop its imapsync children. Strict mirror
+is never automatically retried after an error or crash.
 
-The local SQLite database stores credential-free migration metadata. In public
-mode the same database may additionally contain authenticated ciphertext and
-lease metadata, never plaintext requests. Regression and end-to-end tests scan
-the database, WAL and shared-memory files for test passwords. Treat mailbox
-identifiers, ciphertext and logs as private metadata and protect the database
-file and backups anyway.
+Admission is staged: ciphertext and queue metadata are committed together, then
+the API persists its owner/job record before activating execution. Cancellation
+is acknowledged only after the worker stores it. Terminal tombstones remain for
+48 hours to block replay of a still-valid envelope. Queue capacity and event
+history are bounded. A transport outage does not cause a fresh migration.
+
+HTTP worker redirects are refused. HTTPS is required except for loopback or an
+explicit `MOVEMAILBOX_WORKER_ALLOW_HTTP=true` private-network opt-in. Compose
+does not publish the worker port. Internal HTTP encrypts credential envelopes,
+not bearer tokens or returned metadata; never send it across an untrusted network.
+
+The older master-key child-process path remains available only behind
+`MOVEMAILBOX_EMBEDDED_WORKER=true` for development and self-hosted compatibility.
+Do not enable that fallback on the public service.
+
+The API SQLite database stores credential-free migration metadata. The separate
+worker database contains authenticated ciphertext, lease/status metadata and
+redacted bounded events, never plaintext requests. Regression and end-to-end
+tests scan database, WAL and shared-memory files for test passwords. Treat
+mailbox identifiers, ciphertext and logs as private metadata and protect both
+volumes and their backups anyway.
+
+Deleting a SQLite row is logical deletion, not guaranteed secure erasure from
+WAL, free pages, disks or backups. Ciphertext plus a subsequently stolen worker
+private key can expose historical credentials. TTL is enforced by application
+code; it does not make a retained ciphertext mathematically undecryptable.
+Go/runtime copies also prevent a guarantee of complete memory zeroization.
 
 ## Safe shutdown and updates
 
