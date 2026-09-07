@@ -22,15 +22,17 @@ func TestRealImapsyncTLSVerification(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, mode := range []SecurityMode{SecurityTLS, SecurityStartTLS} {
-		for _, trusted := range []bool{false, true} {
-			name := string(mode) + "/untrusted"
-			if trusted {
-				name = string(mode) + "/trusted"
-			}
+		for _, scenario := range []string{"untrusted", "trusted", "wrong-peer"} {
+			trusted := scenario != "untrusted"
+			wantSuccess := scenario == "trusted"
+			name := string(mode) + "/" + scenario
 			t.Run(name, func(t *testing.T) {
 				cert, _ := testCertificate(t)
+				if scenario == "wrong-peer" {
+					cert, _ = testCertificateForIP(t, "127.0.0.2")
+				}
 				var logins atomic.Int32
-				options := imapServerOptions{security: mode, certificate: cert, acceptLogin: true, ignoreServeError: !trusted, onLogin: func() { logins.Add(1) }}
+				options := imapServerOptions{security: mode, certificate: cert, acceptLogin: true, ignoreServeError: !wantSuccess, onLogin: func() { logins.Add(1) }}
 				source := startIMAPTestServer(t, options)
 				destination := startIMAPTestServer(t, options)
 				r := testRequest()
@@ -55,7 +57,7 @@ func TestRealImapsyncTLSVerification(t *testing.T) {
 				if ctx.Err() != nil {
 					t.Fatalf("imapsync timed out instead of finishing: %v", ctx.Err())
 				}
-				if trusted {
+				if wantSuccess {
 					if err != nil || logins.Load() != 2 {
 						t.Fatalf("trusted control failed: err=%v logins=%d", err, logins.Load())
 					}
