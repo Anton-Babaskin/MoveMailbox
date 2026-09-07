@@ -32,7 +32,8 @@ history.
   STARTTLS, with a manual override when a provider needs something different.
 - **Safe preflight:** source and destination are tested before migration starts.
 - **Useful control:** migrate every folder or choose specific folders, place the
-  result under a destination subfolder, preserve dates and flags, or run dry.
+  result under a destination subfolder, preserve dates and flags, run dry, or
+  use an imapsync preflight mode without copying messages.
 - **Visible work:** Server-Sent Events stream progress, folder names, metrics,
   logs, completion, and cancellation state into the UI.
 - **Durable local history:** credential-free SQLite snapshots survive restarts;
@@ -74,6 +75,24 @@ confirmation action. The API also rejects unconfirmed strict-mirror requests.
 > Test strict mirror with **Dry run** and make a backup before using it on an
 > important destination mailbox. The source mailbox is not deleted or modified,
 > but destination cleanup can be irreversible.
+
+### Advanced preflight modes
+
+The expanded **Migration options** menu also exposes the same useful preflight
+modes as imapsync's online UI:
+
+- **Verbose only** (`--justverbose`) prints the planned command flow without a
+  synchronization run.
+- **Check credentials only** (`--justlogin`) verifies authentication on both
+  mailboxes.
+- **Show folder sizes only** (`--justfoldersizes`) reports message counts and
+  mailbox volume without copying.
+- **Create folders only** (`--justfolders`) creates the destination folder
+  structure without transferring messages.
+
+These modes can be combined with **Dry run** where the selected imapsync
+version supports both flags. They are intentionally opt-in; the default action
+remains a normal copy that preserves dates and flags.
 
 ## Quick start
 

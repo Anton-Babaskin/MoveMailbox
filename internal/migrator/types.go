@@ -66,6 +66,10 @@ type Options struct {
 	SyncFlags             bool     `json:"syncFlags"`
 	PreserveDates         bool     `json:"preserveDates"`
 	DryRun                bool     `json:"dryRun"`
+	JustVerbose           bool     `json:"justVerbose"`
+	JustLogin             bool     `json:"justLogin"`
+	JustFolderSizes       bool     `json:"justFolderSizes"`
+	JustFolders           bool     `json:"justFolders"`
 	Folders               []string `json:"folders,omitempty"`
 	DestinationSubfolder  string   `json:"destinationSubfolder,omitempty"`
 	StrictMirror          bool     `json:"strictMirror"`

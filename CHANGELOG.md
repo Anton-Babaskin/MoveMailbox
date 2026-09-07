@@ -6,6 +6,11 @@ All notable changes to MoveMailbox are documented here.
 
 ### Added
 
+- Added imapsync-compatible advanced migration modes in the expanded options
+  menu: verbose-only, credential check, folder-size report and folder creation
+  without message transfer. The selected modes are passed to imapsync as
+  `--justverbose`, `--justlogin`, `--justfoldersizes` and `--justfolders`.
+
 - Added credential-free SQLite job history with schema versioning, bounded
   snapshots and recovery after application restarts.
 - Added storage health reporting and a persistent Docker data volume.
