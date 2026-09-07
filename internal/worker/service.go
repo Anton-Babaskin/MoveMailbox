@@ -527,10 +527,17 @@ func (service *Service) operationEndpoint(response http.ResponseWriter, request 
 		writeServiceJSON(response, http.StatusNotFound, map[string]string{"error": "operation not found"})
 		return
 	}
+	// A finishing response or an empty queue scan can briefly own a slot.
+	// Give it a bounded chance to release instead of reporting false saturation.
+	slotWait := time.NewTimer(250 * time.Millisecond)
+	defer slotWait.Stop()
 	select {
 	case service.slots <- struct{}{}:
 		defer func() { <-service.slots; service.signal() }()
-	default:
+	case <-request.Context().Done():
+		return
+	case <-slotWait.C:
+		response.Header().Set("Retry-After", "1")
 		response.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}

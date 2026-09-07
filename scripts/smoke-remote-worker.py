@@ -162,17 +162,24 @@ def run(binary, image, directory):
         until(lambda: request("api", job_path, cookie=cookie)[0]["transferred"] > 0)
         kill("api")
         start("api")
-        until(lambda: request("api", job_path, cookie=cookie)[0]["status"] == "running")
+        until(lambda: request("api", job_path, cookie=cookie)[0]["status"] in ("running", "completed"))
+        def completed(path):
+            state, _ = request("api", path, cookie=cookie)
+            assert state["status"] not in ("failed", "cancelled"), "recovered demo job failed"
+            return state if state["status"] == "completed" else None
+        result = until(lambda: completed(job_path))
+        assert result["transferred"] == 954, "unexpected API-recovered demo count"
+        # Use a fresh job for the worker kill so a slow API boot cannot miss the
+        # first job's short demo execution window.
+        retry_job, _ = request("api", "/api/jobs", payload, cookie, csrf, 202)
+        retry_path = "/api/jobs/" + retry_job["id"]
+        until(lambda: request("api", retry_path, cookie=cookie)[0]["transferred"] > 0)
         kill("worker")
         # Keep API up during the outage: a dropped HTTP connection must not cancel work.
         time.sleep(0.4)
         start("worker")
         until(lambda: request("worker", "/healthz")[0]["available"])
-        def completed():
-            state, _ = request("api", job_path, cookie=cookie)
-            assert state["status"] not in ("failed", "cancelled"), "recovered demo job failed"
-            return state if state["status"] == "completed" else None
-        result = until(completed)
+        result = until(lambda: completed(retry_path))
         assert result["transferred"] == 954, "unexpected recovered demo count"
         mirror_payload = payload | {"options": {"strictMirror": True, "strictMirrorConfirmed": True}}
         mirror, _ = request("api", "/api/jobs", mirror_payload, cookie, csrf, 202)
@@ -196,8 +203,9 @@ def run(binary, image, directory):
             log.close()
         with closing(sqlite3.connect(directory / "worker" / "worker.db")) as database:
             assert database.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] == 0
-            attempts = database.execute("SELECT attempts FROM worker_jobs WHERE job_id = ?", (job["id"],)).fetchone()[0]
-            assert attempts == 2, "API restart must not create a worker attempt; worker crash should retry once"
+            assert database.execute("SELECT attempts FROM worker_jobs WHERE job_id = ?", (job["id"],)).fetchone()[0] == 1
+            attempts = database.execute("SELECT attempts FROM worker_jobs WHERE job_id = ?", (retry_job["id"],)).fetchone()[0]
+            assert attempts == 2, "worker crash should retry once"
             assert database.execute("SELECT attempts FROM worker_jobs WHERE job_id = ?", (mirror["id"],)).fetchone()[0] == 1
         for path in directory.rglob("*"):
             if path.is_file():
