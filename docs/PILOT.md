@@ -1,9 +1,17 @@
 # Real-mailbox MVP acceptance test
 
-Status: **not yet executed**. Automated demo and local protocol tests do not
-replace this pilot. Use two disposable accounts on different providers, never
-production mailboxes. Keep the public website in demo mode until release gates
-in [ROADMAP.md](ROADMAP.md) are satisfied.
+Status: **pilot executed 2026-09-07 in the local Docker API/worker lab**. The
+two Mail-in-a-Box servers completed protected IMAP connection checks, folder
+discovery, one-way transfers in both directions, destination-subfolder mapping,
+and a repeat without duplicates. The test did not use strict mirror or delete
+any message. Automated demo and local protocol tests still do not replace a
+broader provider pilot. Keep the public website in demo mode until release
+gates in [ROADMAP.md](ROADMAP.md) are satisfied.
+
+Observed pilot result: both directions completed with one synthetic message;
+the repeat completed with zero new messages and the destination count remained
+one. Mail-in-a-Box uses `.` as its hierarchy delimiter, and the adapter created
+`MoveMailbox-Pilot.INBOX` / `MoveMailbox-Pilot-Reverse.INBOX` correctly.
 
 ## Prepare
 
