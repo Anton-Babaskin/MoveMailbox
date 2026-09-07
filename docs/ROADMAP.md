@@ -59,9 +59,10 @@ Implemented in the current slice:
 Remaining before this stage is complete:
 
 - validate the production egress firewall and secret-manager/KMS deployment;
-- run real-mailbox pilot tests; the crash drill deliberately uses the demo engine.
-  Use [PILOT.md](PILOT.md) for the reproducible acceptance matrix; its status
-  remains not executed until disposable provider accounts are tested.
+- run the remaining production deployment checks. A real two-way Mail-in-a-Box
+  pilot, preflight checks, repeat-without-duplicates and an authorized strict-
+  mirror test are recorded in [PILOT.md](PILOT.md); broader provider coverage
+  and the VPS deployment gate are still pending.
 
 Exit criteria: database dumps alone cannot decrypt credentials; the API retains
 no worker private key; persisted migration envelopes are opened only after a
