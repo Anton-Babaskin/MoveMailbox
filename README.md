@@ -129,14 +129,34 @@ directories, persists credential-free history in the `movemailbox-data` volume,
 and applies configurable CPU, memory, and process limits.
 
 The upstream imapsync image is currently built for `linux/amd64`, so the Compose
-service declares that platform explicitly. Protected guest sessions can be
-enabled with `MOVEMAILBOX_PUBLIC_MODE=true`, a unique session secret, HTTPS and
-an explicit `MOVEMAILBOX_ALLOWED_HOSTS` value. Public mode also requires a
-random credential master key and durable SQLite: migration credentials are
-stored only as authenticated ciphertext and opened by a one-job worker process.
-This is still not a public-launch approval; the hosted deployment must move the
-master key into an independently isolated worker service before accepting real
-customers.
+service declares that platform explicitly.
+
+For the separated hosted topology, generate a recipient key pair and internal
+token once, copy the output into a private environment file, and add the public
+gateway settings:
+
+```bash
+umask 077
+./movemailbox keygen > .env.hosted
+chmod 600 .env.hosted
+# Add MOVEMAILBOX_PUBLIC_MODE=true, MOVEMAILBOX_SESSION_SECRET and
+# MOVEMAILBOX_ALLOWED_HOSTS=movemailbox.com to .env.hosted.
+docker compose --env-file .env.hosted --profile hosted up --build
+```
+
+Never commit `.env.hosted`. The API container receives only the X25519 public
+key and the internal authentication token. The private recipient key and
+encrypted job queue live only in `movemailbox-worker`, on a separate volume.
+The worker continues accepted jobs across API restarts and applies bounded
+retries after an interrupted worker run. Destructive strict-mirror jobs never
+automatically retry after failure or interruption. This topology is a security boundary,
+but not by itself a public-launch approval: trusted HTTPS, egress filtering,
+operational monitoring and the remaining roadmap gates are still required.
+
+See the [worker deployment and recovery guide](docs/WORKER.md) for key isolation,
+transport security, native-process limitations and the reproducible crash drill.
+Keep `.env.hosted` as a Compose interpolation file: **do not source it into the
+API process**, which deliberately refuses to start with a worker private key.
 
 ## How it works
 
@@ -177,7 +197,12 @@ from the source.
 | `--ip-rate` | `MOVEMAILBOX_IP_REQUESTS_PER_MINUTE` | `600` | request limit for a directly connected client IP per minute |
 | `--credential-ttl` | `MOVEMAILBOX_CREDENTIAL_TTL` | `24h` | maximum encrypted credential-envelope lifetime |
 | `--worker-lease-ttl` | `MOVEMAILBOX_WORKER_LEASE_TTL` | `2h` | renewable exclusive worker lease |
-| — | `MOVEMAILBOX_MASTER_KEY` | empty | base64 for at least 32 random bytes; required in public mode |
+| `--worker-url` | `MOVEMAILBOX_WORKER_URL` | empty | independent worker service URL required for hosted public mode |
+| `--worker-public-key` | `MOVEMAILBOX_WORKER_PUBLIC_KEY` | empty | worker X25519 public recipient key |
+| — | `MOVEMAILBOX_WORKER_TOKEN` | empty | internal API/worker authentication token; environment only |
+| — | `MOVEMAILBOX_WORKER_ALLOW_HTTP` | `false` | opt in to cleartext HTTP only on a trusted private network; Compose enables it |
+| `--embedded-worker` | `MOVEMAILBOX_EMBEDDED_WORKER` | `false` | development-only child-worker fallback |
+| — | `MOVEMAILBOX_MASTER_KEY` | empty | legacy embedded-worker key; never use for the hosted topology |
 
 Legacy `MM_*` variables remain supported during the preview transition.
 Loopback hostnames are allowed automatically. Do not use wildcards in
@@ -191,9 +216,9 @@ configure the HTTPS proxy to enforce its own IP limit before forwarding traffic.
 It accepts public hostnames and public IP addresses on standard IMAP ports 143
 and 993, while rejecting private, loopback, link-local and reserved targets.
 The unrestricted manual-port option remains available in local/self-hosted mode.
-Generate the preview master key with a cryptographically secure secret manager
-or a command such as `openssl rand -base64 32`; never commit it or back it up
-with the SQLite database. Changing it invalidates every pending envelope.
+Generate the worker recipient keys and token with `movemailbox keygen`. Changing
+the private key invalidates pending worker envelopes, so rotate it only after
+draining or explicitly cancelling the queue.
 
 ## Development
 
@@ -204,6 +229,16 @@ go vet ./...
 go run ./cmd/mailbox-migrator --demo
 ```
 
+Independent process recovery smoke test (Python 3.9+, demo only, no real IMAP traffic):
+
+```bash
+go build -o bin/movemailbox ./cmd/mailbox-migrator
+python3 scripts/smoke-remote-worker.py --binary bin/movemailbox
+```
+
+On Windows use `bin/movemailbox.exe`. CI runs the same drill against two hardened
+containers with fresh persistent volumes, including strict-mirror crash protection.
+
 CI also runs the race detector, vulnerability scanning, cross-platform builds,
 and a hardened Docker build.
 
@@ -213,7 +248,7 @@ internal/api/           local HTTP API and security headers
 internal/credentials/   authenticated encrypted envelopes and leases
 internal/jobs/          queue, lifecycle, events, cancellation, history
 internal/migrator/      IMAP preflight and imapsync integration
-internal/worker/        isolated worker protocol and process runner
+internal/worker/        embedded and independently deployable worker runtimes
 internal/webui/dist/    embedded browser interface
 scripts/windows/        Windows launchers and release helpers
 ```

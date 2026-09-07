@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -94,8 +95,8 @@ func Execute(ctx context.Context, config ExecuteConfig) error {
 
 func keepLease(ctx context.Context, store credentials.Store, jobID, workerID string, leaseTTL time.Duration, result chan<- error, cancel context.CancelFunc) {
 	interval := leaseTTL / 3
-	if interval < time.Second {
-		interval = time.Second
+	if interval < 100*time.Millisecond {
+		interval = 100 * time.Millisecond
 	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -140,7 +141,9 @@ func (encoder *protocolEncoder) err() error {
 }
 
 func scrubSecrets(value string, request migrator.Request) string {
-	for _, secret := range []string{request.Source.Password, request.Destination.Password} {
+	secrets := []string{request.Source.Password, request.Destination.Password}
+	sort.Slice(secrets, func(i, j int) bool { return len(secrets[i]) > len(secrets[j]) })
+	for _, secret := range secrets {
 		if secret != "" {
 			value = strings.ReplaceAll(value, secret, "[REDACTED]")
 		}

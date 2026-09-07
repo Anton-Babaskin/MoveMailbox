@@ -1,19 +1,21 @@
 # Architecture
 
 MoveMailbox is web-first and desktop-ready. Local mode keeps one process for a
-simple desktop experience. Public mode uses the same binary in two roles: the
-HTTP/API process and short-lived isolated worker processes.
+simple desktop experience. Hosted mode runs the same binary as two independently
+configured services with separate databases and key access.
 
 ```text
 Web UI / future Wails shell
             |
        HTTP + SSE API
             |
-     Go job manager
-       /          \
- local engine   encrypted envelope → leased worker process
-       \          /
-        imapsync adapter / future native IMAP engine
+     Go job manager (API database, public key only)
+       /                         \
+ local engine       authenticated internal HTTP
+                              |
+                encrypted envelope → durable worker queue
+                              |
+                 worker private key → imapsync adapter
 ```
 
 ## Boundaries
@@ -23,7 +25,7 @@ Web UI / future Wails shell
 - `internal/jobs` owns job state, cancellation, concurrency and event fan-out.
 - `internal/api` validates HTTP input and streams progress with SSE.
 - `internal/credentials` seals requests and owns ciphertext leases.
-- `internal/worker` implements the credential-free JSON-lines process protocol.
+- `internal/worker` implements both the local child worker and remote service.
 - `internal/webui` embeds the production interface in the Go binary.
 - `cmd/mailbox-migrator` is a thin process entry point.
 
@@ -38,14 +40,33 @@ is still required. The hardened Compose profile mounts `/tmp` and imapsync's
 home/work directory (`/var/tmp`) as tmpfs so its transient working data is not
 committed to an image layer or container filesystem.
 
-In public mode the API immediately seals each migration request with AES-256-GCM.
-An HMAC-based KDF derives a different encryption key for every opaque job ID;
-the job ID, key ID and timestamps are authenticated as associated data. SQLite
-stores the ciphertext, expiry and an atomic renewable lease. A worker process
-leases exactly one job, opens it, clears the master key from its environment
-before launching imapsync, and emits only redacted structured events. Connection
-tests and folder discovery use the same worker process boundary with transient
-encrypted envelopes passed through stdin rather than written to disk.
+In hosted mode the API immediately seals each request to the worker's X25519
+public key. A fresh ephemeral X25519 exchange and HKDF-SHA256 produce the
+AES-256-GCM key for every envelope; job identity, key identity and timestamps
+are authenticated data. The API retains no decryption key after sealing. The independent
+worker atomically stages ciphertext and queue metadata. Once the API has saved
+the owner/job snapshot, it activates the job. The worker then acquires a lease,
+opens the envelope and exposes redacted status/events. Connection
+tests and folder discovery use the same encryption boundary without persistence.
+
+The remote queue is independent of an API request lifetime. API shutdown merely
+detaches its poller; the worker keeps running and persists result/event cursors.
+After restart, the API reloads the credential-free job snapshot and reconnects.
+With whole-process-tree supervision, worker restart requeues ordinary interrupted
+work with bounded attempts. Imapsync normally skips already-copied messages, but
+provider behavior still needs real-mailbox verification. Destructive strict mirror
+is marked for manual review, never automatically replayed. Native recovery is
+opt-in, because surviving child processes must be ruled out first. The SQLite
+implementation is intentionally one API and one worker service per deployment;
+an OS lock prevents a second worker service opening the same database. PostgreSQL
+and distributed fencing are the later multi-worker data plane.
+
+Status and event cursors are read in one SQLite transaction. A worker transport
+outage only delays polling; the API does not recreate or cancel the job. Terminal
+records remain for 48 hours, and active credential rows are logically deleted
+on completion/failure/cancel or expiry. This is not secure erasure of old pages
+or backups. Worker admission is capped at 1024 queued plus retained records by
+default, and each record retains its last 128 redacted events.
 
 The HTTP boundary accepts only exact configured `Host` values plus automatic
 loopback entries. Custom domains belong in `MOVEMAILBOX_ALLOWED_HOSTS`; this
@@ -75,10 +96,10 @@ per-tenant quotas or back-pressure shared across workers.
 Local history is also written to a versioned SQLite store. Persisted snapshots
 contain job status, mailbox identifiers, counters and bounded events, but the
 store interface cannot receive a plaintext migration request or credentials.
-Direct local jobs found after restart are marked failed. Public jobs can be
-requeued only while a valid encrypted envelope remains. SQLite is the current
-desktop/self-hosted implementation; the hosted edition will replace it with
-PostgreSQL and a separately deployed worker/key boundary.
+Direct local jobs found after restart are marked failed. Hosted jobs reconnect
+while their remote worker record remains (terminal results no longer need an envelope). SQLite is the
+current single-VPS implementation; the hosted edition will later replace it
+with PostgreSQL for multiple API/worker replicas.
 
 ## Build and container trust
 
@@ -91,8 +112,8 @@ PostgreSQL and a separately deployed worker/key boundary.
   final imapsync base is version `2.319`, runs as `nobody:nogroup` and is
   currently limited to `linux/amd64`.
 - The image carries the application version through a linker variable and OCI
-  metadata, exposes a health check and needs writable access only to its two
-  memory-backed temporary directories.
+  metadata and a health check. Writable paths are the two memory-backed temporary
+  directories and the role-specific persistent data volume.
 
 ## Desktop direction
 
@@ -104,11 +125,10 @@ Wails layer; this keeps desktop and hosted editions compatible.
 ## Before public hosting
 
 The preview intentionally binds to loopback by default. Guest ownership,
-short-lived encrypted envelopes and worker process isolation are implemented.
-A hosted edition still needs an independently deployed worker service with KMS
-access unavailable to the API, bounded retry/stuck-job recovery, an egress
-firewall, audit logging, durable shared limits and an HTTPS reverse proxy before
-it is safe to expose publicly.
+recipient-encrypted envelopes, an independently deployed worker, bounded retry
+and API restart recovery are implemented. A public deployment still needs an
+egress firewall, audit logging, durable shared limits, monitoring and a trusted
+HTTPS reverse proxy before it is safe to expose broadly.
 
 Deployments should drain running jobs before restart. Normal process/container
 shutdown must receive a grace period for job cancellation and child-process

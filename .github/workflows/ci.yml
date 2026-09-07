@@ -124,6 +124,9 @@ jobs:
           test "$(docker image inspect movemailbox:ci --format '{{.Config.User}}')" = "nobody:nogroup"
           test "$(docker image inspect movemailbox:ci --format '{{.Config.Healthcheck.Test}}')" != "[]"
 
+      - name: Verify independent API and worker hard-kill recovery
+        run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci
+
       - name: Run container health check with hardened settings
         shell: bash
         run: |

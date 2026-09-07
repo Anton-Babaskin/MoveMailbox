@@ -18,6 +18,13 @@ type MigrationWorker interface {
 	Close() error
 }
 
+// ShutdownSurvivor is implemented by durable remote workers whose jobs keep
+// running while the API process restarts. Local child-process workers omit it
+// and retain the cancel-and-delete shutdown behavior.
+type ShutdownSurvivor interface {
+	SurvivesManagerShutdown() bool
+}
+
 // Snapshot is the credential-free state persisted for one migration job.
 // Requests are intentionally absent: IMAP passwords must remain runtime-only.
 type Snapshot struct {

@@ -36,7 +36,7 @@ without seeing a login screen, may attach a verified email without interrupting
 a free job, and can pay for a one-time transfer through a magic link. A full
 account is needed only for persistent paid history or business features.
 
-## 3. Secure credential envelopes and workers — in progress
+## 3. Secure credential envelopes and workers — implementation complete; deployment gates pending
 
 Implemented in the current slice:
 
@@ -46,17 +46,26 @@ Implemented in the current slice:
 - connection tests and folder discovery through transient encrypted workers;
 - deletion after normal completion, failure and cancellation;
 - tamper, wrong-key, expiry, concurrent-lease and plaintext-leak tests.
+- an independent authenticated worker HTTP service and separate worker volume;
+- X25519 recipient encryption so the API holds no decrypting key;
+- a durable worker queue with bounded events/results and bounded retries;
+- API detach/reconnect behavior and interrupted-worker recovery;
+- a non-root worker Compose service with independent resource limits.
+- atomic staged admission, idempotent activation and cancellation tombstones;
+- one service owner per SQLite database and consistent event snapshots;
+- no automatic retry for destructive strict mirror;
+- a reproducible API/worker hard-kill drill for Windows processes and CI containers.
 
 Remaining before this stage is complete:
 
-- move the worker from an API child process to an independently deployed service;
-- allow only the worker service/KMS identity to decrypt envelopes;
-- bounded retries, graceful draining and stuck-job recovery across hard restarts;
-- isolated non-root worker containers with CPU, memory, PID and wall-time limits.
+- validate the production egress firewall and secret-manager/KMS deployment;
+- run real-mailbox pilot tests; the crash drill deliberately uses the demo engine.
 
-Exit criteria: database and backup dumps cannot decrypt credentials, only the
-leased worker can open an envelope, and forced-restart tests leave no reusable
-credential material.
+Exit criteria: database dumps alone cannot decrypt credentials; the API retains
+no worker private key; persisted migration envelopes are opened only after a
+lease; forced restart/cancel tests pass with no plaintext credentials in storage.
+Encrypted remnants may exist in WAL/backups and remain sensitive. Multi-replica
+coordination belongs to stage 4, not the single-VPS preview.
 
 ## 4. Hosted data plane
 

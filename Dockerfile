@@ -29,7 +29,7 @@ LABEL org.opencontainers.image.title="MoveMailbox" \
 
 USER root
 COPY --from=builder --chown=nobody:nogroup /out/movemailbox /usr/local/bin/movemailbox
-RUN mkdir -p /data && chown nobody:nogroup /data
+RUN mkdir -p /data /worker-data && chown nobody:nogroup /data /worker-data
 
 ENV MOVEMAILBOX_ADDR=0.0.0.0:8080 \
     MOVEMAILBOX_IMAPSYNC_BIN=imapsync \

@@ -38,7 +38,9 @@ func OpenSQLiteStore(path string) (*SQLiteStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open credential SQLite: %w", err)
 	}
-	database.SetMaxOpenConns(4)
+	// SQLite writer coordination is more predictable with one connection per
+	// store handle; WAL still allows the separate job/event handle to read.
+	database.SetMaxOpenConns(1)
 	store := &SQLiteStore{db: database}
 	if err := store.initialize(context.Background()); err != nil {
 		_ = database.Close()
@@ -101,6 +103,12 @@ func (store *SQLiteStore) Put(ctx context.Context, envelope Envelope) error {
 		return fmt.Errorf("store credential envelope: %w", err)
 	}
 	return nil
+}
+
+// ReleaseLease is called only after the owning engine has fully stopped.
+func (store *SQLiteStore) ReleaseLease(ctx context.Context, jobID, workerID string) error {
+	_, err := store.db.ExecContext(ctx, "UPDATE credential_envelopes SET lease_owner = NULL, lease_until = NULL WHERE job_id = ? AND lease_owner = ?", jobID, workerID)
+	return err
 }
 
 func (store *SQLiteStore) Lease(ctx context.Context, jobID, workerID string, now time.Time, duration time.Duration) (Envelope, error) {
