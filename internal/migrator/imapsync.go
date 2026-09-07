@@ -111,6 +111,18 @@ func buildArgs(request Request) []string {
 	if request.Options.DryRun {
 		args = append(args, "--dry")
 	}
+	if request.Options.JustVerbose {
+		args = append(args, "--justverbose")
+	}
+	if request.Options.JustLogin {
+		args = append(args, "--justlogin")
+	}
+	if request.Options.JustFolderSizes {
+		args = append(args, "--justfoldersizes")
+	}
+	if request.Options.JustFolders {
+		args = append(args, "--justfolders")
+	}
 	if request.Options.PreserveDates {
 		args = append(args, "--syncinternaldates")
 	}

@@ -66,6 +66,20 @@ func TestBuildArgsIncludesFolderAndDestructiveOptions(t *testing.T) {
 	}
 }
 
+func TestBuildArgsIncludesAdvancedImapsyncModes(t *testing.T) {
+	request := testRequest()
+	request.Options.JustVerbose = true
+	request.Options.JustLogin = true
+	request.Options.JustFolderSizes = true
+	request.Options.JustFolders = true
+	args := buildArgs(request)
+	for _, expected := range []string{"--justverbose", "--justlogin", "--justfoldersizes", "--justfolders"} {
+		if !slices.Contains(args, expected) {
+			t.Fatalf("expected advanced option %q in %v", expected, args)
+		}
+	}
+}
+
 func TestImapsyncEnvironmentReplacesInheritedPasswords(t *testing.T) {
 	environment := imapsyncEnvironment([]string{
 		"PATH=/usr/bin",
