@@ -81,8 +81,7 @@ confirmation action. The API also rejects unconfirmed strict-mirror requests.
 The expanded **Migration options** menu also exposes the same useful preflight
 modes as imapsync's online UI:
 
-- **Verbose only** (`--justverbose`) prints the planned command flow without a
-  synchronization run.
+- **Dry run** (`--dry`) previews the planned operations without modifying mailboxes.
 - **Check credentials only** (`--justlogin`) verifies authentication on both
   mailboxes.
 - **Show folder sizes only** (`--justfoldersizes`) reports message counts and
@@ -90,9 +89,12 @@ modes as imapsync's online UI:
 - **Create folders only** (`--justfolders`) creates the destination folder
   structure without transferring messages.
 
-These modes can be combined with **Dry run** where the selected imapsync
-version supports both flags. They are intentionally opt-in; the default action
-remains a normal copy that preserves dates and flags.
+Choose at most one of credential check, folder-size report or folder creation.
+These modes may be combined with **Dry run**, but not with **Strict mirror**.
+Dry run alone can preview a confirmed strict mirror. The legacy API field
+`justVerbose` is an alias for `dryRun`, not an imapsync command-line option.
+The default remains a normal copy. The bundled utility sends these options to
+the backend; the separate marketing website is still a no-data demo.
 
 ## Quick start
 

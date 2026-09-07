@@ -67,15 +67,31 @@ func TestBuildArgsIncludesFolderAndDestructiveOptions(t *testing.T) {
 }
 
 func TestBuildArgsIncludesAdvancedImapsyncModes(t *testing.T) {
-	request := testRequest()
-	request.Options.JustVerbose = true
-	request.Options.JustLogin = true
-	request.Options.JustFolderSizes = true
-	request.Options.JustFolders = true
-	args := buildArgs(request)
-	for _, expected := range []string{"--justverbose", "--justlogin", "--justfoldersizes", "--justfolders"} {
-		if !slices.Contains(args, expected) {
-			t.Fatalf("expected advanced option %q in %v", expected, args)
+	for _, tc := range []struct {
+		options Options
+		flag    string
+	}{
+		{Options{DryRun: true}, "--dry"},
+		{Options{JustVerbose: true}, "--dry"},
+		{Options{DryRun: true, JustVerbose: true}, "--dry"},
+		{Options{JustLogin: true}, "--justlogin"},
+		{Options{JustFolderSizes: true}, "--justfoldersizes"},
+		{Options{JustFolders: true}, "--justfolders"},
+	} {
+		request := testRequest()
+		request.Options = tc.options
+		if err := request.Validate(); err != nil {
+			t.Fatal(err)
+		}
+		args := buildArgs(request)
+		count := 0
+		for _, arg := range args {
+			if arg == tc.flag {
+				count++
+			}
+		}
+		if count != 1 || slices.Contains(args, "--justverbose") || slices.Contains(args, "--delete2") {
+			t.Fatalf("incorrect preflight arguments: %v", args)
 		}
 	}
 }

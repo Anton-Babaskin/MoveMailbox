@@ -198,6 +198,12 @@ def run(binary, image, directory):
         second, _ = request("api", "/api/jobs", payload, cookie, csrf, 202)
         request("api", "/api/jobs/" + second["id"] + "/cancel", {}, cookie, csrf, 202)
         assert request("api", "/api/jobs/" + second["id"], cookie=cookie)[0]["status"] == "cancelled"
+        for mode in ("dryRun", "justVerbose", "justLogin", "justFolderSizes", "justFolders"):
+            preflight, _ = request("api", "/api/jobs", payload | {"options": {mode: True}}, cookie, csrf, 202)
+            outcome = until(lambda: completed("/api/jobs/" + preflight["id"]))
+            assert outcome["transferred"] == 0 and outcome["bytes"] == 0, f"{mode} reported copied mail"
+        for options in ({"justLogin": True, "justFolders": True}, {"justFolders": True, "strictMirror": True, "strictMirrorConfirmed": True}):
+            request("api", "/api/jobs", payload | {"options": options}, cookie, csrf, 400)
         if image:
             for name, source in (("api", "/data/movemailbox.db"), ("worker", "/worker-data/worker.db")):
                 for suffix in ("", "-wal", "-shm"):
@@ -216,7 +222,7 @@ def run(binary, image, directory):
             if path.is_file():
                 raw = path.read_bytes()
                 assert not any(secret.encode() in raw for secret in passwords), f"password found in {path.name}"
-        print("PASS: demo connection/folders, API kill/reconnect, worker kill/retry, 954 messages, strict mirror not replayed after kill, owner isolation, cancel, no plaintext in DB/WAL/logs")
+        print("PASS: demo preflight modes and conflict rejection, connection/folders, API kill/reconnect, worker kill/retry, 954 messages, strict mirror not replayed after kill, owner isolation, cancel, no plaintext in DB/WAL/logs")
     finally:
         for name in ("api", "worker"):
             kill(name)

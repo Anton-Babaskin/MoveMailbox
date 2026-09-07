@@ -39,6 +39,25 @@ func (DemoEngine) ListFolders(ctx context.Context, _ Endpoint) ([]Folder, error)
 }
 
 func (DemoEngine) Migrate(ctx context.Context, request Request, emit func(Event)) (Result, error) {
+	if err := request.Validate(); err != nil {
+		return Result{}, err
+	}
+	if err := ctx.Err(); err != nil {
+		return Result{}, err
+	}
+	if request.Options.DryRun || request.Options.JustVerbose || request.Options.JustLogin || request.Options.JustFolderSizes || request.Options.JustFolders {
+		message := "Демо: пробный запуск; изменения не выполнялись"
+		switch {
+		case request.Options.JustLogin:
+			message = "Демо: проверка доступа завершена; реальных подключений не было"
+		case request.Options.JustFolderSizes:
+			message = "Демо: оценка размера завершена; реальные размеры не запрашивались"
+		case request.Options.JustFolders:
+			message = "Демо: создание структуры папок смоделировано; реальные папки не создавались"
+		}
+		emit(Event{Type: "progress", Phase: "verifying", Progress: 100, Message: message, Timestamp: time.Now()})
+		return Result{}, nil
+	}
 	folders := []struct {
 		name     string
 		messages int64

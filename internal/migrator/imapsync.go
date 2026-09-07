@@ -85,6 +85,9 @@ func (e ImapsyncEngine) ListFolders(ctx context.Context, endpoint Endpoint) ([]F
 }
 
 func (e ImapsyncEngine) Migrate(ctx context.Context, request Request, emit func(Event)) (Result, error) {
+	if err := request.Validate(); err != nil {
+		return Result{}, err
+	}
 	binary, err := e.resolveBinary()
 	if err != nil {
 		return Result{}, errors.New("imapsync не найден; установите его или запустите приложение в Docker")
@@ -108,11 +111,8 @@ func buildArgs(request Request) []string {
 	}
 	args = append(args, securityArgs("1", request.Source.Security)...)
 	args = append(args, securityArgs("2", request.Destination.Security)...)
-	if request.Options.DryRun {
+	if request.Options.DryRun || request.Options.JustVerbose {
 		args = append(args, "--dry")
-	}
-	if request.Options.JustVerbose {
-		args = append(args, "--justverbose")
 	}
 	if request.Options.JustLogin {
 		args = append(args, "--justlogin")

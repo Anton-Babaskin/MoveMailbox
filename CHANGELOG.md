@@ -9,7 +9,9 @@ All notable changes to MoveMailbox are documented here.
 - Added imapsync-compatible advanced migration modes in the expanded options
   menu: verbose-only, credential check, folder-size report and folder creation
   without message transfer. The selected modes are passed to imapsync as
-  `--justverbose`, `--justlogin`, `--justfoldersizes` and `--justfolders`.
+  `--dry`, `--justlogin`, `--justfoldersizes` and `--justfolders`.
+- Reject conflicting preflight modes and their combination with strict mirror.
+  Demo preflight runs no longer report simulated messages as transferred.
 
 - Added credential-free SQLite job history with schema versioning, bounded
   snapshots and recovery after application restarts.

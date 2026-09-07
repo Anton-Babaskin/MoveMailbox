@@ -2,6 +2,8 @@ const byId = (id) => document.getElementById(id);
 
 const translations = {
   ru: {
+    jobCompleted: "Задание завершено",
+    runMode: "Режим запуска", modeCopy: "Перенос писем", modeLogin: "Только проверить доступ", modeSizes: "Только показать размеры папок", modeFolders: "Только создать папки — без писем",
     history: "История", checkingEngine: "Проверяем движок…", heroTitle: "Перенесите почту.", heroAccent: "Спокойно и красиво.",
     heroDescription: "Подключите два почтовых ящика — мы аккуратно перенесём папки, письма, даты и флаги. Без консоли и сложных инструкций.",
     passwordsNotStored: "Пароли не сохраняются", oneWay: "Только в одну сторону", canCancel: "Можно отменить", accountNotRequired: "Без регистрации MoveMailbox", from: "ОТКУДА", source: "Источник",
@@ -44,6 +46,8 @@ const translations = {
     byteUnits: ["Б", "КБ", "МБ", "ГБ", "ТБ"], locale: "ru-RU",
   },
   en: {
+    jobCompleted: "Task completed",
+    runMode: "Run mode", modeCopy: "Copy messages", modeLogin: "Check credentials only", modeSizes: "Show folder sizes only", modeFolders: "Create folders only — no messages",
     history: "History", checkingEngine: "Checking engine…", heroTitle: "Move your email.", heroAccent: "Calmly and clearly.",
     heroDescription: "Connect two mailboxes and MoveMailbox will carefully copy folders, messages, dates, and flags — without a console or complex instructions.",
     passwordsNotStored: "Passwords are not stored", oneWay: "One-way copy", canCancel: "Cancellation supported", accountNotRequired: "No MoveMailbox account required", from: "FROM", source: "Source",
@@ -321,6 +325,7 @@ function applyFolderSelection() {
 
 function updateStrictMirrorUI() {
   const button = byId("strictMirrorButton");
+  button.disabled = byId("runMode").value !== "copy";
   button.setAttribute("aria-pressed", String(state.strictMirror));
   byId("strictMirrorSummary").textContent = state.strictMirror ? t("strictMirrorOn") : t("strictMirrorOff");
   const safety = document.querySelector(".safety-note span");
@@ -329,6 +334,7 @@ function updateStrictMirrorUI() {
 }
 
 function toggleStrictMirror() {
+  if (byId("runMode").value !== "copy") return;
   if (state.strictMirror) {
     state.strictMirror = false;
     updateStrictMirrorUI();
@@ -340,6 +346,7 @@ function toggleStrictMirror() {
 }
 
 function enableStrictMirror() {
+  if (byId("runMode").value !== "copy") return;
   if (!byId("strictMirrorAcknowledge").checked) return;
   state.strictMirror = true;
   updateStrictMirrorUI();
@@ -384,6 +391,9 @@ function requestPayload() {
       syncFlags: byId("syncFlags").checked,
       preserveDates: byId("preserveDates").checked,
       dryRun: byId("dryRun").checked,
+      justLogin: byId("runMode").value === "justLogin",
+      justFolderSizes: byId("runMode").value === "justFolderSizes",
+      justFolders: byId("runMode").value === "justFolders",
       folders: [...state.selectedFolders],
       destinationSubfolder: byId("destinationSubfolder").value.trim(),
       strictMirror: state.strictMirror,
@@ -649,12 +659,12 @@ function renderFinished(job) {
   if (job.status === "completed") {
     elements.progress.classList.add("completed");
     badgeText.lastChild.textContent = t("migrationCompletedBadge");
-    elements.title.textContent = t("mailTransferred");
+    elements.title.textContent = t("jobCompleted");
     elements.progressPhase.dataset.phase = "completed";
     elements.progressPhase.textContent = phaseLabel("completed");
     setIndeterminate(false);
     setProgress(100);
-    showToast(t("migrationCompleted"), t("transferredCount", { count: (job.transferred || 0).toLocaleString(t("locale")) }));
+    showToast(t("jobCompleted"), t("transferredCount", { count: (job.transferred || 0).toLocaleString(t("locale")) }));
   } else {
     elements.progress.classList.add("failed");
     badgeText.lastChild.textContent = job.status === "cancelled" ? t("migrationCancelledBadge") : t("attentionBadge");
@@ -792,7 +802,7 @@ function applyLocale() {
         ? t("migrationCompletedBadge")
         : (job.status === "cancelled" ? t("migrationCancelledBadge") : t("attentionBadge"));
       elements.title.textContent = job.status === "completed"
-        ? t("mailTransferred")
+        ? t("jobCompleted")
         : (job.status === "cancelled" ? t("migrationStopped") : t("migrationFailed"));
     }
   }
@@ -870,6 +880,10 @@ byId("applyFolderSelection").addEventListener("click", applyFolderSelection);
 byId("closeFolderModal").addEventListener("click", () => closeModal(elements.folderModal));
 byId("cancelFolderSelection").addEventListener("click", () => closeModal(elements.folderModal));
 byId("strictMirrorButton").addEventListener("click", toggleStrictMirror);
+byId("runMode").addEventListener("change", () => {
+  if (byId("runMode").value !== "copy") state.strictMirror = false;
+  updateStrictMirrorUI();
+});
 byId("strictMirrorAcknowledge").addEventListener("change", (event) => { byId("confirmStrictMirror").disabled = !event.target.checked; });
 byId("confirmStrictMirror").addEventListener("click", enableStrictMirror);
 byId("cancelStrictMirror").addEventListener("click", () => closeModal(elements.strictMirrorModal));
