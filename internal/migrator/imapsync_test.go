@@ -96,6 +96,26 @@ func TestBuildArgsIncludesAdvancedImapsyncModes(t *testing.T) {
 	}
 }
 
+func TestSecurityArgsRequireCertificateAndPeerVerification(t *testing.T) {
+	for _, side := range []string{"1", "2"} {
+		for _, host := range []string{"imap.example.com", "203.0.113.10", "2001:db8::10"} {
+			for _, mode := range []SecurityMode{SecurityTLS, SecurityStartTLS} {
+				args := securityArgs(side, Endpoint{Host: host, Security: mode})
+				for _, value := range []string{"SSL_verify_mode=1", "SSL_verifycn_scheme=imap", "SSL_verifycn_name=" + host} {
+					index := slices.Index(args, value)
+					if index < 1 || args[index-1] != "--sslargs"+side {
+						t.Fatalf("missing enforced TLS parameter %s: %v", value, args)
+					}
+				}
+			}
+		}
+		args := securityArgs(side, Endpoint{Security: SecurityPlain})
+		if slices.Contains(args, "--sslargs"+side) {
+			t.Fatalf("plain mode must not claim TLS verification: %v", args)
+		}
+	}
+}
+
 func TestImapsyncEnvironmentReplacesInheritedPasswords(t *testing.T) {
 	environment := imapsyncEnvironment([]string{
 		"PATH=/usr/bin",

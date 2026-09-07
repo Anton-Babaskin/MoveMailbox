@@ -14,11 +14,12 @@ ARG VERSION=dev
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 RUN go test ./...
+RUN CGO_ENABLED=0 go test -c -o /out/migrator-tests ./internal/migrator
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \
     -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=${VERSION}" \
     -o /out/movemailbox ./cmd/mailbox-migrator
 
-FROM ${IMAPSYNC_IMAGE}
+FROM ${IMAPSYNC_IMAGE} AS runtime
 
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="MoveMailbox" \
@@ -42,3 +43,10 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD ["wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8080/api/health"]
 ENTRYPOINT ["/usr/local/bin/movemailbox"]
+
+FROM runtime AS tls-test
+COPY --from=builder /out/migrator-tests /tmp/migrator-tests
+RUN MOVEMAILBOX_TEST_REAL_IMAPSYNC=1 /tmp/migrator-tests -test.run '^TestRealImapsyncTLSVerification$' -test.v
+
+# The default release image contains no test executable.
+FROM runtime AS release

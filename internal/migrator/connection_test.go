@@ -130,6 +130,7 @@ type imapServerOptions struct {
 	acceptLogin   bool
 	hangOnLogin   bool
 	closeOnLogout bool
+	onLogin       func()
 	// Some negative client tests intentionally abort a TLS handshake.
 	ignoreServeError bool
 }
@@ -216,6 +217,9 @@ func serveIMAPTestConnection(connection net.Conn, options imapServerOptions) err
 			writer = bufio.NewWriter(connection)
 			continue
 		case "LOGIN":
+			if options.onLogin != nil {
+				options.onLogin()
+			}
 			if options.hangOnLogin {
 				_, err := io.Copy(io.Discard, reader)
 				return err

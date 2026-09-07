@@ -36,6 +36,14 @@ ensure the proxy validates the public host and forwards that validated value in
 
 ## Credential handling
 
+The imapsync adapter explicitly enables certificate-chain and IMAP peer-name
+verification for both implicit TLS and STARTTLS. It does not inherit imapsync's
+permissive certificate defaults. An IP address requires a certificate valid for
+that IP; use the certificate's DNS name otherwise. There is no browser option to
+ignore certificate errors. Private CAs must be trusted by both the Go connection
+checker and the imapsync runtime; an in-memory Go TLSConfig does not configure Perl.
+Explicit plain IMAP remains a local-only, unencrypted compatibility mode.
+
 Mailbox passwords are highly sensitive runtime data. The imapsync adapter uses
 imapsync's dedicated `IMAPSYNC_PASSWORD1` and `IMAPSYNC_PASSWORD2`
 child-process environment variables instead of command-line arguments or

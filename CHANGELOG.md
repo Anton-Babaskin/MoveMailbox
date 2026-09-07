@@ -4,6 +4,11 @@ All notable changes to MoveMailbox are documented here.
 
 ## [Unreleased]
 
+### Security
+
+- Require certificate-chain and peer-name verification in imapsync for both
+  mailboxes, on TLS and STARTTLS, instead of relying on permissive defaults.
+
 ### Added
 
 - Added imapsync-compatible advanced migration modes in the expanded options
