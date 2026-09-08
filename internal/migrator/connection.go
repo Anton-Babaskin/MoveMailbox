@@ -94,7 +94,11 @@ func listIMAPFolders(parent context.Context, endpoint Endpoint, baseTLSConfig *t
 }
 
 func withAuthenticatedIMAPClient(parent context.Context, endpoint Endpoint, baseTLSConfig *tls.Config, use func(*imapclient.Client) error) error {
-	ctx, cancel := context.WithTimeout(parent, connectionTestTimeout)
+	return withIMAPTimeout(parent, endpoint, baseTLSConfig, connectionTestTimeout, use)
+}
+
+func withIMAPTimeout(parent context.Context, endpoint Endpoint, baseTLSConfig *tls.Config, timeout time.Duration, use func(*imapclient.Client) error) error {
+	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 
 	address := net.JoinHostPort(endpoint.Host, strconv.Itoa(endpoint.Port))

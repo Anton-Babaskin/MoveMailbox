@@ -79,6 +79,10 @@ coordination belongs to stage 4, not the single-VPS preview.
 - PostgreSQL store implementation and migrations;
 - durable multi-worker queue and idempotent job commands;
 - mailbox-size estimation before transfer;
+- Implemented September 8: worker-owned whole-mailbox admission check, default
+  decimal 5 GB, independent of folder selection; permanent fail-closed rejection.
+  See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
+  Execution-time overrun policy and per-customer quotas remain pending.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
