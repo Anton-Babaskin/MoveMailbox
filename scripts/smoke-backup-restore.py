@@ -80,6 +80,20 @@ def run(image):
         print("PASS: stopped paired DBs, integrity checks, no active worker jobs/envelopes, no synthetic password in backup", flush=True)
         # No service keys, tokens or cookie/session secrets are placed in backup.
         (backup / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        # A backup is not trusted merely because the file exists. Verify that
+        # truncation and a byte-level mutation are rejected before restore.
+        worker_backup = backup / "worker.db"
+        for label, mutate in (("truncated", lambda data: data[: max(512, len(data) // 3)]),
+                              ("corrupt", lambda data: data[:100] + bytes([data[100] ^ 0xFF]) + data[101:])):
+            damaged = backup / ("worker-" + label + ".db")
+            damaged.write_bytes(mutate(worker_backup.read_bytes()))
+            try:
+                with sqlite3.connect(damaged) as damaged_db:
+                    check = damaged_db.execute("PRAGMA integrity_check").fetchall()
+                assert check == [("ok",)], label + " backup unexpectedly passed integrity check"
+            except sqlite3.DatabaseError:
+                pass
+        print("PASS: truncated and byte-corrupted worker backups fail SQLite integrity validation", flush=True)
         pilot.docker("network", "create", restored)
         for role in ("worker", "api"):
             volume = restored + "-" + role + "-data"

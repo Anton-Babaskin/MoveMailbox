@@ -86,7 +86,10 @@ coordination belongs to stage 4, not the single-VPS preview.
 - WSL Docker verification passed on September 8: actual worker quota rejection,
   6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
-  Controlled mid-APPEND faults and backup restoration remain pending.
+  Controlled mid-APPEND faults and production backup retention remain pending.
+- September 8: recipient-key rotation and damaged/truncated backup checks passed;
+  clean restore into new Docker volumes also passed. A deterministic mid-APPEND
+  fault-injection proxy and production backup retention/restore runbook remain.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

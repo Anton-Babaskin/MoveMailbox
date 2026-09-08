@@ -114,9 +114,22 @@ there is no old-key keyring. Replace public/private halves together and restart
 both roles. Rotate the internal token on both sides. Rotating the session secret
 invalidates guest cookies, so coordinate it with retention and incident handling.
 
+The recipient-envelope rotation test confirms that a new X25519 key cannot open
+old envelopes, and the old key cannot open envelopes sealed to the new key. The
+safe sequence is therefore: stop admission, drain/cancel the queue, confirm zero
+leased envelopes, generate the new pair, deploy API public key and worker private
+key together, then resume admission. Do not delete the old key until the drain
+and incident-retention window has ended; it is required only to finish already
+accepted envelopes.
+
 Treat metadata, ciphertext and backups as sensitive. Logical deletion/TTL does
 not securely erase old SQLite pages or backups; a stolen private key can decrypt
 retained ciphertext. Do not include worker credentials in ordinary backups.
+Backups must be taken with both API and worker writers stopped (or by a tested
+consistent SQLite snapshot), include a manifest and SHA-256 checksums, and pass
+`PRAGMA integrity_check` before restore. A truncated or byte-corrupted copy must
+be rejected and never mounted as a live queue. Restore into empty volumes; do
+not overwrite the only working database.
 See [SECURITY.md](../SECURITY.md) for the precise threat boundary.
 
 Before public traffic: HTTPS/proxy abuse controls, verified egress blocking of
