@@ -36,6 +36,19 @@ type estimatedTestEngine struct {
 	called   bool
 }
 
+type growingEstimateEngine struct {
+	estimatedTestEngine
+	calls int
+}
+
+func (e *growingEstimateEngine) EstimateMailbox(context.Context, Endpoint) (MailboxEstimate, error) {
+	e.calls++
+	if e.calls == 1 {
+		return MailboxEstimate{Bytes: 400, Messages: 1, Folders: 1}, nil
+	}
+	return MailboxEstimate{Bytes: 600, Messages: 2, Folders: 1}, nil
+}
+
 func (e *estimatedTestEngine) EstimateMailbox(context.Context, Endpoint) (MailboxEstimate, error) {
 	return e.estimate, e.err
 }
@@ -76,6 +89,18 @@ func TestQuotaAdmission(t *testing.T) {
 				t.Fatal("upstream details leaked")
 			}
 		})
+	}
+}
+
+func TestQuotaAdmissionRejectsMailboxGrowthBetweenInventories(t *testing.T) {
+	engine := &growingEstimateEngine{}
+	request := Request{Source: Endpoint{Host: "source.test", Port: 993, Security: SecurityTLS, Username: "u", Password: "p"}, Destination: Endpoint{Host: "dest.test", Port: 993, Security: SecurityTLS, Username: "u", Password: "p"}}
+	_, err := (QuotaEngine{Engine: engine, MaxMailboxBytes: 500}).Migrate(context.Background(), request, nil)
+	if !errors.Is(err, ErrMailboxPolicy) {
+		t.Fatalf("expected growth to be rejected, got %v", err)
+	}
+	if engine.calls != 2 || engine.called {
+		t.Fatalf("growth check calls=%d migrationCalled=%v", engine.calls, engine.called)
 	}
 }
 

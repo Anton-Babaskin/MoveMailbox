@@ -59,6 +59,19 @@ func (e QuotaEngine) Migrate(ctx context.Context, request Request, emit func(Eve
 		if estimate.Bytes > e.MaxMailboxBytes {
 			return Result{}, fmt.Errorf("%w: source is %d bytes; limit is %d bytes", ErrMailboxPolicy, estimate.Bytes, e.MaxMailboxBytes)
 		}
+		// A mailbox can receive mail while the first inventory is running. Take a
+		// second read-only inventory immediately before invoking imapsync; a growth
+		// race is rejected instead of silently starting above the admission limit.
+		latest, err := estimator.EstimateMailbox(ctx, request.Source)
+		if err != nil || latest.Bytes < 0 || latest.Messages < 0 || latest.Folders < 0 {
+			return Result{}, fmt.Errorf("%w: source changed and could not be re-verified", ErrMailboxPolicy)
+		}
+		if emit != nil && latest != estimate {
+			emit(Event{Type: "log", Phase: "estimating", Message: fmt.Sprintf("Source changed during admission; rechecked at %d bytes, %d messages, %d folders", latest.Bytes, latest.Messages, latest.Folders)})
+		}
+		if latest.Bytes > e.MaxMailboxBytes {
+			return Result{}, fmt.Errorf("%w: source grew to %d bytes; limit is %d bytes", ErrMailboxPolicy, latest.Bytes, e.MaxMailboxBytes)
+		}
 	}
 	if err := ctx.Err(); err != nil {
 		return Result{}, err
