@@ -86,13 +86,14 @@ coordination belongs to stage 4, not the single-VPS preview.
 - WSL Docker verification passed on September 8: actual worker quota rejection,
   6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
-  Controlled mid-APPEND faults and production backup retention remain pending.
-- September 8: recipient-key rotation and damaged/truncated backup checks passed;
-  clean restore into new Docker volumes also passed. A deterministic mid-APPEND
-  fault-injection proxy and production backup retention/restore runbook remain.
-- September 8: deterministic TLS proxy observed and interrupted a real APPEND
-  after 131,072 bytes; imapsync returned exit 114 and did not report success.
-  Production backup/off-site runbook is now documented; provider drill remains.
+  Production backup retention remains pending.
+- September 8: key separation verified by unit tests; coordinated deployed key
+  rotation remains pending. Corrected backup validation rejects corrupt/truncated,
+  missing and inconsistent pairs; clean Docker restore passes. See PILOT.md.
+- September 8 corrected streaming proxy: exact 131,072-byte APPEND cut, exit 114,
+  zero committed partial messages, successful recovery and repeat without duplicates.
+  Lost acknowledgements after commit and an API-level proxy drill remain pending.
+- Production backup/off-site runbook is documented; encrypted provider drill remains.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

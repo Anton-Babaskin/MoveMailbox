@@ -55,6 +55,14 @@ real upload and restore, not just a successful local archive command.
    decrypt it on a trusted operator machine or ephemeral restore host.
 4. Verify manifest hashes, file ownership/mode, schema versions and exact
    `PRAGMA integrity_check = ok` before mounting anything.
+   Run `python3 scripts/backup_validation.py /path/to/backup` against the entire
+   pair before creating restored volumes. This checks required tables, terminal
+   job states, absence of envelopes and consistency of shared job identities.
+   It is a read-only gate and does not launch services or overwrite data.
+   SHA-256 detects damage relative to the manifest; it does not authenticate a
+   manifest modified by an attacker. Use the authenticated encrypted archive and
+   restricted off-site access for provenance. Retention can remove terminal rows
+   independently, so the validator does not require identical job-ID sets.
 5. Start a staging API/worker pair on private ports with the same image version.
    Confirm health, owner isolation, zero active jobs and zero credential
    envelopes. A damaged/truncated archive must fail here and must not be

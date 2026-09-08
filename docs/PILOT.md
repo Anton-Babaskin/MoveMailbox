@@ -145,20 +145,41 @@ real imapsync against the two authorized Mail-in-a-Box accounts:
   preflight modes, guest isolation, no synthetic passwords in DB/WAL/log files.
 
 Real cancellation/kill was observed after the child process started, not
-guaranteed during an in-flight IMAP APPEND. Mid-APPEND network cuts and ambiguous
-server acknowledgements still need a controlled fault-injection proxy test.
+guaranteed during an in-flight IMAP APPEND. The exact mid-literal cut is tested
+below; lost acknowledgements after a successful server commit remain untested.
 
 ### Deterministic APPEND fault injection
 
-`scripts/smoke-imap-append-drop.py` was run on September 8 against the same
-disposable attachment folder. Its TLS test proxy observed the destination
-`APPEND`, forwarded exactly 131,072 bytes of the literal, then closed both
-connections. The pinned imapsync returned exit 114 (destination APPEND rejected)
-and did not report success. This validates the error path and avoids falsely
-marking the job complete. The generated destination folder may contain a partial
-test message and must be inspected or removed manually; the harness never
-deletes it. The proxy intentionally terminates TLS only for this disposable
-fault test; it is not part of the production trust model.
+The original proxy counted payload by receive chunks and did not prove an exact
+cut. Its old exact-byte claim is superseded by the corrected September 8 run:
+
+- Streaming parser tests verify fragmented/coalesced commands, CRLF and braces
+  inside binary bodies, and synchronizing/non-synchronizing literal markers.
+- Real imapsync 2.319 declared 8,610,095 literal bytes; the proxy forwarded exactly
+  131,072 body bytes to the upstream TLS socket, then closed it. Exit code was 114.
+- Read-only destination inspection found zero messages after the cut.
+- Normal recovery and a subsequent repeat each left exactly one complete message;
+  SHA-256, flags and INTERNALDATE matched the source. The source stayed unchanged.
+- Target retained: `MoveMailbox-ProxyDrop-Exact-20260908.MoveMailbox-Attachment-546b1b366e`.
+
+The test verifies TLS on source, destination and the test proxy (a temporary CA
+trusted only by the test client). Mailbox passwords are supplied through Docker
+stdin into the child environment, not command arguments or container config.
+These are direct imapsync assertions; the test does not claim API/worker state
+transitions for this exact fault. No test messages are deleted.
+
+### Backup validator regression and corrected restore
+
+The original damaged-backup assertion was reversed: an `ok` integrity result
+could pass incorrectly. The corrected test fails if a damaged sample is accepted.
+The restore path now validates the entire pair before allocating restored resources:
+checksums, SQLite integrity, required tables, terminal jobs, empty envelopes and
+consistent states for shared job identities. Missing files are opened read-only
+and cannot silently become empty databases. Ten Python regression tests passed.
+
+Corrected Docker restore passed on September 8: original job `c382b899b4789989`,
+new job after restore `30c1b0443d58914b`; owner isolation and no terminal replay
+verified. Local backup retained at `/tmp/movemailbox-backup-o2d26iq_` in WSL.
 Initial recovery harness attempts hit a Docker `top` formatting issue (PID is
 required); the harness was corrected before the successful assertions above.
 

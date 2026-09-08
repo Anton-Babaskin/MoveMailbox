@@ -5,6 +5,7 @@ Demo-only. No real mailbox credentials or network calls. Retains stopped labs
 and backup files for inspection. Never overwrites an existing database.
 """
 import argparse
+from contextlib import closing
 import hashlib
 import importlib.util
 import json
@@ -15,6 +16,8 @@ import sqlite3
 import tempfile
 import time
 import traceback
+
+from backup_validation import validate_pair
 
 
 def load(name, filename):
@@ -41,7 +44,7 @@ def run(image):
         return root / ("worker.db" if role == "worker" else "movemailbox.db")
 
     def connect(path):
-        return sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)
+        return closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True))
 
     try:
         pilot.start(prefix, 8184, image, demo=True)
@@ -71,7 +74,7 @@ def run(image):
                 if role == "worker":
                     assert source_db.execute("SELECT count(*) FROM worker_jobs WHERE status NOT IN ('completed','failed','cancelled')").fetchone()[0] == 0
                     assert source_db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] == 0
-                with sqlite3.connect(destination) as destination_db:
+                with closing(sqlite3.connect(destination)) as destination_db:
                     source_db.backup(destination_db)
                     assert destination_db.execute("PRAGMA integrity_check").fetchall() == [("ok",)]
             raw = destination.read_bytes()
@@ -88,12 +91,15 @@ def run(image):
             damaged = backup / ("worker-" + label + ".db")
             damaged.write_bytes(mutate(worker_backup.read_bytes()))
             try:
-                with sqlite3.connect(damaged) as damaged_db:
+                with closing(sqlite3.connect(damaged)) as damaged_db:
                     check = damaged_db.execute("PRAGMA integrity_check").fetchall()
-                assert check == [("ok",)], label + " backup unexpectedly passed integrity check"
+                if check == [("ok",)]:
+                    raise AssertionError(label + " backup unexpectedly passed integrity check")
             except sqlite3.DatabaseError:
                 pass
         print("PASS: truncated and byte-corrupted worker backups fail SQLite integrity validation", flush=True)
+        validate_pair(backup, manifest)
+        # All pair validation must succeed before allocating restored resources.
         pilot.docker("network", "create", restored)
         for role in ("worker", "api"):
             volume = restored + "-" + role + "-data"
@@ -103,7 +109,7 @@ def run(image):
             original = volume_db(prefix, role)
             source = backup / (role + ".db")
             assert hashlib.sha256(source.read_bytes()).hexdigest() == manifest["files"][role]
-            with connect(source) as db, sqlite3.connect(destination) as output:
+            with connect(source) as db, closing(sqlite3.connect(destination)) as output:
                 db.backup(output)
             os.chown(destination, original.stat().st_uid, original.stat().st_gid)
             os.chmod(destination, 0o600)
