@@ -63,6 +63,10 @@ Remaining before this stage is complete:
   pilot, preflight checks, repeat-without-duplicates and an authorized strict-
   mirror test are recorded in [PILOT.md](PILOT.md); broader provider coverage
   and the VPS deployment gate are still pending.
+- The September 8 corrected hosted pilot additionally verified actual worker
+  job rows, content/flags/internal dates, guest isolation, CSRF rejection,
+  strict mirror and terminal envelope cleanup. The September 7 transfers
+  exercised the local engine despite the presence of a worker container.
 
 Exit criteria: database dumps alone cannot decrypt credentials; the API retains
 no worker private key; persisted migration envelopes are opened only after a

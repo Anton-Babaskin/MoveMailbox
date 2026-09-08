@@ -4,12 +4,18 @@
 Run after building movemailbox:pilot. Existing resources are never replaced.
 Stop/restart with docker stop/start movemailbox-pilot-api movemailbox-pilot-worker.
 Docker administrators can inspect service keys in container environments.
+Public mode is required to select the remote runner. HTTP is loopback-only;
+test clients must explicitly replay the session cookie and CSRF token, or use
+a trusted local HTTPS proxy. Never disable public mode to bypass cookie handling.
 """
 import base64
+import argparse
 import json
 import os
 import secrets
 import subprocess
+import time
+import urllib.request
 
 IMAGE = "movemailbox:pilot"
 PREFIX = "movemailbox-pilot"
@@ -22,21 +28,20 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start():
+def start(prefix=PREFIX, port=8180):
     docker("image", "inspect", IMAGE)
     # Resolve all collisions before making any changes. Do not reuse unknown data.
-    for kind, names in (("container", [PREFIX + "-api", PREFIX + "-worker"]),
-                        ("volume", [PREFIX + "-api-data", PREFIX + "-worker-data"]),
-                        ("network", [PREFIX])):
+    for kind, names in (("container", [prefix + "-api", prefix + "-worker"]),
+                        ("volume", [prefix + "-api-data", prefix + "-worker-data"]),
+                        ("network", [prefix])):
         for name in names:
             result = subprocess.run(["docker", kind, "inspect", name], capture_output=True)
             if result.returncode == 0:
                 raise RuntimeError("Pilot resources already exist; restart them instead of overwriting")
     keys = dict(line.split("=", 1) for line in docker("run", "--rm", IMAGE, "keygen").splitlines())
-    public_mode = os.getenv("MOVEMAILBOX_PILOT_PUBLIC", "false").lower() == "true"
-    docker("network", "create", PREFIX)
+    docker("network", "create", prefix)
     for role in ("worker", "api"):
-        volume = PREFIX + "-" + role + "-data"
+        volume = prefix + "-" + role + "-data"
         docker("volume", "create", volume)
         values = {"MOVEMAILBOX_WORKER_TOKEN": keys["MOVEMAILBOX_WORKER_TOKEN"]}
         if role == "worker":
@@ -48,26 +53,23 @@ def start():
             })
         else:
             values.update({
-                "MOVEMAILBOX_PUBLIC_MODE": "true" if public_mode else "false",
+                "MOVEMAILBOX_PUBLIC_MODE": "true",
                 "MOVEMAILBOX_WORKER_PUBLIC_KEY": keys["MOVEMAILBOX_WORKER_PUBLIC_KEY"],
-                "MOVEMAILBOX_WORKER_URL": "http://" + PREFIX + "-worker:8090",
+                "MOVEMAILBOX_WORKER_URL": "http://" + prefix + "-worker:8090",
                 "MOVEMAILBOX_WORKER_ALLOW_HTTP": "true",
-                "MOVEMAILBOX_ALLOWED_HOSTS": "localhost:8180,127.0.0.1:8180",
+                "MOVEMAILBOX_ALLOWED_HOSTS": f"localhost:{port},127.0.0.1:{port}",
+                "MOVEMAILBOX_SESSION_SECRET": base64.b64encode(secrets.token_bytes(48)).decode(),
             })
-            if public_mode:
-                values.update({
-                    "MOVEMAILBOX_SESSION_SECRET": base64.b64encode(secrets.token_bytes(48)).decode(),
-                })
         environment = {key: value for key, value in os.environ.items() if not key.startswith(("MOVEMAILBOX_", "IMAPSYNC_PASSWORD"))}
         environment.update(values)
-        args = ["run", "--detach", "--name", PREFIX + "-" + role, "--network", PREFIX,
+        args = ["run", "--detach", "--name", prefix + "-" + role, "--network", prefix,
                 "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges:true",
                 "--init", "--pids-limit=128", "--memory=512m", "--cpus=1",
                 "--tmpfs=/tmp:size=64m,mode=1777,noexec,nosuid,nodev",
                 "--tmpfs=/var/tmp:size=64m,mode=1777,noexec,nosuid,nodev",
                 "--mount", "type=volume,src=" + volume + ",dst=" + ("/data" if role == "api" else "/worker-data")]
         if role == "api":
-            args += ["--publish", "127.0.0.1:8180:8080"]
+            args += ["--publish", f"127.0.0.1:{port}:8080"]
         else:
             args += ["--health-cmd=wget -q -T 3 -O /dev/null http://127.0.0.1:8090/healthz"]
         for key in values:
@@ -76,9 +78,29 @@ def start():
         if role == "worker":
             args += ["worker-service"]
         docker(*args, env=environment)
-        print("Started", PREFIX + "-" + role, flush=True)
-    print("Local pilot: http://localhost:8180 (real engine, no mailbox credentials stored by this script)")
+        print("Started", prefix + "-" + role, flush=True)
+    for attempt in range(20):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=3) as response:
+                health = json.load(response)
+            if health.get("execution") != "remote-worker":
+                raise RuntimeError("Pilot is not using the remote worker")
+            if health.get("available"):
+                print(f"Verified remote-worker pilot: http://localhost:{port}")
+                return
+        except (OSError, ValueError):
+            pass
+        time.sleep(1)
+    raise RuntimeError("Remote worker did not become available; inspect pilot status")
 
 
 if __name__ == "__main__":
-    start()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--name", default=PREFIX)
+    parser.add_argument("--port", type=int, default=8180)
+    args = parser.parse_args()
+    if not args.name.startswith("movemailbox-") or not all(c.isascii() and (c.isalnum() or c == "-") for c in args.name):
+        parser.error("name must start with movemailbox- and contain ASCII letters, numbers or hyphens")
+    if not 1024 <= args.port <= 65535:
+        parser.error("port must be between 1024 and 65535")
+    start(args.name, args.port)

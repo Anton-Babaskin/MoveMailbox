@@ -1,10 +1,14 @@
 # Real-mailbox MVP acceptance test
 
-Status: **pilot executed 2026-09-07 in the local Docker API/worker lab**. The
+Status: **local-engine pilot executed 2026-09-07; remote-worker pilot verified
+2026-09-08**. The initial lab had two containers but public mode was disabled,
+so the real migrations on September 7 ran inside the API container. They did
+not validate the remote-worker path. The
 two Mail-in-a-Box servers completed protected IMAP connection checks, folder
 discovery, one-way transfers in both directions, destination-subfolder mapping,
-and a repeat without duplicates. The test did not use strict mirror or delete
-any message. Automated demo and local protocol tests still do not replace a
+and a repeat without duplicates. The initial copying tests were non-destructive;
+the separately authorized strict-mirror test is described below.
+Automated demo and local protocol tests still do not replace a
 broader provider pilot. Keep the public website in demo mode until release
 gates in [ROADMAP.md](ROADMAP.md) are satisfied.
 
@@ -13,15 +17,65 @@ the repeat completed with zero new messages and the destination count remained
 one. Mail-in-a-Box uses `.` as its hierarchy delimiter, and the adapter created
 `MoveMailbox-Pilot.INBOX` / `MoveMailbox-Pilot-Reverse.INBOX` correctly.
 The real backend also completed `justLogin` and `dryRun` jobs against both
-servers with zero transferred messages and zero bytes; no dry-run destination
-folder was left behind.
+servers with zero transferred messages and zero bytes.
 
 An authorized strict-mirror check was then isolated to
 `MoveMailbox-Strict-20260907.INBOX`: one destination-only synthetic message
 was added, the dry-run left both messages intact, and the confirmed live run
 finished with one message remaining. The remaining Message-ID matched the
 source; the extra destination-only message was removed. No source message was
-deleted. This is the only destructive test recorded in the pilot.
+deleted. This test used the local engine; the remote-worker test is below.
+
+## Remote-worker verification, 2026-09-08
+
+The corrected lab requires public mode and checks `execution=remote-worker`
+before declaring itself ready. It uses loopback HTTP for the test client, which
+explicitly replays the guest cookie and CSRF token. This does not validate a
+production HTTPS deployment.
+
+- Both connection checks and folder reads succeeded through the worker.
+- `justLogin` and `dryRun` completed without copying. A read-only IMAP check
+  confirmed the new destination folder did not exist after dry-run.
+- A copy to `MoveMailbox-Worker-20260908.INBOX` transferred one message (3277
+  bytes); the repeat transferred zero. Content SHA-256, flags and internal date
+  matched the source. Source INBOX and destination INBOX snapshots were unchanged.
+- Missing CSRF was rejected with 403; another guest session received 404 for
+  the migration job.
+- Worker SQLite contained all four completed jobs with exactly one attempt
+  each and zero remaining credential envelopes. This proves the separate
+  worker executed the jobs rather than the API's local engine.
+- Strict mirror was then tested in that same isolated destination folder with
+  one newly appended synthetic extra message: dry-run preserved two messages;
+  live mirror left the original one and removed the extra. Source content was
+  unchanged. Both worker rows were completed with `attempts=1`, `no_retry=1`,
+  and no remaining credential envelopes. This verifies the persisted retry
+  guard, not behavior during an actual mid-transfer crash.
+
+Crash recovery during a real large transfer, multiple providers, and load
+testing are still pending on this corrected hosted path.
+
+### Reusing the local lab
+
+The corrected launcher always enables the protected gateway and verifies the
+remote execution mode. In an open Ubuntu WSL terminal with Docker running:
+
+```sh
+sudo python3 scripts/start-local-pilot.py --name movemailbox-worker-pilot --port 8181
+```
+
+Existing resources are preserved; for a previously created lab use:
+
+```sh
+sudo docker start movemailbox-worker-pilot-worker movemailbox-worker-pilot-api
+sudo docker stop movemailbox-worker-pilot-api movemailbox-worker-pilot-worker
+```
+
+Keep the WSL terminal open during testing: systemd services alone did not keep
+this machine's WSL distribution alive. The lab uses loopback HTTP, not public
+HTTPS. A non-browser client must replay the received cookie explicitly because
+ordinary cookie jars do not send a Secure cookie over HTTP. Do not disable the
+gateway to work around this; that would silently select the local engine.
+Mailbox passwords are not part of the launcher or its container configuration.
 
 ## Prepare
 
