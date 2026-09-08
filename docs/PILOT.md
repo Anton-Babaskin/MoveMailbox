@@ -147,6 +147,18 @@ real imapsync against the two authorized Mail-in-a-Box accounts:
 Real cancellation/kill was observed after the child process started, not
 guaranteed during an in-flight IMAP APPEND. Mid-APPEND network cuts and ambiguous
 server acknowledgements still need a controlled fault-injection proxy test.
+
+### Deterministic APPEND fault injection
+
+`scripts/smoke-imap-append-drop.py` was run on September 8 against the same
+disposable attachment folder. Its TLS test proxy observed the destination
+`APPEND`, forwarded exactly 131,072 bytes of the literal, then closed both
+connections. The pinned imapsync returned exit 114 (destination APPEND rejected)
+and did not report success. This validates the error path and avoids falsely
+marking the job complete. The generated destination folder may contain a partial
+test message and must be inspected or removed manually; the harness never
+deletes it. The proxy intentionally terminates TLS only for this disposable
+fault test; it is not part of the production trust model.
 Initial recovery harness attempts hit a Docker `top` formatting issue (PID is
 required); the harness was corrected before the successful assertions above.
 

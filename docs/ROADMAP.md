@@ -90,6 +90,9 @@ coordination belongs to stage 4, not the single-VPS preview.
 - September 8: recipient-key rotation and damaged/truncated backup checks passed;
   clean restore into new Docker volumes also passed. A deterministic mid-APPEND
   fault-injection proxy and production backup retention/restore runbook remain.
+- September 8: deterministic TLS proxy observed and interrupted a real APPEND
+  after 131,072 bytes; imapsync returned exit 114 and did not report success.
+  Production backup/off-site runbook is now documented; provider drill remains.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
