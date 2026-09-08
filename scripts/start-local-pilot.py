@@ -28,7 +28,7 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
+def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False):
     if max_mailbox_bytes < 0:
         raise ValueError("mailbox limit must be non-negative")
     docker("image", "inspect", image)
@@ -53,6 +53,7 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
                 "MOVEMAILBOX_WORKER_DATABASE": "/worker-data/worker.db",
                 "MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED": "true",
                 "MOVEMAILBOX_MAX_MAILBOX_BYTES": str(max_mailbox_bytes),
+                "MOVEMAILBOX_DEMO": "true" if demo else "false",
             })
         else:
             values.update({
@@ -103,6 +104,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8180)
     parser.add_argument("--image", default=IMAGE)
     parser.add_argument("--max-mailbox-bytes", type=int, default=5000000000)
+    parser.add_argument("--demo", action="store_true", help="simulate mail; never contact IMAP")
     args = parser.parse_args()
     if not args.name.startswith("movemailbox-") or not all(c.isascii() and (c.isalnum() or c == "-") for c in args.name):
         parser.error("name must start with movemailbox- and contain ASCII letters, numbers or hyphens")
@@ -110,4 +112,4 @@ if __name__ == "__main__":
         parser.error("port must be between 1024 and 65535")
     if args.max_mailbox_bytes < 0:
         parser.error("mailbox limit must be non-negative")
-    start(args.name, args.port, args.image, args.max_mailbox_bytes)
+    start(args.name, args.port, args.image, args.max_mailbox_bytes, args.demo)
