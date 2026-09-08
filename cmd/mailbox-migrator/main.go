@@ -215,6 +215,11 @@ func main() {
 }
 
 func runWorkerService(arguments []string) int {
+	mailboxLimit, err := strconv.ParseInt(env("MOVEMAILBOX_MAX_MAILBOX_BYTES", "5000000000"), 10, 64)
+	if err != nil || mailboxLimit < 0 {
+		fmt.Fprintln(os.Stderr, "invalid MOVEMAILBOX_MAX_MAILBOX_BYTES")
+		return 2
+	}
 	flags := flag.NewFlagSet("worker-service", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	address := flags.String("addr", env("MOVEMAILBOX_WORKER_ADDR", "0.0.0.0:8090"), "worker service listen address")
@@ -222,6 +227,7 @@ func runWorkerService(arguments []string) int {
 	imapsyncBinary := flags.String("imapsync", env("MOVEMAILBOX_IMAPSYNC_BIN", "imapsync"), "path to imapsync executable")
 	demo := flags.Bool("demo", envBool("MOVEMAILBOX_DEMO", false), "use the built-in demo engine")
 	maxConcurrent := flags.Int("max-concurrent", envInt("MOVEMAILBOX_WORKER_MAX_CONCURRENT", 2), "maximum concurrent worker jobs")
+	maxMailboxBytes := flags.Int64("max-mailbox-bytes", mailboxLimit, "entire source mailbox limit in bytes; 0 explicitly disables quota")
 	maxAttempts := flags.Int("max-attempts", envInt("MOVEMAILBOX_WORKER_MAX_ATTEMPTS", 3), "maximum attempts after interrupted or failed work")
 	leaseTTL := flags.Duration("lease-ttl", envDuration("MOVEMAILBOX_WORKER_LEASE_TTL", 30*time.Second), "renewable credential lease duration")
 	maxJobs := flags.Int("max-jobs", envInt("MOVEMAILBOX_WORKER_MAX_JOBS", 1024), "maximum queued and retained worker records")
@@ -235,6 +241,10 @@ func runWorkerService(arguments []string) int {
 	if *demo {
 		engine = migrator.DemoEngine{}
 	}
+	if *maxMailboxBytes < 0 {
+		return 2
+	}
+	engine = migrator.QuotaEngine{Engine: engine, MaxMailboxBytes: *maxMailboxBytes}
 	service, err := worker.NewService(worker.ServiceConfig{
 		DatabasePath:      *databasePath,
 		PrivateKey:        os.Getenv("MOVEMAILBOX_WORKER_PRIVATE_KEY"),

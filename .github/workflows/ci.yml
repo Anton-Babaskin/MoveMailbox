@@ -52,6 +52,9 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
+      - name: Check Python test harness syntax
+        run: python3 -m compileall -q scripts
+
       - name: Scan reachable dependencies for vulnerabilities
         run: go run golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} ./...
 
@@ -123,6 +126,9 @@ jobs:
           set -euo pipefail
           test "$(docker image inspect movemailbox:ci --format '{{.Config.User}}')" = "nobody:nogroup"
           test "$(docker image inspect movemailbox:ci --format '{{.Config.Healthcheck.Test}}')" != "[]"
+
+      - name: Verify real imapsync certificate rejection and trusted login
+        run: docker build --target tls-test --progress=plain .
 
       - name: Verify independent API and worker hard-kill recovery
         run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci

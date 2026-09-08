@@ -66,6 +66,10 @@ type Options struct {
 	SyncFlags             bool     `json:"syncFlags"`
 	PreserveDates         bool     `json:"preserveDates"`
 	DryRun                bool     `json:"dryRun"`
+	JustVerbose           bool     `json:"justVerbose"` // Legacy API alias for DryRun, never --justverbose.
+	JustLogin             bool     `json:"justLogin"`
+	JustFolderSizes       bool     `json:"justFolderSizes"`
+	JustFolders           bool     `json:"justFolders"`
 	Folders               []string `json:"folders,omitempty"`
 	DestinationSubfolder  string   `json:"destinationSubfolder,omitempty"`
 	StrictMirror          bool     `json:"strictMirror"`
@@ -87,6 +91,18 @@ func (r Request) Validate() error {
 	}
 	if sameMailbox(r.Source, r.Destination) {
 		return errors.New("источник и назначение совпадают; укажите другой почтовый ящик назначения")
+	}
+	modeCount := 0
+	for _, enabled := range []bool{r.Options.JustLogin, r.Options.JustFolderSizes, r.Options.JustFolders} {
+		if enabled {
+			modeCount++
+		}
+	}
+	if modeCount > 1 {
+		return errors.New("выберите один режим: проверка доступа, оценка размера или создание папок")
+	}
+	if modeCount > 0 && r.Options.StrictMirror {
+		return errors.New("строгое зеркало нельзя совмещать с проверкой доступа, оценкой размера или созданием папок")
 	}
 	if len(r.Options.Folders) > 500 {
 		return errors.New("можно выбрать не более 500 папок за один запуск")

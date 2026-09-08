@@ -4,7 +4,21 @@ All notable changes to MoveMailbox are documented here.
 
 ## [Unreleased]
 
+### Security
+
+- Require certificate-chain and peer-name verification in imapsync for both
+  mailboxes, on TLS and STARTTLS, instead of relying on permissive defaults.
+- Reject unencrypted IMAP at the public API boundary, including connection
+  tests, folder discovery and job creation. Local compatibility mode is unchanged.
+
 ### Added
+
+- Added imapsync-compatible advanced migration modes in the expanded options
+  menu: verbose-only, credential check, folder-size report and folder creation
+  without message transfer. The selected modes are passed to imapsync as
+  `--dry`, `--justlogin`, `--justfoldersizes` and `--justfolders`.
+- Reject conflicting preflight modes and their combination with strict mirror.
+  Demo preflight runs no longer report simulated messages as transferred.
 
 - Added credential-free SQLite job history with schema versioning, bounded
   snapshots and recovery after application restarts.

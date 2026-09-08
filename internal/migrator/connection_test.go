@@ -130,6 +130,7 @@ type imapServerOptions struct {
 	acceptLogin   bool
 	hangOnLogin   bool
 	closeOnLogout bool
+	onLogin       func()
 	// Some negative client tests intentionally abort a TLS handshake.
 	ignoreServeError bool
 }
@@ -216,6 +217,9 @@ func serveIMAPTestConnection(connection net.Conn, options imapServerOptions) err
 			writer = bufio.NewWriter(connection)
 			continue
 		case "LOGIN":
+			if options.onLogin != nil {
+				options.onLogin()
+			}
 			if options.hangOnLogin {
 				_, err := io.Copy(io.Discard, reader)
 				return err
@@ -241,6 +245,10 @@ func serveIMAPTestConnection(connection net.Conn, options imapServerOptions) err
 }
 
 func testCertificate(t *testing.T) (tls.Certificate, *x509.CertPool) {
+	return testCertificateForIP(t, "127.0.0.1")
+}
+
+func testCertificateForIP(t *testing.T, address string) (tls.Certificate, *x509.CertPool) {
 	t.Helper()
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -257,7 +265,7 @@ func testCertificate(t *testing.T) (tls.Certificate, *x509.CertPool) {
 		NotAfter:     time.Now().Add(time.Hour),
 		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+		IPAddresses:  []net.IP{net.ParseIP(address)},
 	}
 	certificateDER, err := x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
 	if err != nil {

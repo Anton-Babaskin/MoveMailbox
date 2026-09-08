@@ -6,3 +6,10 @@ outputs
 *.db
 *.log
 .env
+.env.*
+website
+*.zip
+*.tar.gz
+*.db-wal
+*.db-shm
+*.db.lock

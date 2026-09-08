@@ -349,6 +349,10 @@ func (service *Service) runJob(jobID string) {
 		return
 	}
 	if migrationErr != nil {
+		if errors.Is(migrationErr, migrator.ErrMailboxPolicy) {
+			service.finishFailure(jobID, scrubSecrets(migrationErr.Error(), request))
+			return
+		}
 		if request.Options.StrictMirror {
 			service.finishFailure(jobID, "strict mirror stopped; review destination before a new confirmed run: "+scrubSecrets(migrationErr.Error(), request))
 			return

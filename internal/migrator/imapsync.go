@@ -85,6 +85,9 @@ func (e ImapsyncEngine) ListFolders(ctx context.Context, endpoint Endpoint) ([]F
 }
 
 func (e ImapsyncEngine) Migrate(ctx context.Context, request Request, emit func(Event)) (Result, error) {
+	if err := request.Validate(); err != nil {
+		return Result{}, err
+	}
 	binary, err := e.resolveBinary()
 	if err != nil {
 		return Result{}, errors.New("imapsync не найден; установите его или запустите приложение в Docker")
@@ -106,10 +109,19 @@ func buildArgs(request Request) []string {
 		"--noreleasecheck",
 		"--nolog",
 	}
-	args = append(args, securityArgs("1", request.Source.Security)...)
-	args = append(args, securityArgs("2", request.Destination.Security)...)
-	if request.Options.DryRun {
+	args = append(args, securityArgs("1", request.Source)...)
+	args = append(args, securityArgs("2", request.Destination)...)
+	if request.Options.DryRun || request.Options.JustVerbose {
 		args = append(args, "--dry")
+	}
+	if request.Options.JustLogin {
+		args = append(args, "--justlogin")
+	}
+	if request.Options.JustFolderSizes {
+		args = append(args, "--justfoldersizes")
+	}
+	if request.Options.JustFolders {
+		args = append(args, "--justfolders")
 	}
 	if request.Options.PreserveDates {
 		args = append(args, "--syncinternaldates")
@@ -129,12 +141,19 @@ func buildArgs(request Request) []string {
 	return args
 }
 
-func securityArgs(side string, mode SecurityMode) []string {
-	switch mode {
+func securityArgs(side string, endpoint Endpoint) []string {
+	// imapsync defaults to SSL_VERIFY_NONE. Require both chain and peer-name
+	// verification explicitly, including STARTTLS where PeerHost can be lost.
+	verified := []string{
+		"--sslargs" + side, "SSL_verify_mode=1",
+		"--sslargs" + side, "SSL_verifycn_scheme=imap",
+		"--sslargs" + side, "SSL_verifycn_name=" + endpoint.Host,
+	}
+	switch endpoint.Security {
 	case SecurityTLS:
-		return []string{"--ssl" + side, "--notls" + side}
+		return append([]string{"--ssl" + side, "--notls" + side}, verified...)
 	case SecurityStartTLS:
-		return []string{"--nossl" + side, "--tls" + side}
+		return append([]string{"--nossl" + side, "--tls" + side}, verified...)
 	case SecurityPlain:
 		return []string{"--nossl" + side, "--notls" + side}
 	default:

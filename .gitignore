@@ -1,4 +1,6 @@
 # Build output
+__pycache__/
+*.pyc
 /bin/
 /dist/
 /mailbox-migrator

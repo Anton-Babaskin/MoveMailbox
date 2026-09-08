@@ -321,6 +321,10 @@ func (s *Server) allowEndpoint(w http.ResponseWriter, r *http.Request, endpoint 
 	if !s.publicMode {
 		return true
 	}
+	if endpoint.Security != migrator.SecurityTLS && endpoint.Security != migrator.SecurityStartTLS {
+		writeErrorCode(w, http.StatusForbidden, "connection.tls.required", "online mode requires TLS or STARTTLS")
+		return false
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	if err := s.targetPolicy.validate(ctx, endpoint.Host, endpoint.Port); err != nil {

@@ -59,7 +59,14 @@ Implemented in the current slice:
 Remaining before this stage is complete:
 
 - validate the production egress firewall and secret-manager/KMS deployment;
-- run real-mailbox pilot tests; the crash drill deliberately uses the demo engine.
+- run the remaining production deployment checks. A real two-way Mail-in-a-Box
+  pilot, preflight checks, repeat-without-duplicates and an authorized strict-
+  mirror test are recorded in [PILOT.md](PILOT.md); broader provider coverage
+  and the VPS deployment gate are still pending.
+- The September 8 corrected hosted pilot additionally verified actual worker
+  job rows, content/flags/internal dates, guest isolation, CSRF rejection,
+  strict mirror and terminal envelope cleanup. The September 7 transfers
+  exercised the local engine despite the presence of a worker container.
 
 Exit criteria: database dumps alone cannot decrypt credentials; the API retains
 no worker private key; persisted migration envelopes are opened only after a
@@ -72,6 +79,14 @@ coordination belongs to stage 4, not the single-VPS preview.
 - PostgreSQL store implementation and migrations;
 - durable multi-worker queue and idempotent job commands;
 - mailbox-size estimation before transfer;
+- Implemented September 8: worker-owned whole-mailbox admission check, default
+  decimal 5 GB, independent of folder selection; permanent fail-closed rejection.
+  See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
+  Execution-time overrun policy and per-customer quotas remain pending.
+- WSL Docker verification passed on September 8: actual worker quota rejection,
+  6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
+  cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
+  Controlled mid-APPEND faults and backup restoration remain pending.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

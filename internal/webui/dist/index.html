@@ -106,6 +106,14 @@
                   <label class="check-option"><input id="dryRun" type="checkbox"><span class="check-ui"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"/></svg></span><span><strong data-i18n="dryRun">Пробный запуск</strong><small data-i18n="dryRunDescription">Ничего не копировать</small></span></label>
                 </div>
                 <div class="advanced-migration-options">
+                  <label><strong data-i18n="runMode">Режим запуска</strong>
+                    <select id="runMode">
+                      <option value="copy" data-i18n="modeCopy">Перенос писем</option>
+                      <option value="justLogin" data-i18n="modeLogin">Только проверить доступ</option>
+                      <option value="justFolderSizes" data-i18n="modeSizes">Только показать размеры папок</option>
+                      <option value="justFolders" data-i18n="modeFolders">Только создать папки — без писем</option>
+                    </select>
+                  </label>
                   <button class="option-action" id="folderSelectionButton" type="button">
                     <svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3Z"/><path d="M3 7V5h7l2 2"/></svg>
                     <span><strong data-i18n="folderSelection">Выбор папок</strong><small id="folderSelectionSummary">Все папки</small></span>
