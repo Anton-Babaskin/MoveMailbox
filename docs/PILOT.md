@@ -126,6 +126,40 @@ automatically. Do not enable folder deletion: MoveMailbox uses `--delete2`, not
 
 ## Record and close
 
+### September 8 WSL Docker attachment and recovery drill
+
+Backend `76aebfb`, image `movemailbox:quota-pilot`, actual separate worker and
+real imapsync against the two authorized Mail-in-a-Box accounts:
+
+- PASS: quota denial/admission, 6 MiB random attachment, exact content hash,
+  flags and INTERNALDATE, and idempotent repeat. See [quota evidence](MAILBOX-QUOTA.md).
+- PASS: cancel job `618863d2aab2fa35` while an imapsync process was present.
+  The process exited, envelope cleanup completed, manual rerun
+  `4d0559ee05612827` produced the expected single message. Repeat copied zero.
+- PASS: forcibly killed the worker container while imapsync was present for
+  job `ff7fca450c01c2d4`. Restart recovered that same job with exactly two
+  attempts. Content/flags/date matched; repeat copied zero; envelopes were empty.
+- PASS: source test message and both original INBOX snapshots stayed unchanged.
+- PASS: existing demo Docker drill on the same image: API hard-kill/reconnect,
+  worker hard-kill/retry, strict mirror not replayed after a kill, cancellation,
+  preflight modes, guest isolation, no synthetic passwords in DB/WAL/log files.
+
+Real cancellation/kill was observed after the child process started, not
+guaranteed during an in-flight IMAP APPEND. Mid-APPEND network cuts and ambiguous
+server acknowledgements still need a controlled fault-injection proxy test.
+Initial recovery harness attempts hit a Docker `top` formatting issue (PID is
+required); the harness was corrected before the successful assertions above.
+
+`scripts/smoke-live-recovery.py` reproduces the real recovery drill against an
+explicit existing isolated quota lab; it requires `--allow-worker-kill` and
+the same process-only credentials as the quota smoke test. It creates new
+destination folders, retains mail/volumes and stops the named lab at the end.
+The demo drill cleans up only its disposable generated test resources.
+
+No real mailbox messages were deleted in these September 8 attachment/recovery
+runs. Generated test folders remain for inspection. No production/VPS deployment
+or backup-restore drill is implied by these results.
+
 For each test record PASS/FAIL/NOT RUN, version, timestamps, expected/actual
 counts and sanitized job ID/log excerpt. Remove mailbox credentials, cookies,
 authorization headers and message bodies before sharing diagnostics. Revoke

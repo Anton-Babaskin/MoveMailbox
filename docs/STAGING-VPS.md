@@ -21,6 +21,11 @@ demo form to public real-credential submissions as a substitute for these gates.
 
 Next verification stages:
 
+Local WSL status (September 8): quota image rebuilt; real hosted quota denial/
+admission, 6 MiB attachment verification, cancellation, worker SIGKILL recovery
+and idempotent repeats passed. The steps below remain the VPS acceptance plan;
+local success does not substitute for validating the deployed environment.
+
 1. Rebuild the quota-enabled image and verify hosted rejection/admission using
    low test limits and isolated destination folders.
 2. Define and test overrun handling when the source grows after admission.

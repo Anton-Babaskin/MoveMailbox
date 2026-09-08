@@ -28,8 +28,10 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start(prefix=PREFIX, port=8180):
-    docker("image", "inspect", IMAGE)
+def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
+    if max_mailbox_bytes < 0:
+        raise ValueError("mailbox limit must be non-negative")
+    docker("image", "inspect", image)
     # Resolve all collisions before making any changes. Do not reuse unknown data.
     for kind, names in (("container", [prefix + "-api", prefix + "-worker"]),
                         ("volume", [prefix + "-api-data", prefix + "-worker-data"]),
@@ -38,7 +40,7 @@ def start(prefix=PREFIX, port=8180):
             result = subprocess.run(["docker", kind, "inspect", name], capture_output=True)
             if result.returncode == 0:
                 raise RuntimeError("Pilot resources already exist; restart them instead of overwriting")
-    keys = dict(line.split("=", 1) for line in docker("run", "--rm", IMAGE, "keygen").splitlines())
+    keys = dict(line.split("=", 1) for line in docker("run", "--rm", image, "keygen").splitlines())
     docker("network", "create", prefix)
     for role in ("worker", "api"):
         volume = prefix + "-" + role + "-data"
@@ -50,6 +52,7 @@ def start(prefix=PREFIX, port=8180):
                 "MOVEMAILBOX_WORKER_ADDR": "0.0.0.0:8090",
                 "MOVEMAILBOX_WORKER_DATABASE": "/worker-data/worker.db",
                 "MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED": "true",
+                "MOVEMAILBOX_MAX_MAILBOX_BYTES": str(max_mailbox_bytes),
             })
         else:
             values.update({
@@ -74,7 +77,7 @@ def start(prefix=PREFIX, port=8180):
             args += ["--health-cmd=wget -q -T 3 -O /dev/null http://127.0.0.1:8090/healthz"]
         for key in values:
             args += ["--env", key]
-        args += [IMAGE]
+        args += [image]
         if role == "worker":
             args += ["worker-service"]
         docker(*args, env=environment)
@@ -98,9 +101,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name", default=PREFIX)
     parser.add_argument("--port", type=int, default=8180)
+    parser.add_argument("--image", default=IMAGE)
+    parser.add_argument("--max-mailbox-bytes", type=int, default=5000000000)
     args = parser.parse_args()
     if not args.name.startswith("movemailbox-") or not all(c.isascii() and (c.isalnum() or c == "-") for c in args.name):
         parser.error("name must start with movemailbox- and contain ASCII letters, numbers or hyphens")
     if not 1024 <= args.port <= 65535:
         parser.error("port must be between 1024 and 65535")
-    start(args.name, args.port)
+    if args.max_mailbox_bytes < 0:
+        parser.error("mailbox limit must be non-negative")
+    start(args.name, args.port, args.image, args.max_mailbox_bytes)

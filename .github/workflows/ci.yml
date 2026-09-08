@@ -52,6 +52,9 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
+      - name: Check Python test harness syntax
+        run: python3 -m compileall -q scripts
+
       - name: Scan reachable dependencies for vulnerabilities
         run: go run golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} ./...
 

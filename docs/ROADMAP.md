@@ -83,6 +83,10 @@ coordination belongs to stage 4, not the single-VPS preview.
   decimal 5 GB, independent of folder selection; permanent fail-closed rejection.
   See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
   Execution-time overrun policy and per-customer quotas remain pending.
+- WSL Docker verification passed on September 8: actual worker quota rejection,
+  6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
+  cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
+  Controlled mid-APPEND faults and backup restoration remain pending.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
