@@ -100,6 +100,9 @@ func runImapsyncProcess(ctx context.Context, cmd *exec.Cmd, request Request, emi
 
 	var exitErr *exec.ExitError
 	if errors.As(waitErr, &exitErr) {
+		if exitErr.ExitCode() == 118 {
+			return result, fmt.Errorf("%w: imapsync stopped at the transfer budget; already copied mail is retained; manual review required", ErrMailboxPolicy)
+		}
 		return result, fmt.Errorf("imapsync завершился с кодом %d: %s", exitErr.ExitCode(), exitMessage(exitErr.ExitCode()))
 	}
 	return result, waitErr

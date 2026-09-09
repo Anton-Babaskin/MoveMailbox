@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Anton-Babaskin/MoveMailbox/internal/credentials"
@@ -52,18 +53,19 @@ type Service struct {
 	jobs      *serviceStore
 	tokenHash [32]byte
 
-	mu           sync.Mutex
-	running      map[string]context.CancelFunc
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wake         chan struct{}
-	slots        chan struct{}
-	wg           sync.WaitGroup
-	shutdownOnce sync.Once
-	shutdownDone chan struct{}
-	shutdownErr  error
-	ready        bool
-	stopping     bool
+	mu                 sync.Mutex
+	running            map[string]context.CancelFunc
+	ctx                context.Context
+	cancel             context.CancelFunc
+	wake               chan struct{}
+	slots              chan struct{}
+	wg                 sync.WaitGroup
+	shutdownOnce       sync.Once
+	shutdownDone       chan struct{}
+	shutdownErr        error
+	ready              bool
+	stopping           bool
+	pendingFinalWrites atomic.Int64
 }
 
 func NewService(config ServiceConfig) (*Service, error) {
@@ -314,6 +316,7 @@ func (service *Service) runJob(jobID string) {
 	}
 	leaseErrors := make(chan error, 1)
 	go keepLease(migrationContext, service.envelopes, jobID, workerID, service.config.LeaseTTL, leaseErrors, cancelMigration)
+	var eventWriteFailed atomic.Bool
 	result, migrationErr := service.config.Engine.Migrate(migrationContext, request, func(event migrator.Event) {
 		event = sanitizeServiceEvent(event, request)
 		if event.Timestamp.IsZero() {
@@ -323,6 +326,7 @@ func (service *Service) runJob(jobID string) {
 		err := service.jobs.appendEvent(writeContext, jobID, event, time.Now())
 		cancel()
 		if err != nil {
+			eventWriteFailed.Store(true)
 			cancelMigration()
 		}
 	})
@@ -331,6 +335,10 @@ func (service *Service) runJob(jobID string) {
 	// The engine and its lease-renewal goroutine have stopped before releasing ownership.
 	if err := service.envelopes.ReleaseLease(context.Background(), jobID, workerID); err != nil {
 		service.finishFailure(jobID, "credential lease could not be released")
+		return
+	}
+	if eventWriteFailed.Load() {
+		service.finishFailure(jobID, "migration progress could not be persisted; already copied mail is retained; manual review required")
 		return
 	}
 	if service.ctx.Err() != nil {
@@ -365,6 +373,7 @@ func (service *Service) runJob(jobID string) {
 	cancel()
 	if err != nil {
 		log.Printf("worker job %s completion failed: %v", jobID, err)
+		service.finishFailure(jobID, "migration finished but final state could not be persisted; already copied mail is retained; manual review required")
 	}
 }
 
@@ -388,13 +397,34 @@ func (service *Service) retryOrFail(jobID string, failure error, undoAttempt boo
 
 func (service *Service) finishFailure(jobID, message string) {
 	message = truncateServiceError(message)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := service.jobs.complete(ctx, jobID, remoteStatusFailed, migrator.Result{}, message, time.Now()); err != nil {
-		log.Printf("worker job %s failure state could not be stored: %v", jobID, err)
-		return
+	pending := false
+	defer func() {
+		if pending {
+			service.pendingFinalWrites.Add(-1)
+		}
+	}()
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		err := service.jobs.complete(ctx, jobID, remoteStatusFailed, migrator.Result{}, message, time.Now())
+		cancel()
+		if err == nil {
+			return
+		} // complete atomically removes the envelope.
+		if !pending {
+			pending = true
+			service.pendingFinalWrites.Add(1)
+			log.Printf("worker job %s failure state pending storage recovery: %v", jobID, err)
+		}
+		// Retain the execution slot and retry only the terminal transaction.
+		// Never rerun IMAP merely because storage could not record its outcome.
+		timer := time.NewTimer(250 * time.Millisecond)
+		select {
+		case <-service.ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
 	}
-	_ = service.envelopes.Delete(ctx, jobID)
 }
 
 func (service *Service) requeueIfPresent(jobID string, available time.Time, undoAttempt bool) {
@@ -415,8 +445,12 @@ func (service *Service) health(response http.ResponseWriter, request *http.Reque
 		response.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	writeServiceJSON(response, http.StatusOK, map[string]any{
-		"status": "ok", "engine": service.config.Engine.Name(), "available": service.config.Engine.Available(),
+	status, code := "ok", http.StatusOK
+	if service.pendingFinalWrites.Load() > 0 {
+		status, code = "storage-unavailable", http.StatusServiceUnavailable
+	}
+	writeServiceJSON(response, code, map[string]any{
+		"status": status, "engine": service.config.Engine.Name(), "available": code == http.StatusOK && service.config.Engine.Available(),
 	})
 }
 

@@ -82,11 +82,36 @@ coordination belongs to stage 4, not the single-VPS preview.
 - Implemented September 8: worker-owned whole-mailbox admission check, default
   decimal 5 GB, independent of folder selection; permanent fail-closed rejection.
   See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
-  Execution-time overrun policy and per-customer quotas remain pending.
+  Whole-message execution-time guard now fails permanently on native exit 118;
+  strict byte accounting and per-customer cumulative quotas remain pending.
+- September 9: growth after both inventories verified through the guest API and
+  real worker/imapsync: one whole message over budget retained, second skipped,
+  permanent failure in one attempt, credentials removed. This is the documented
+  whole-message guard, not a hard traffic cap. See PILOT.md.
 - WSL Docker verification passed on September 8: actual worker quota rejection,
   6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
-  Controlled mid-APPEND faults and backup restoration remain pending.
+  Production backup retention remains pending.
+- September 8: key separation verified by unit tests; coordinated deployed key
+  rotation remains pending. Corrected backup validation rejects corrupt/truncated,
+  missing and inconsistent pairs; clean Docker restore passes. See PILOT.md.
+- September 8 corrected streaming proxy: exact 131,072-byte APPEND cut, exit 114,
+  zero committed partial messages, successful recovery and repeat without duplicates.
+  Lost acknowledgements after commit also pass with one complete message after
+  recovery and repeat. September 9: both exact faults also pass through the
+  guest API and encrypted remote worker queue, automatic recovery in two attempts,
+  no duplicates, guest isolation and terminal envelope cleanup. See PILOT.md.
+- Production backup/off-site runbook is documented; encrypted provider drill remains.
+- September 9: worker event-write failure no longer allows false success; a
+  permanent failure and cleanup are tested when terminal writes remain available.
+  Real SQLITE_FULL snapshot rollback and recovery are covered without filling the
+  host disk. Container-level ENOSPC admission now passes: 503 with no partial
+  job/envelope; new work succeeds after freeing bounded tmpfs, without restart.
+  Active demo-transfer ENOSPC now passes too: pending terminal writes recover
+  after capacity returns without replay; worker reports unavailable while pending.
+  Crash during pending terminal commit now passes in the demo Docker drill:
+  no-resume and mirror fail without replay; opted-in ordinary copy resumes after
+  lease expiry. Combined live-IMAP ENOSPC/crash remains a gate. See PILOT.md.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

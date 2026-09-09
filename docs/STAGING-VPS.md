@@ -26,9 +26,17 @@ admission, 6 MiB attachment verification, cancellation, worker SIGKILL recovery
 and idempotent repeats passed. The steps below remain the VPS acceptance plan;
 local success does not substitute for validating the deployed environment.
 
+Key-rotation unit tests and a Docker restore drill also pass: damaged/truncated
+copies fail integrity validation, and valid copies restore into empty volumes
+without replaying terminal jobs. VPS acceptance must still test provider-level
+snapshots, retention, access control and restore from an off-host copy.
+
 1. Rebuild the quota-enabled image and verify hosted rejection/admission using
    low test limits and isolated destination folders.
 2. Define and test overrun handling when the source grows after admission.
 3. Test large attachments, cancellation, worker termination, retry idempotency
    and VPS restart with content/flags/internal-date comparisons.
 4. Restore metadata from backup and validate expiry, secret rotation and rollback.
+
+Use [BACKUP-RUNBOOK.md](BACKUP-RUNBOOK.md) for the concrete production sequence;
+do not improvise a live SQLite copy or store the only backup on the VPS.

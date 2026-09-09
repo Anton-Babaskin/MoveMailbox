@@ -28,7 +28,7 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
+def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False, worker_test_args=(), started_containers=None, worker_test_database=None, resume_interrupted=True):
     if max_mailbox_bytes < 0:
         raise ValueError("mailbox limit must be non-negative")
     docker("image", "inspect", image)
@@ -50,9 +50,10 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
             values.update({
                 "MOVEMAILBOX_WORKER_PRIVATE_KEY": keys["MOVEMAILBOX_WORKER_PRIVATE_KEY"],
                 "MOVEMAILBOX_WORKER_ADDR": "0.0.0.0:8090",
-                "MOVEMAILBOX_WORKER_DATABASE": "/worker-data/worker.db",
-                "MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED": "true",
+                "MOVEMAILBOX_WORKER_DATABASE": worker_test_database or "/worker-data/worker.db",
+                "MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED": "true" if resume_interrupted else "false",
                 "MOVEMAILBOX_MAX_MAILBOX_BYTES": str(max_mailbox_bytes),
+                "MOVEMAILBOX_DEMO": "true" if demo else "false",
             })
         else:
             values.update({
@@ -75,12 +76,17 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000):
             args += ["--publish", f"127.0.0.1:{port}:8080"]
         else:
             args += ["--health-cmd=wget -q -T 3 -O /dev/null http://127.0.0.1:8090/healthz"]
+            # Python-only hook for isolated fault-injection labs; not a service
+            # option and never enabled by the launcher CLI.
+            args += list(worker_test_args)
         for key in values:
             args += ["--env", key]
         args += [image]
         if role == "worker":
             args += ["worker-service"]
         docker(*args, env=environment)
+        if started_containers is not None:
+            started_containers.append(prefix + "-" + role)
         print("Started", prefix + "-" + role, flush=True)
     for attempt in range(20):
         try:
@@ -103,6 +109,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8180)
     parser.add_argument("--image", default=IMAGE)
     parser.add_argument("--max-mailbox-bytes", type=int, default=5000000000)
+    parser.add_argument("--demo", action="store_true", help="simulate mail; never contact IMAP")
     args = parser.parse_args()
     if not args.name.startswith("movemailbox-") or not all(c.isascii() and (c.isalnum() or c == "-") for c in args.name):
         parser.error("name must start with movemailbox- and contain ASCII letters, numbers or hyphens")
@@ -110,4 +117,4 @@ if __name__ == "__main__":
         parser.error("port must be between 1024 and 65535")
     if args.max_mailbox_bytes < 0:
         parser.error("mailbox limit must be non-negative")
-    start(args.name, args.port, args.image, args.max_mailbox_bytes)
+    start(args.name, args.port, args.image, args.max_mailbox_bytes, args.demo)

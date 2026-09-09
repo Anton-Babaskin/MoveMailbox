@@ -93,6 +93,46 @@ func TestRecipientEnvelopeRejectsWrongKeyTamperingAndExpiry(t *testing.T) {
 	}
 }
 
+func TestRecipientKeyRotationRequiresDrainAndReencryption(t *testing.T) {
+	oldPublic, oldPrivate, err := GenerateRecipientKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldSealer, _ := NewRecipientSealer(oldPublic, time.Hour)
+	oldOpener, _ := NewRecipientOpener(oldPrivate)
+	defer oldOpener.Destroy()
+	oldEnvelope, err := oldSealer.Seal("rotation-old", credentialTestRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newPublic, newPrivate, err := GenerateRecipientKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+	newSealer, _ := NewRecipientSealer(newPublic, time.Hour)
+	newOpener, _ := NewRecipientOpener(newPrivate)
+	defer newOpener.Destroy()
+	if _, err := newOpener.Open("rotation-old", oldEnvelope); err == nil {
+		t.Fatal("rotated worker key opened an old envelope")
+	}
+
+	request, err := oldOpener.Open("rotation-old", oldEnvelope)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newEnvelope, err := newSealer.Seal("rotation-new", request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := newOpener.Open("rotation-new", newEnvelope); err != nil {
+		t.Fatalf("new key could not open re-encrypted envelope: %v", err)
+	}
+	if _, err := oldOpener.Open("rotation-new", newEnvelope); err == nil {
+		t.Fatal("old worker key opened a new envelope")
+	}
+}
+
 func TestRecipientKeyParsers(t *testing.T) {
 	publicKey, privateKey, err := GenerateRecipientKeyPair()
 	if err != nil {

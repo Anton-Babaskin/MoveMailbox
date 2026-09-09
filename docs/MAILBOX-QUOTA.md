@@ -13,8 +13,10 @@ Before each migration attempt (including preflight modes), the worker:
 2. Opens each folder with EXAMINE (read-only) and fetches only UID and
    RFC822.SIZE, in batches of at most 500 messages.
 3. Checks counts, duplicate UIDs, sizes, overflow and detectable mailbox changes.
-4. Logs the aggregate bytes/message/folder counts and configured limit.
-5. Allows exactly the limit; rejects a larger mailbox before calling imapsync.
+4. Repeats the read-only inventory immediately before calling imapsync, so a
+   mailbox that grows during the first pass is rejected before any copy.
+5. Logs the aggregate bytes/message/folder counts and configured limit.
+6. Allows exactly the limit; rejects a larger mailbox before calling imapsync.
 
 Inventory failures fail closed, without automatic retries or destination writes.
 Terminal job cleanup removes the credential envelope through the existing worker
@@ -24,12 +26,27 @@ messages. Missing or non-positive sizes require manual investigation, not a gues
 Folder aliases (including Gmail labels) may count the same message more than once;
 this is a conservative sum of IMAP folder contents, not provider disk usage.
 
+## Execution-time guard
+
+The worker also passes its server-owned budget to imapsync through
+`--exitwhenover`, using limit + 1 so the configured boundary stays inclusive
+(MaxInt64 saturates conservatively). Clients cannot override this context value.
+Native exit 118 becomes a permanent mailbox-policy failure: the worker does not
+retry automatically and removes the credential envelope. Already copied mail is
+retained. An engine reporting bytes above the limit cannot report success either.
+
+This is a **whole-message guard**, not a strict network-byte cap: imapsync 2.319
+checks completed transferred bytes after each message. The last whole message
+can exceed the budget. Failed attempts, wire overhead and cumulative usage across
+jobs are not accounted for; the threshold applies per migration attempt.
+
 ## Limitations / remaining launch gates
 
-This is **admission control**, not a continuous byte cap. IMAP offers no atomic
-whole-account snapshot: incoming mail, new folders or changes after inspection
-can make the eventual transfer exceed the estimate. Before making hard billing
-guarantees, implement a separately tested execution-time budget/overrun policy.
+IMAP offers no atomic
+whole-account snapshot: incoming mail, new folders or changes after the second
+inspection can make the eventual transfer exceed the estimate. Before making
+hard billing guarantees, implement strict byte accounting and cumulative quotas.
+Growth in folders not selected for transfer is not continuously monitored.
 Changing the environment does not add payment rights or per-customer quotas.
 Do not expose the worker port publicly. Continue applying API target validation,
 outbound network restrictions, TLS verification and guest rate/concurrency limits.
@@ -51,7 +68,7 @@ Never commit test secrets or attach unredacted environment/log dumps.
 September 8 live read-only checks passed on both authorized Mail-in-a-Box test
 accounts: source 8,145 bytes / 2 messages / 8 folders; destination 14,699 bytes /
 4 messages / 12 folders. This verifies the native estimator against real IMAP,
-the native estimator directly.
+not the complete worker path by itself.
 
 The subsequent WSL Docker run on image `movemailbox:quota-pilot` (backend
 `76aebfb`) verified API -> remote worker -> real imapsync end to end:
@@ -71,3 +88,20 @@ Reproduce only with disposable mailboxes using `scripts/smoke-live-quota.py
 variables through the process environment. The script creates isolated folders,
 keeps their test messages and Docker volumes, and stops its containers on exit.
 Ports 8182/8183 must be free. No credentials should be saved in tracked files.
+
+The execution-time guard has Go argument-boundary, process-exit and remote-worker
+tests: growth after both inventories fails permanently with one attempt and no
+remaining envelope. An opt-in native test, `scripts/smoke-live-budget.py --image
+movemailbox:quota-pilot --allow-test-mail`, passed with two synthetic messages:
+a 2-byte threshold retained one complete message, skipped the second and exited
+118; the source stayed unchanged. This native test is separate from the Go worker
+integration test, not a live end-to-end runtime-budget API assertion.
+
+The subsequent full guest API/worker growth test also passed on September 9:
+both inventories admitted a source below 12,000,000 bytes, then a test execution
+gate allowed insertion of two 12,317,565-byte messages before native copying.
+One complete message was retained, the second skipped; the job failed permanently
+in one attempt and credentials were removed. Content/flags/date and guest
+isolation passed. See PILOT.md and `scripts/smoke-api-growth.py` for exact scope
+and reproduction. The observed 317,565-byte overshoot illustrates why this is
+not a strict byte cap.

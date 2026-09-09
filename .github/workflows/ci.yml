@@ -55,6 +55,9 @@ jobs:
       - name: Check Python test harness syntax
         run: python3 -m compileall -q scripts
 
+      - name: Test APPEND framing and backup rejection
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
       - name: Scan reachable dependencies for vulnerabilities
         run: go run golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} ./...
 
@@ -132,6 +135,18 @@ jobs:
 
       - name: Verify independent API and worker hard-kill recovery
         run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci
+
+      - name: Verify worker ENOSPC admission and recovery in bounded tmpfs
+        run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci
+
+      - name: Verify active worker ENOSPC terminal recovery without replay
+        run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active
+
+      - name: Verify crash during pending terminal write across recovery policies
+        run: |
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash --resume-interrupted
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash --resume-interrupted --strict-mirror
 
       - name: Run container health check with hardened settings
         shell: bash

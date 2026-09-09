@@ -26,6 +26,14 @@ type MailboxEstimator interface {
 
 var ErrMailboxPolicy = errors.New("mailbox size policy rejected the job")
 
+// Private context key: budgets originate in worker configuration, never JSON.
+type transferBudgetKey struct{}
+
+func transferBudget(ctx context.Context) int64 {
+	value, _ := ctx.Value(transferBudgetKey{}).(int64)
+	return value
+}
+
 // QuotaEngine is a worker-owned admission policy. The client cannot override it.
 // Zero disables the policy for explicitly unlimited self-hosted installations.
 type QuotaEngine struct {
@@ -59,11 +67,31 @@ func (e QuotaEngine) Migrate(ctx context.Context, request Request, emit func(Eve
 		if estimate.Bytes > e.MaxMailboxBytes {
 			return Result{}, fmt.Errorf("%w: source is %d bytes; limit is %d bytes", ErrMailboxPolicy, estimate.Bytes, e.MaxMailboxBytes)
 		}
+		// A mailbox can receive mail while the first inventory is running. Take a
+		// second read-only inventory immediately before invoking imapsync; a growth
+		// race is rejected instead of silently starting above the admission limit.
+		latest, err := estimator.EstimateMailbox(ctx, request.Source)
+		if err != nil || latest.Bytes < 0 || latest.Messages < 0 || latest.Folders < 0 {
+			return Result{}, fmt.Errorf("%w: source changed and could not be re-verified", ErrMailboxPolicy)
+		}
+		if emit != nil && latest != estimate {
+			emit(Event{Type: "log", Phase: "estimating", Message: fmt.Sprintf("Source changed during admission; rechecked at %d bytes, %d messages, %d folders", latest.Bytes, latest.Messages, latest.Folders)})
+		}
+		if latest.Bytes > e.MaxMailboxBytes {
+			return Result{}, fmt.Errorf("%w: source grew to %d bytes; limit is %d bytes", ErrMailboxPolicy, latest.Bytes, e.MaxMailboxBytes)
+		}
 	}
 	if err := ctx.Err(); err != nil {
 		return Result{}, err
 	}
-	return e.Engine.Migrate(ctx, request, emit)
+	if e.MaxMailboxBytes > 0 {
+		ctx = context.WithValue(ctx, transferBudgetKey{}, e.MaxMailboxBytes)
+	}
+	result, err := e.Engine.Migrate(ctx, request, emit)
+	if e.MaxMailboxBytes > 0 && result.Bytes > e.MaxMailboxBytes {
+		return result, fmt.Errorf("%w: transfer exceeded %d bytes; already copied mail is retained; manual review required", ErrMailboxPolicy, e.MaxMailboxBytes)
+	}
+	return result, err
 }
 
 // Preserve optional folder discovery when wrapping an engine.

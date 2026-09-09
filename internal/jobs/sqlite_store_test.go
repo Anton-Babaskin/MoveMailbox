@@ -169,7 +169,7 @@ func TestSQLiteHistoryEvictionDeletesPersistentSnapshot(t *testing.T) {
 		t.Fatal(err)
 	}
 	manager, err := NewManagerWithStore(&controlledEngine{available: true}, Config{
-		MaxConcurrent: 1, CompletedTTL: 15 * time.Millisecond, CleanupInterval: 2 * time.Millisecond,
+		MaxConcurrent: 1, CompletedTTL: time.Hour, CleanupInterval: time.Hour,
 	}, store)
 	if err != nil {
 		t.Fatal(err)
@@ -179,13 +179,11 @@ func TestSQLiteHistoryEvictionDeletesPersistentSnapshot(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitForStatus(t, manager, view.ID, StatusCompleted)
-	deadline := time.Now().Add(time.Second)
-	for time.Now().Before(deadline) {
-		if _, ok := manager.Get(view.ID); !ok {
-			break
-		}
-		time.Sleep(2 * time.Millisecond)
-	}
+	// Advance eviction time only after completion has been observed. A tiny
+	// wall-clock TTL can erase the record before the status poll under -race.
+	manager.mu.Lock()
+	manager.evictLocked(time.Now().Add(2*time.Hour), false)
+	manager.mu.Unlock()
 	if _, ok := manager.Get(view.ID); ok {
 		t.Fatal("expired job remained in manager")
 	}
