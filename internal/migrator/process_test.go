@@ -72,6 +72,14 @@ func TestRunImapsyncProcessCancellationIsBounded(t *testing.T) {
 	}
 }
 
+func TestTransferBudgetExitIsPermanentAndRetainsPartialResult(t *testing.T) {
+	cmd := helperProcessCommand(context.Background(), "budget")
+	result, err := runImapsyncProcess(context.Background(), cmd, testRequest(), nil)
+	if !errors.Is(err, ErrMailboxPolicy) || result.Transferred != 1 || result.Bytes != 600 {
+		t.Fatalf("result=%+v err=%v", result, err)
+	}
+}
+
 func TestScanReadersReportsScannerErrorAfterBufferedLine(t *testing.T) {
 	wantErr := errors.New("synthetic reader failure")
 	reader := &readerWithTerminalError{data: []byte("complete line\n"), err: wantErr}
@@ -124,6 +132,10 @@ func TestImapsyncHelperProcess(t *testing.T) {
 	}
 	scenario := os.Args[len(os.Args)-1]
 	switch scenario {
+	case "budget":
+		fmt.Fprintln(os.Stdout, "Messages transferred : 1")
+		fmt.Fprintln(os.Stdout, "Total bytes transferred : 600")
+		os.Exit(118)
 	case "tail":
 		for index := 0; index < 5000; index++ {
 			fmt.Fprintf(os.Stdout, "log line %d\n", index)

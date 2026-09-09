@@ -18,6 +18,7 @@ import tempfile
 import threading
 
 from append_gate import AppendGate
+from append_ack_gate import AppendAckGate
 
 
 def account(role):
@@ -38,9 +39,9 @@ def make_cert(directory):
 
 
 class DropProxy:
-    def __init__(self, destination, cert, key, drop_after):
+    def __init__(self, destination, cert, key, drop_after, lose_ack=False):
         self.destination = destination
-        self.gate = AppendGate(drop_after)
+        self.gate = AppendAckGate() if lose_ack else AppendGate(drop_after)
         self.server = socket.socket()
         self.server.bind(("127.0.0.1", 0))
         self.server.listen(1)
@@ -81,9 +82,17 @@ class DropProxy:
                         data = upstream.recv(65536)
                         if not data:
                             break
-                        client.sendall(data)
-                except OSError:
-                    pass
+                        if isinstance(self.gate, AppendAckGate):
+                            self.gate.reply(data, client.sendall)
+                            if self.gate.dropped:
+                                self.close()
+                                break
+                        else:
+                            client.sendall(data)
+                except Exception as exc:
+                    if not self.gate.dropped:
+                        self.error = type(exc).__name__
+                        self.close()
             reply = threading.Thread(target=relay_replies, daemon=True)
             reply.start()
             while not self.gate.dropped:
@@ -92,14 +101,15 @@ class DropProxy:
                     break
                 self.gate.feed(data, upstream.sendall)
         except Exception as exc:
-            self.error = type(exc).__name__
+            if not self.gate.dropped:
+                self.error = type(exc).__name__
         finally:
             self.close()
             if reply:
                 reply.join(timeout=5)
 
 
-def imapsync(args, source, destination, cert=None, port=None):
+def imapsync(args, source, destination, cert=None, port=None, exit_when_over=None):
     name = "movemailbox-append-test-" + secrets.token_hex(8)
     env = {key: value for key, value in os.environ.items() if not key.startswith(("MM_", "MOVEMAILBOX_", "IMAPSYNC_PASSWORD"))}
     command = ["docker", "run", "--rm", "--name", name, "-i", "--network", "host",
@@ -118,6 +128,8 @@ def imapsync(args, source, destination, cert=None, port=None):
             command += ["--sslargs" + side, option]
     if cert:
         command += ["--sslargs2", "SSL_ca_file=/test-ca.pem"]
+    if exit_when_over is not None:
+        command += ["--exitwhenover", str(exit_when_over)]
     try:
         return subprocess.run(command, input=(source["PASSWORD"] + "\n" + destination["PASSWORD"] + "\n").encode(),
                               env=env, capture_output=True, timeout=180).returncode
@@ -144,20 +156,22 @@ def run(args):
             raise RuntimeError("destination test prefix already exists")
         with tempfile.TemporaryDirectory(prefix="movemailbox-append-drop-") as temporary:
             cert, key = make_cert(Path(temporary))
-            proxy = DropProxy(destination, cert, key, args.drop_after)
+            proxy = DropProxy(destination, cert, key, args.drop_after, args.lose_ack)
             proxy.thread.start()
             try:
                 result = imapsync(args, source, destination, cert, proxy.port)
             finally:
                 proxy.close()
                 proxy.thread.join(timeout=5)
-            if proxy.error or not proxy.gate.dropped or proxy.gate.forwarded != args.drop_after or result != 114:
+            expected_bytes = proxy.gate.literal_size if args.lose_ack else args.drop_after
+            if proxy.error or not proxy.gate.dropped or proxy.gate.forwarded != expected_bytes or result != 114:
                 raise RuntimeError("exact APPEND cut / exit 114 assertion failed")
             print(f"PASS: declared literal={proxy.gate.literal_size}, forwarded={proxy.gate.forwarded} bytes, exit={result}", flush=True)
         folder = args.target + "." + args.folder
-        if live.snapshot(clients[1], folder):
-            raise RuntimeError("destination committed an incomplete APPEND")
-        print("PASS: interrupted APPEND left no message in destination folder", flush=True)
+        expected = original if args.lose_ack else []
+        if live.snapshot(clients[1], folder) != expected:
+            raise RuntimeError("unexpected destination state after APPEND fault")
+        print("PASS: server committed exact message but success reply was withheld" if args.lose_ack else "PASS: interrupted APPEND left no message in destination folder", flush=True)
         for attempt in ("recovery", "repeat"):
             if imapsync(args, source, destination) != 0:
                 raise RuntimeError("normal transfer failed")
@@ -181,6 +195,7 @@ if __name__ == "__main__":
     parser.add_argument("--folder", required=True)
     parser.add_argument("--target", required=True)
     parser.add_argument("--drop-after", type=int, default=131072)
+    parser.add_argument("--lose-ack", action="store_true", help="drop server success after committed APPEND")
     args = parser.parse_args()
     if args.drop_after < 1024 or not args.folder.startswith("MoveMailbox-Attachment-") or not args.target.startswith("MoveMailbox-ProxyDrop-"):
         parser.error("use disposable folder names and drop-after >= 1024")

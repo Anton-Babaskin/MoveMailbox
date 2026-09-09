@@ -82,7 +82,8 @@ coordination belongs to stage 4, not the single-VPS preview.
 - Implemented September 8: worker-owned whole-mailbox admission check, default
   decimal 5 GB, independent of folder selection; permanent fail-closed rejection.
   See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
-  Execution-time overrun policy and per-customer quotas remain pending.
+  Whole-message execution-time guard now fails permanently on native exit 118;
+  strict byte accounting and per-customer cumulative quotas remain pending.
 - WSL Docker verification passed on September 8: actual worker quota rejection,
   6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
@@ -92,7 +93,8 @@ coordination belongs to stage 4, not the single-VPS preview.
   missing and inconsistent pairs; clean Docker restore passes. See PILOT.md.
 - September 8 corrected streaming proxy: exact 131,072-byte APPEND cut, exit 114,
   zero committed partial messages, successful recovery and repeat without duplicates.
-  Lost acknowledgements after commit and an API-level proxy drill remain pending.
+  Lost acknowledgements after commit also pass with one complete message after
+  recovery and repeat. An API-level exact proxy drill remains pending.
 - Production backup/off-site runbook is documented; encrypted provider drill remains.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;

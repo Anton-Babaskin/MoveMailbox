@@ -146,7 +146,7 @@ real imapsync against the two authorized Mail-in-a-Box accounts:
 
 Real cancellation/kill was observed after the child process started, not
 guaranteed during an in-flight IMAP APPEND. The exact mid-literal cut is tested
-below; lost acknowledgements after a successful server commit remain untested.
+below, together with lost acknowledgements after a successful server commit.
 
 ### Deterministic APPEND fault injection
 
@@ -167,6 +167,21 @@ trusted only by the test client). Mailbox passwords are supplied through Docker
 stdin into the child environment, not command arguments or container config.
 These are direct imapsync assertions; the test does not claim API/worker state
 transitions for this exact fault. No test messages are deleted.
+
+The additional `--lose-ack` scenario passed with the same pinned imapsync:
+all 8,610,095 literal bytes reached the server; the proxy observed and withheld
+the tagged APPEND success. imapsync exited 114 although the destination already
+held the complete message. Recovery and repeat each retained exactly one message
+with matching SHA-256, flags and INTERNALDATE; source unchanged. Target retained:
+`MoveMailbox-ProxyDrop-Ack-20260908.MoveMailbox-Attachment-546b1b366e`.
+The parser regression suite now contains eleven passing tests. This remains a
+direct engine fault test, not an exact API/worker fault-state assertion.
+
+The native execution-budget smoke test also passed: two synthetic source messages,
+a 2-byte threshold, one whole message copied, second skipped, exit 118 and source
+unchanged. Source folder `MoveMailbox-Budget-06f1f52d07b9` and its `-Copy` target
+prefix remain for inspection. See MAILBOX-QUOTA.md for the whole-message overshoot
+limitation and separate Go worker integration coverage.
 
 ### Backup validator regression and corrected restore
 

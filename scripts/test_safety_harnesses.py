@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from append_gate import AppendGate
+from append_ack_gate import AppendAckGate
 from backup_validation import validate_pair
 
 
@@ -17,6 +18,20 @@ def database(path):
 
 
 class AppendTests(unittest.TestCase):
+    def test_lost_ack_forwards_whole_literal_but_not_success(self):
+        stream = b"a1 APPEND INBOX {12+}\r\nhello\r\nworld\r\n"
+        for chunk in (1, 3, 100):
+            gate, sent, received = AppendAckGate(), bytearray(), bytearray()
+            for offset in range(0, len(stream), chunk):
+                gate.feed(stream[offset:offset+chunk], sent.extend)
+            self.assertEqual(sent, stream)
+            replies = b"* 1 EXISTS\r\na2 OK other command\r\na1 OK [APPENDUID 1 1] saved\r\n"
+            for offset in range(0, len(replies), chunk):
+                gate.reply(replies[offset:offset+chunk], received.extend)
+            self.assertEqual(received, b"* 1 EXISTS\r\na2 OK other command\r\n")
+            self.assertTrue(gate.dropped)
+            self.assertEqual(gate.forwarded, 12)
+
     def test_fragmented_and_coalesced_literal(self):
         body = bytes(range(256)) * 20  # Includes CRLF, braces and non-text bytes.
         for marker in (b"{5120}", b"{5120+}"):

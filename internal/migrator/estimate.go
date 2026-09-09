@@ -26,6 +26,14 @@ type MailboxEstimator interface {
 
 var ErrMailboxPolicy = errors.New("mailbox size policy rejected the job")
 
+// Private context key: budgets originate in worker configuration, never JSON.
+type transferBudgetKey struct{}
+
+func transferBudget(ctx context.Context) int64 {
+	value, _ := ctx.Value(transferBudgetKey{}).(int64)
+	return value
+}
+
 // QuotaEngine is a worker-owned admission policy. The client cannot override it.
 // Zero disables the policy for explicitly unlimited self-hosted installations.
 type QuotaEngine struct {
@@ -76,7 +84,14 @@ func (e QuotaEngine) Migrate(ctx context.Context, request Request, emit func(Eve
 	if err := ctx.Err(); err != nil {
 		return Result{}, err
 	}
-	return e.Engine.Migrate(ctx, request, emit)
+	if e.MaxMailboxBytes > 0 {
+		ctx = context.WithValue(ctx, transferBudgetKey{}, e.MaxMailboxBytes)
+	}
+	result, err := e.Engine.Migrate(ctx, request, emit)
+	if e.MaxMailboxBytes > 0 && result.Bytes > e.MaxMailboxBytes {
+		return result, fmt.Errorf("%w: transfer exceeded %d bytes; already copied mail is retained; manual review required", ErrMailboxPolicy, e.MaxMailboxBytes)
+	}
+	return result, err
 }
 
 // Preserve optional folder discovery when wrapping an engine.

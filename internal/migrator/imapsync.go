@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -93,9 +94,23 @@ func (e ImapsyncEngine) Migrate(ctx context.Context, request Request, emit func(
 		return Result{}, errors.New("imapsync не найден; установите его или запустите приложение в Docker")
 	}
 
-	cmd := exec.CommandContext(ctx, binary, buildArgs(request)...)
+	cmd := exec.CommandContext(ctx, binary, buildExecutionArgs(ctx, request)...)
 	cmd.Env = imapsyncEnvironment(os.Environ(), request.Source.Password, request.Destination.Password)
 	return runImapsyncProcess(ctx, cmd, request, emit)
+}
+
+func buildExecutionArgs(ctx context.Context, request Request) []string {
+	args := buildArgs(request)
+	if budget := transferBudget(ctx); budget > 0 {
+		// imapsync checks >= after completing a message. Preserve inclusive
+		// admission at the boundary, but stop further copies once it is exceeded.
+		threshold := budget
+		if threshold < math.MaxInt64 {
+			threshold++
+		}
+		args = append(args, "--exitwhenover", strconv.FormatInt(threshold, 10))
+	}
+	return args
 }
 
 func buildArgs(request Request) []string {
