@@ -28,7 +28,7 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False):
+def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False, worker_test_args=(), started_containers=None):
     if max_mailbox_bytes < 0:
         raise ValueError("mailbox limit must be non-negative")
     docker("image", "inspect", image)
@@ -76,12 +76,17 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, d
             args += ["--publish", f"127.0.0.1:{port}:8080"]
         else:
             args += ["--health-cmd=wget -q -T 3 -O /dev/null http://127.0.0.1:8090/healthz"]
+            # Python-only hook for isolated fault-injection labs; not a service
+            # option and never enabled by the launcher CLI.
+            args += list(worker_test_args)
         for key in values:
             args += ["--env", key]
         args += [image]
         if role == "worker":
             args += ["worker-service"]
         docker(*args, env=environment)
+        if started_containers is not None:
+            started_containers.append(prefix + "-" + role)
         print("Started", prefix + "-" + role, flush=True)
     for attempt in range(20):
         try:

@@ -183,6 +183,48 @@ unchanged. Source folder `MoveMailbox-Budget-06f1f52d07b9` and its `-Copy` targe
 prefix remain for inspection. See MAILBOX-QUOTA.md for the whole-message overshoot
 limitation and separate Go worker integration coverage.
 
+### Full API/worker APPEND faults — September 9
+
+`scripts/smoke-api-append-drop.py` now reproduces both faults with the actual
+guest API, encrypted remote queue and native imapsync. Image
+`movemailbox:api-append-pilot` contains backend `254959a` and pinned imapsync 2.319.
+The worker alone receives a Docker host override and temporary trusted test CA;
+API public-target validation stays enabled. The proxy binds only to the Docker
+bridge gateway, verifies the real upstream certificate, and passes later
+connections normally. This is an isolated test configuration, never production.
+
+- Mid-literal: 131,072 of 8,610,095 bytes forwarded. Job `95273180d562ae68`
+  completed automatically in two worker attempts; repeat `433077444ffc7b54`
+  completed in one attempt with zero copied messages.
+- Lost success reply: all 8,610,095 bytes forwarded and the tagged APPEND success
+  withheld. Job `4c02f42bb0dc06b8` completed in two attempts; repeat
+  `0732f04f41140a86` completed in one attempt with zero copied messages.
+- Both destination inspections found exactly one matching SHA-256, flags and
+  INTERNALDATE. Source fixture remained unchanged. Another guest received 404;
+  worker SQLite contained zero terminal credential envelopes; service logs
+  contained neither mailbox password.
+- Stopped labs retained: `movemailbox-api-append-21cb3cea581f` and
+  `movemailbox-api-append-b92ec7730d1c`. Destination prefixes are
+  `MoveMailbox-APIAppend-21cb3cea581f` and `MoveMailbox-APIAppend-b92ec7730d1c`.
+  No mail was deleted. Temporary certificates are removed, so these stopped
+  fault labs cannot simply be restarted; rerun the harness for fresh trust.
+
+Run in WSL with Docker administrator access and process-only `MM_SOURCE_*` /
+`MM_DESTINATION_*` credentials:
+
+```text
+python3 scripts/smoke-api-append-drop.py --image movemailbox:api-append-pilot --folder MoveMailbox-Attachment-546b1b366e --allow-test-mail
+python3 scripts/smoke-api-append-drop.py --image movemailbox:api-append-pilot --folder MoveMailbox-Attachment-546b1b366e --allow-test-mail --lose-ack
+```
+
+Use an existing isolated one-message attachment fixture; API port 8184 and
+Docker bridge port 993 must be free. An initial immediate second run hit TCP
+port reuse; SO_REUSEADDR was added before the successful lost-ack run. Fourteen
+offline harness tests pass, including cleanup ownership on partial launch and
+ensuring that the test host override applies only to the worker.
+This establishes these two faults for Mail-in-a-Box, not every provider or a
+production firewall/deployment. Strict mirror is intentionally not used.
+
 ### Backup validator regression and corrected restore
 
 The original damaged-backup assertion was reversed: an `ok` integrity result

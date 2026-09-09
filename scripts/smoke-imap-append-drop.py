@@ -52,9 +52,11 @@ class DropProxy:
         self.context.load_cert_chain(cert, key)
         self.connections = []
         self.error = None
+        self.closing = threading.Event()
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def close(self):
+        self.closing.set()
         self.server.close()
         for connection in self.connections:
             try:
@@ -90,7 +92,7 @@ class DropProxy:
                         else:
                             client.sendall(data)
                 except Exception as exc:
-                    if not self.gate.dropped:
+                    if not self.gate.dropped and not self.closing.is_set():
                         self.error = type(exc).__name__
                         self.close()
             reply = threading.Thread(target=relay_replies, daemon=True)

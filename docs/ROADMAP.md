@@ -94,7 +94,9 @@ coordination belongs to stage 4, not the single-VPS preview.
 - September 8 corrected streaming proxy: exact 131,072-byte APPEND cut, exit 114,
   zero committed partial messages, successful recovery and repeat without duplicates.
   Lost acknowledgements after commit also pass with one complete message after
-  recovery and repeat. An API-level exact proxy drill remains pending.
+  recovery and repeat. September 9: both exact faults also pass through the
+  guest API and encrypted remote worker queue, automatic recovery in two attempts,
+  no duplicates, guest isolation and terminal envelope cleanup. See PILOT.md.
 - Production backup/off-site runbook is documented; encrypted provider drill remains.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
