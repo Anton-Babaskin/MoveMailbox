@@ -109,7 +109,9 @@ coordination belongs to stage 4, not the single-VPS preview.
   job/envelope; new work succeeds after freeing bounded tmpfs, without restart.
   Active demo-transfer ENOSPC now passes too: pending terminal writes recover
   after capacity returns without replay; worker reports unavailable while pending.
-  Crash during pending terminal commit and live-IMAP ENOSPC remain gates. See PILOT.md.
+  Crash during pending terminal commit now passes in the demo Docker drill:
+  no-resume and mirror fail without replay; opted-in ordinary copy resumes after
+  lease expiry. Combined live-IMAP ENOSPC/crash remains a gate. See PILOT.md.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

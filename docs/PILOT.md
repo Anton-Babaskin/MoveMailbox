@@ -234,8 +234,48 @@ Operational limit: pending terminal recovery is in memory. Restore capacity befo
 restarting the worker where possible; do not use this readiness failure to trigger
 automatic restarts. A crash during the outage still follows interrupted-job
 recovery policy and is not covered by this no-replay guarantee. Existing strict-
-mirror guards remain in effect. Crash-at-pending-commit and live-IMAP ENOSPC remain
-separate gates; this demo test does not prove message integrity under that fault.
+mirror guards remain in effect. The subsequent crash-policy matrix is below;
+live-IMAP ENOSPC remains separate, as demo tests do not prove message integrity.
+
+### SIGKILL during pending terminal write — September 9
+
+The ENOSPC harness now supports `--active --crash`. A restricted holder container
+keeps the same bounded tmpfs volume mounted across worker SIGKILL; this avoids
+mistaking an empty database after tmpfs unmount for successful crash recovery.
+The test verifies the original `running` record with one attempt after the kill,
+frees only its filler and restarts the original worker with its original keys.
+The demo engine never connects to IMAP. On image `movemailbox:active-enospc`
+(backend code from `7a15597`), all three policies passed:
+
+| Policy | Original job | Final state / attempts |
+| --- | --- | --- |
+| Resume disabled | `6728b41b8c80ed35` | failed / 1 |
+| Resume enabled, ordinary copy | `6c9d8a3ec3ff4b7b` | completed / 2 |
+| Resume enabled, strict mirror | `39282f38e63f8805` | failed / 1 |
+
+Every case verifies terminal envelope cleanup, a new successful job after repair,
+SQLite integrity, guest isolation and absence of synthetic passwords in logs.
+Retained stopped labs: `movemailbox-enospc-d9fab134ca37`,
+`movemailbox-enospc-89361ec76f2b`, `movemailbox-enospc-08a01f666496`.
+Worker tmpfs was discarded only after each holder stopped. API volumes remain.
+
+The resume-enabled case respects the existing credential lease, which may survive
+the crash for 30 seconds. The initial 20-second harness deadline was insufficient;
+recovery now allows 75 seconds and polls every two seconds to stay within guest
+request limits. Failed harness attempts are not counted as passing product tests.
+
+```text
+sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:active-enospc --active --crash
+sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:active-enospc --active --crash --resume-interrupted
+sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:active-enospc --active --crash --resume-interrupted --strict-mirror
+```
+
+All three commands also run in CI. Recovery policy itself was not changed: the
+standalone worker defaults to resume disabled, while the current Compose setup
+enables supervised interrupted-job recovery. An uncertain ordinary copy may
+therefore execute again after restart; only the no-resume policy and strict-mirror
+guard avoid that replay. This test proves metadata/worker behavior with a demo
+engine, not real-mail idempotence under combined ENOSPC + process crash.
 
 ### Actual container ENOSPC at admission — September 9
 

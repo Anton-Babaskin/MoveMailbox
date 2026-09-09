@@ -51,12 +51,13 @@ class HarnessTests(unittest.TestCase):
             pilot.subprocess, "run", return_value=SimpleNamespace(returncode=1)
         ):
             with self.assertRaises(RuntimeError):
-                pilot.start("movemailbox-unit", worker_test_args=("--add-host", "mail.example:172.17.0.1"), started_containers=started, worker_test_database="/fault/worker.db")
+                pilot.start("movemailbox-unit", worker_test_args=("--add-host", "mail.example:172.17.0.1"), started_containers=started, worker_test_database="/fault/worker.db", resume_interrupted=False)
         self.assertEqual(started, ["movemailbox-unit-worker"])
         launches = [args for args in calls if args[:2] == ("run", "--detach")]
         self.assertIn("--add-host", launches[0])
         self.assertNotIn("--add-host", launches[1])
         self.assertEqual(environments[0]["MOVEMAILBOX_WORKER_DATABASE"], "/fault/worker.db")
+        self.assertEqual(environments[0]["MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED"], "false")
         self.assertNotIn("MOVEMAILBOX_WORKER_DATABASE", environments[1])
 
     def test_existing_resource_is_never_claimed_for_cleanup(self):

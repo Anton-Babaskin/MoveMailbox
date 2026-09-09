@@ -142,6 +142,12 @@ jobs:
       - name: Verify active worker ENOSPC terminal recovery without replay
         run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active
 
+      - name: Verify crash during pending terminal write across recovery policies
+        run: |
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash --resume-interrupted
+          sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active --crash --resume-interrupted --strict-mirror
+
       - name: Run container health check with hardened settings
         shell: bash
         run: |

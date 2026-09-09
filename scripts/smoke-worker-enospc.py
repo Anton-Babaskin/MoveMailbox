@@ -36,7 +36,16 @@ def run(args):
         pilot.docker("volume", "create", "--driver", "local", "--opt", "type=tmpfs", "--opt", "device=tmpfs", "--opt", "o=size=8m,mode=0770,uid=65534,gid=65534", volume)
         pilot.start(prefix, args.port, args.image, 0, demo=True,
                     worker_test_args=["--mount", "type=volume,src=" + volume + ",dst=/fault"],
-                    worker_test_database="/fault/worker.db", started_containers=started)
+                    worker_test_database="/fault/worker.db", started_containers=started,
+                    resume_interrupted=not args.crash or args.resume_interrupted)
+        holder = None
+        if args.crash:
+            holder = prefix + "-holder"
+            pilot.docker("run", "--detach", "--name", holder, "--init", "--network=none", "--read-only", "--cap-drop=ALL",
+                         "--security-opt=no-new-privileges:true", "--memory=64m", "--pids-limit=16",
+                         "--mount", "type=volume,src=" + volume + ",dst=/fault", "--entrypoint", "sleep", args.image, "600")
+            # Stop last, keeping tmpfs data mounted while the worker is killed.
+            started.insert(0, holder)
         config = json.loads(pilot.docker("inspect", worker))[0]
         info = json.loads(pilot.docker("volume", "inspect", volume))[0]
         if info["Driver"] != "local" or info["Options"] != {"type": "tmpfs", "device": "tmpfs", "o": "size=8m,mode=0770,uid=65534,gid=65534"}:
@@ -54,7 +63,7 @@ def run(args):
         # Demo worker never connects to either endpoint. Public API checks remain.
         active_job = None
         if args.active:
-            active_payload = {**payload, "options": {}}
+            active_payload = {**payload, "options": {"strictMirror": args.strict_mirror, "strictMirrorConfirmed": args.strict_mirror}}
             active_job, _ = api.request("/api/jobs", active_payload, 202)
             deadline = time.monotonic() + 15
             while True:
@@ -92,6 +101,15 @@ def run(args):
             if state["status"] == "completed":
                 raise RuntimeError("full storage produced false success")
             print("PASS: active transfer lost persistence; worker unavailable while terminal write cannot commit; no false success", flush=True)
+            if args.crash:
+                pilot.docker("kill", "--signal=KILL", worker)
+                if pilot.docker("inspect", "--format", "{{.State.Running}}", worker) != "false":
+                    raise RuntimeError("worker did not stop after SIGKILL")
+                with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
+                    row = db.execute("SELECT status, attempts FROM worker_jobs WHERE job_id=?", (active_job["id"],)).fetchone()
+                    if row != ("running", 1):
+                        raise RuntimeError("uncertain running record not retained across kill")
+                print("PASS: SIGKILL while terminal write pending; holder preserves original running record in same tmpfs", flush=True)
         else:
             api.request("/api/jobs", payload, expected=503)
             jobs, _ = api.request("/api/jobs")
@@ -103,25 +121,32 @@ def run(args):
                         raise RuntimeError("partial admission persisted")
             print("PASS: actual ENOSPC, zero available tmpfs blocks, API 503; no accepted job/envelope/event", flush=True)
         # Exact file in our verified tmpfs only. Truncate, do not recursively delete.
-        if pilot.docker("exec", worker, "stat", "-c", "%F", "/fault/filler") != "regular file":
+        storage_container = holder or worker
+        if pilot.docker("exec", storage_container, "stat", "-c", "%F", "/fault/filler") != "regular file":
             raise RuntimeError("filler is not a regular file")
-        pilot.docker("exec", worker, "truncate", "-s", "0", "/fault/filler")
-        if int(pilot.docker("exec", worker, "stat", "-f", "-c", "%a", "/fault")) <= 0:
+        pilot.docker("exec", storage_container, "truncate", "-s", "0", "/fault/filler")
+        if int(pilot.docker("exec", storage_container, "stat", "-f", "-c", "%a", "/fault")) <= 0:
             raise RuntimeError("capacity was not restored")
+        if args.crash:
+            pilot.docker("start", worker)
         if active_job:
-            deadline = time.monotonic() + 20
+            expected_status = "completed" if args.crash and args.resume_interrupted and not args.strict_mirror else "failed"
+            expected_attempts = 2 if expected_status == "completed" else 1
+            # Crash can retain an unexpired credential lease (30 s by default).
+            # Respect that lease rather than forcing a premature second owner.
+            deadline = time.monotonic() + 75
             while True:
                 state, _ = api.request("/api/jobs/" + active_job["id"])
-                if state["status"] == "failed":
+                if state["status"] == expected_status:
                     break
                 if time.monotonic() > deadline:
                     raise RuntimeError("terminal state did not recover after freeing space")
-                time.sleep(0.25)
+                time.sleep(2)  # Respect guest rate limits during lease expiry.
             with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
                 row = db.execute("SELECT status, attempts FROM worker_jobs WHERE job_id=?", (active_job["id"],)).fetchone()
-                if row != ("failed", 1) or db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] != 0:
+                if row != (expected_status, expected_attempts) or db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] != 0:
                     raise RuntimeError("active job replayed or retained credentials")
-            print("PASS: original job becomes failed after capacity returns, one attempt, credentials removed, no restart/replay", flush=True)
+            print(f"PASS: original job {expected_status}, attempts={expected_attempts}, credentials removed; crash={args.crash}, resume={args.resume_interrupted}, mirror={args.strict_mirror}", flush=True)
         recovered = api.run(payload)
         if recovered["status"] != "completed":
             raise RuntimeError("new job failed after restoring capacity")
@@ -135,7 +160,7 @@ def run(args):
         logs = pilot.docker("logs", worker) + pilot.docker("logs", prefix + "-api")
         if any(payload[side]["password"] in logs for side in ("source", "destination")):
             raise RuntimeError("synthetic credentials in service logs")
-        print("PASS: capacity restored without restart; new job completes in one attempt, no envelopes, integrity ok, guest isolation, no secrets in logs", flush=True)
+        print("PASS: new job completes after recovery in one attempt, no envelopes, integrity ok, guest isolation, no secrets in logs", flush=True)
         print(json.dumps({"lab": prefix, "activeJob": active_job["id"] if active_job else None, "recoveredJob": recovered["id"], "tmpfsBytes": 8388608}), flush=True)
     finally:
         for name in reversed(started):
@@ -149,9 +174,14 @@ if __name__ == "__main__":
     parser.add_argument("--image", required=True)
     parser.add_argument("--port", type=int, default=8186)
     parser.add_argument("--active", action="store_true", help="fill after migration has started")
+    parser.add_argument("--crash", action="store_true", help="SIGKILL pending worker; preserve database with a holder")
+    parser.add_argument("--resume-interrupted", action="store_true", help="explicitly opt into recovery after crash")
+    parser.add_argument("--strict-mirror", action="store_true", help="demo-only destructive-mode replay guard")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error("unprivileged API port required")
+    if (args.crash and not args.active) or ((args.resume_interrupted or args.strict_mirror) and not args.crash):
+        parser.error("crash requires active; resume/mirror require crash")
     try:
         run(args)
     except Exception as exc:
