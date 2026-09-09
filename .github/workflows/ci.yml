@@ -139,6 +139,9 @@ jobs:
       - name: Verify worker ENOSPC admission and recovery in bounded tmpfs
         run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci
 
+      - name: Verify active worker ENOSPC terminal recovery without replay
+        run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci --active
+
       - name: Run container health check with hardened settings
         shell: bash
         run: |

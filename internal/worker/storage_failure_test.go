@@ -50,3 +50,54 @@ func TestEventPersistenceFailureCannotReportSuccess(t *testing.T) {
 		t.Fatalf("new migration after storage repair failed: %v", err)
 	}
 }
+
+func TestFinalWriteFailureRecoversWithoutReplayingEngine(t *testing.T) {
+	public, private, token := remoteTestSecrets(t)
+	engine := &remoteTestEngine{}
+	service := newRemoteTestService(t, filepath.Join(t.TempDir(), "worker.db"), private, token, engine)
+	_, err := service.jobs.db.Exec(`CREATE TRIGGER reject_terminal BEFORE UPDATE OF status ON worker_jobs WHEN NEW.status IN ('completed','failed') BEGIN SELECT RAISE(ABORT, 'injected terminal failure'); END`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewServer(service.Handler())
+	defer server.Close()
+	runner := newRemoteTestRunner(t, server.URL, public, token)
+	defer runner.Close()
+	if err := runner.Prepare(context.Background(), "terminal-failure", workerTestRequest()); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { _, err := runner.Run(ctx, "terminal-failure", nil); done <- err }()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if service.pendingFinalWrites.Load() > 0 {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if service.pendingFinalWrites.Load() != 1 || runner.Available() {
+		t.Fatal("worker did not expose pending terminal write as unavailable")
+	}
+	if _, err := service.jobs.db.Exec(`DROP TRIGGER reject_terminal`); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err == nil {
+		t.Fatal("uncertain completion reported success")
+	}
+	snapshot, exists, err := service.jobs.get(context.Background(), "terminal-failure", 0)
+	if err != nil || !exists || snapshot.Status != remoteStatusFailed || snapshot.Attempts != 1 {
+		t.Fatalf("terminal write was not recovered: %+v %v", snapshot, err)
+	}
+	engine.mu.Lock()
+	attempts := engine.attempts
+	engine.mu.Unlock()
+	if attempts != 1 {
+		t.Fatalf("engine replayed %d times", attempts)
+	}
+	_, err = service.envelopes.Lease(context.Background(), "terminal-failure", "check", time.Now(), time.Second)
+	if !errors.Is(err, credentials.ErrNotFound) {
+		t.Fatalf("envelope retained: %v", err)
+	}
+}

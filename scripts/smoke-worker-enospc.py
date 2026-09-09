@@ -13,6 +13,7 @@ import secrets
 import sqlite3
 import subprocess
 import traceback
+import time
 
 
 def load(name, filename):
@@ -51,30 +52,76 @@ def run(args):
                    "destination": {"host": "8.8.8.8", "port": 993, "security": "tls", "username": "demo-dest@example.test", "password": "synthetic-enospc-dest"},
                    "options": {"justLogin": True}}
         # Demo worker never connects to either endpoint. Public API checks remain.
-        with closing(sqlite3.connect(dbpath)) as db:
-            result = db.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
-            if result[0] != 0:
-                raise RuntimeError("cannot checkpoint idle test database")
+        active_job = None
+        if args.active:
+            active_payload = {**payload, "options": {}}
+            active_job, _ = api.request("/api/jobs", active_payload, 202)
+            deadline = time.monotonic() + 15
+            while True:
+                with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
+                    row = db.execute("SELECT status, sequence FROM worker_jobs WHERE job_id=?", (active_job["id"],)).fetchone()
+                if row and row[0] == "running" and row[1] > 0:
+                    break
+                if time.monotonic() > deadline:
+                    raise RuntimeError("active job did not start")
+                time.sleep(0.05)
+            pilot.docker("pause", worker)
+        try:
+            with closing(sqlite3.connect(dbpath)) as db:
+                result = db.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+                if result[0] != 0:
+                    raise RuntimeError("cannot checkpoint test database")
+        finally:
+            if active_job:
+                pilot.docker("unpause", worker)
         filled = subprocess.run(["docker", "exec", worker, "dd", "if=/dev/zero", "of=/fault/filler", "bs=1048576", "count=16"], capture_output=True, timeout=20)
         if filled.returncode == 0 or b"No space left on device" not in filled.stderr:
             raise RuntimeError("real ENOSPC not observed")
         if int(pilot.docker("exec", worker, "stat", "-f", "-c", "%a", "/fault")) != 0:
             raise RuntimeError("test filesystem still has available blocks")
-        api.request("/api/jobs", payload, expected=503)
-        jobs, _ = api.request("/api/jobs")
-        if jobs:
-            raise RuntimeError("API accepted job despite unavailable durable admission")
-        with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
-            for table in ("worker_jobs", "credential_envelopes", "worker_events"):
-                if db.execute("SELECT count(*) FROM " + table).fetchone()[0] != 0:
-                    raise RuntimeError("partial admission persisted")
-        print("PASS: actual ENOSPC, zero available tmpfs blocks, API 503; no accepted job/envelope/event", flush=True)
+        if active_job:
+            deadline = time.monotonic() + 20
+            while True:
+                health, _ = api.request("/api/health")
+                if not health["available"]:
+                    break
+                if time.monotonic() > deadline:
+                    raise RuntimeError("worker did not expose pending storage failure")
+                time.sleep(0.25)
+            state, _ = api.request("/api/jobs/" + active_job["id"])
+            if state["status"] == "completed":
+                raise RuntimeError("full storage produced false success")
+            print("PASS: active transfer lost persistence; worker unavailable while terminal write cannot commit; no false success", flush=True)
+        else:
+            api.request("/api/jobs", payload, expected=503)
+            jobs, _ = api.request("/api/jobs")
+            if jobs:
+                raise RuntimeError("API accepted job despite unavailable durable admission")
+            with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
+                for table in ("worker_jobs", "credential_envelopes", "worker_events"):
+                    if db.execute("SELECT count(*) FROM " + table).fetchone()[0] != 0:
+                        raise RuntimeError("partial admission persisted")
+            print("PASS: actual ENOSPC, zero available tmpfs blocks, API 503; no accepted job/envelope/event", flush=True)
         # Exact file in our verified tmpfs only. Truncate, do not recursively delete.
         if pilot.docker("exec", worker, "stat", "-c", "%F", "/fault/filler") != "regular file":
             raise RuntimeError("filler is not a regular file")
         pilot.docker("exec", worker, "truncate", "-s", "0", "/fault/filler")
         if int(pilot.docker("exec", worker, "stat", "-f", "-c", "%a", "/fault")) <= 0:
             raise RuntimeError("capacity was not restored")
+        if active_job:
+            deadline = time.monotonic() + 20
+            while True:
+                state, _ = api.request("/api/jobs/" + active_job["id"])
+                if state["status"] == "failed":
+                    break
+                if time.monotonic() > deadline:
+                    raise RuntimeError("terminal state did not recover after freeing space")
+                time.sleep(0.25)
+            with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
+                row = db.execute("SELECT status, attempts FROM worker_jobs WHERE job_id=?", (active_job["id"],)).fetchone()
+                if row != ("failed", 1) or db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] != 0:
+                    raise RuntimeError("active job replayed or retained credentials")
+            print("PASS: original job becomes failed after capacity returns, one attempt, credentials removed, no restart/replay", flush=True)
         recovered = api.run(payload)
         if recovered["status"] != "completed":
             raise RuntimeError("new job failed after restoring capacity")
@@ -89,7 +136,7 @@ def run(args):
         if any(payload[side]["password"] in logs for side in ("source", "destination")):
             raise RuntimeError("synthetic credentials in service logs")
         print("PASS: capacity restored without restart; new job completes in one attempt, no envelopes, integrity ok, guest isolation, no secrets in logs", flush=True)
-        print(json.dumps({"lab": prefix, "recoveredJob": recovered["id"], "tmpfsBytes": 8388608}), flush=True)
+        print(json.dumps({"lab": prefix, "activeJob": active_job["id"] if active_job else None, "recoveredJob": recovered["id"], "tmpfsBytes": 8388608}), flush=True)
     finally:
         for name in reversed(started):
             pilot.docker("stop", "--time=20", name)
@@ -101,6 +148,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True)
     parser.add_argument("--port", type=int, default=8186)
+    parser.add_argument("--active", action="store_true", help="fill after migration has started")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error("unprivileged API port required")

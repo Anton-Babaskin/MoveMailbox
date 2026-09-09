@@ -201,8 +201,41 @@ limitation and separate Go worker integration coverage.
   fsync or read failure. If storage cannot accept even terminal state/cleanup,
   immediate durable failure and envelope deletion cannot be guaranteed; repairing
   storage and reviewing interrupted work remain necessary. Container-level ENOSPC
-  at admission is now covered below; ENOSPC during active migration remains pending.
+  at admission and during an active demo migration is now covered below.
   The full API growth test is recorded below.
+
+### Active worker ENOSPC and terminal-state recovery — September 9
+
+Reproduced a backend defect with a SQLite terminal-write rejection: after the
+engine returned, the job stayed `running` even after the database was repaired.
+The worker now retains its execution slot and retries only the failed terminal
+transaction (250 ms interval; bounded individual writes), never the IMAP operation.
+Pending terminal writes make `/healthz` return 503 with `storage-unavailable`.
+After storage recovers, failure state and envelope removal commit atomically.
+Even if the engine returned success, a lost final commit is reported conservatively
+as failure requiring review; already copied mail is retained.
+
+`TestFinalWriteFailureRecoversWithoutReplayingEngine` covers the regression,
+degraded availability, repair without restart, one engine attempt and cleanup.
+`scripts/smoke-worker-enospc.py --active` additionally passed with an actual full
+8 MiB tmpfs and the demo engine on image `movemailbox:active-enospc` (version label
+`active-storage-test`, containing this change):
+
+- Started job `152573d1bb202e67`, verified worker `running` and persisted events,
+  checkpointed WAL, then exhausted storage. No false successful API result.
+- Worker became unavailable while its terminal transaction could not commit.
+- After truncating only the validated filler, the same job became `failed` in
+  one attempt; zero envelopes. New job `4aad49e37e2f6cf7` completed without restart.
+- SQLite integrity, guest isolation and synthetic-secret log checks passed.
+  Lab `movemailbox-enospc-bdd03465ceb7` stopped; ephemeral worker tmpfs discarded,
+  API volume retained. No real mailbox was accessed. Both ENOSPC modes run in CI.
+
+Operational limit: pending terminal recovery is in memory. Restore capacity before
+restarting the worker where possible; do not use this readiness failure to trigger
+automatic restarts. A crash during the outage still follows interrupted-job
+recovery policy and is not covered by this no-replay guarantee. Existing strict-
+mirror guards remain in effect. Crash-at-pending-commit and live-IMAP ENOSPC remain
+separate gates; this demo test does not prove message integrity under that fault.
 
 ### Actual container ENOSPC at admission — September 9
 
