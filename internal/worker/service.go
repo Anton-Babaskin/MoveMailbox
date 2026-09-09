@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Anton-Babaskin/MoveMailbox/internal/credentials"
@@ -314,6 +315,7 @@ func (service *Service) runJob(jobID string) {
 	}
 	leaseErrors := make(chan error, 1)
 	go keepLease(migrationContext, service.envelopes, jobID, workerID, service.config.LeaseTTL, leaseErrors, cancelMigration)
+	var eventWriteFailed atomic.Bool
 	result, migrationErr := service.config.Engine.Migrate(migrationContext, request, func(event migrator.Event) {
 		event = sanitizeServiceEvent(event, request)
 		if event.Timestamp.IsZero() {
@@ -323,6 +325,7 @@ func (service *Service) runJob(jobID string) {
 		err := service.jobs.appendEvent(writeContext, jobID, event, time.Now())
 		cancel()
 		if err != nil {
+			eventWriteFailed.Store(true)
 			cancelMigration()
 		}
 	})
@@ -331,6 +334,10 @@ func (service *Service) runJob(jobID string) {
 	// The engine and its lease-renewal goroutine have stopped before releasing ownership.
 	if err := service.envelopes.ReleaseLease(context.Background(), jobID, workerID); err != nil {
 		service.finishFailure(jobID, "credential lease could not be released")
+		return
+	}
+	if eventWriteFailed.Load() {
+		service.finishFailure(jobID, "migration progress could not be persisted; already copied mail is retained; manual review required")
 		return
 	}
 	if service.ctx.Err() != nil {

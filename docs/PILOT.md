@@ -183,6 +183,26 @@ unchanged. Source folder `MoveMailbox-Budget-06f1f52d07b9` and its `-Copy` targe
 prefix remain for inspection. See MAILBOX-QUOTA.md for the whole-message overshoot
 limitation and separate Go worker integration coverage.
 
+### Storage write failures — September 9
+
+- Regression reproduced before the fix: a worker event INSERT rejected by a
+  SQLite trigger could still result in `completed` if the engine returned nil
+  after cancellation. Worker now latches event-write failure, cancels the engine
+  and records permanent failure before considering the engine success result.
+- `TestEventPersistenceFailureCannotReportSuccess` verifies one attempt, explicit
+  persistence failure, terminal envelope deletion and a successful new job after
+  removing the injected fault. This uses the real worker HTTP service and SQLite,
+  with a simulated migration engine; it is not a live IMAP/disk-exhaustion drill.
+- `TestSQLiteFullRollsBackSnapshotAndRecoversAfterCapacityRestored` constrains
+  `PRAGMA max_page_count` and asserts actual SQLite error code 13 (`SQLITE_FULL`).
+  A failed snapshot update leaves the previous record intact; increasing capacity
+  permits the update and `PRAGMA integrity_check` returns `ok`.
+- These tests do not exhaust the host filesystem or prove handling of every WAL,
+  fsync or read failure. If storage cannot accept even terminal state/cleanup,
+  immediate durable failure and envelope deletion cannot be guaranteed; repairing
+  storage and reviewing interrupted work remain necessary. Container-level ENOSPC
+  and growth-over-budget through the complete guest API are still pending.
+
 ### Full API/worker APPEND faults — September 9
 
 `scripts/smoke-api-append-drop.py` now reproduces both faults with the actual

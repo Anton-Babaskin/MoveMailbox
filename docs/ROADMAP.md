@@ -98,6 +98,10 @@ coordination belongs to stage 4, not the single-VPS preview.
   guest API and encrypted remote worker queue, automatic recovery in two attempts,
   no duplicates, guest isolation and terminal envelope cleanup. See PILOT.md.
 - Production backup/off-site runbook is documented; encrypted provider drill remains.
+- September 9: worker event-write failure no longer allows false success; a
+  permanent failure and cleanup are tested when terminal writes remain available.
+  Real SQLITE_FULL snapshot rollback and recovery are covered without filling the
+  host disk. Container-level ENOSPC and complete storage outage remain gates.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
