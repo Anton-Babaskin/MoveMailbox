@@ -28,7 +28,7 @@ def docker(*args, env=None):
     return result.stdout.decode().strip()
 
 
-def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False, worker_test_args=(), started_containers=None):
+def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False, worker_test_args=(), started_containers=None, worker_test_database=None):
     if max_mailbox_bytes < 0:
         raise ValueError("mailbox limit must be non-negative")
     docker("image", "inspect", image)
@@ -50,7 +50,7 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, d
             values.update({
                 "MOVEMAILBOX_WORKER_PRIVATE_KEY": keys["MOVEMAILBOX_WORKER_PRIVATE_KEY"],
                 "MOVEMAILBOX_WORKER_ADDR": "0.0.0.0:8090",
-                "MOVEMAILBOX_WORKER_DATABASE": "/worker-data/worker.db",
+                "MOVEMAILBOX_WORKER_DATABASE": worker_test_database or "/worker-data/worker.db",
                 "MOVEMAILBOX_WORKER_RECOVER_INTERRUPTED": "true",
                 "MOVEMAILBOX_MAX_MAILBOX_BYTES": str(max_mailbox_bytes),
                 "MOVEMAILBOX_DEMO": "true" if demo else "false",

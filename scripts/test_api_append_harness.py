@@ -35,10 +35,12 @@ class HarnessTests(unittest.TestCase):
 
     def test_partial_launch_tracks_only_created_worker_and_keeps_api_routing(self):
         pilot = load("pilot", "start-local-pilot.py")
-        calls, started = [], []
+        calls, started, environments = [], [], []
 
         def docker(*args, **kwargs):
             calls.append(args)
+            if args[:2] == ("run", "--detach"):
+                environments.append(kwargs["env"])
             if args[:2] == ("run", "--rm"):
                 return "MOVEMAILBOX_WORKER_TOKEN=test-token\nMOVEMAILBOX_WORKER_PRIVATE_KEY=test-private\nMOVEMAILBOX_WORKER_PUBLIC_KEY=test-public"
             if args[:2] == ("run", "--detach") and args[3].endswith("-api"):
@@ -49,11 +51,13 @@ class HarnessTests(unittest.TestCase):
             pilot.subprocess, "run", return_value=SimpleNamespace(returncode=1)
         ):
             with self.assertRaises(RuntimeError):
-                pilot.start("movemailbox-unit", worker_test_args=("--add-host", "mail.example:172.17.0.1"), started_containers=started)
+                pilot.start("movemailbox-unit", worker_test_args=("--add-host", "mail.example:172.17.0.1"), started_containers=started, worker_test_database="/fault/worker.db")
         self.assertEqual(started, ["movemailbox-unit-worker"])
         launches = [args for args in calls if args[:2] == ("run", "--detach")]
         self.assertIn("--add-host", launches[0])
         self.assertNotIn("--add-host", launches[1])
+        self.assertEqual(environments[0]["MOVEMAILBOX_WORKER_DATABASE"], "/fault/worker.db")
+        self.assertNotIn("MOVEMAILBOX_WORKER_DATABASE", environments[1])
 
     def test_existing_resource_is_never_claimed_for_cleanup(self):
         pilot = load("pilot", "start-local-pilot.py")

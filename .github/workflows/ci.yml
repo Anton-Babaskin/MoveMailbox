@@ -136,6 +136,9 @@ jobs:
       - name: Verify independent API and worker hard-kill recovery
         run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci
 
+      - name: Verify worker ENOSPC admission and recovery in bounded tmpfs
+        run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci
+
       - name: Run container health check with hardened settings
         shell: bash
         run: |

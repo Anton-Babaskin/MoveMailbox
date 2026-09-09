@@ -201,7 +201,42 @@ limitation and separate Go worker integration coverage.
   fsync or read failure. If storage cannot accept even terminal state/cleanup,
   immediate durable failure and envelope deletion cannot be guaranteed; repairing
   storage and reviewing interrupted work remain necessary. Container-level ENOSPC
-  remains pending. The full API growth test is recorded below.
+  at admission is now covered below; ENOSPC during active migration remains pending.
+  The full API growth test is recorded below.
+
+### Actual container ENOSPC at admission — September 9
+
+`scripts/smoke-worker-enospc.py` passed twice on backend `07fb9de` in image
+`movemailbox:growth-pilot`. The worker uses the demo engine and an isolated
+8,388,608-byte tmpfs volume. No IMAP connections or real credentials are used.
+
+- Confirms Docker volume driver/options, destination mapping, actual tmpfs type
+  and exact capacity before filling only `/fault/filler`. Bounded dd returns
+  `No space left on device`; statfs confirms zero available blocks.
+- Guest API rejects new work with 503. API job list and worker job/event/envelope
+  tables remain empty: no partial admission and no fake successful job.
+- Truncating only the verified regular filler file restores capacity. Without
+  restarting either service, a new job completes in one attempt, terminal
+  envelopes are absent, SQLite integrity is `ok`, another guest gets 404 and
+  synthetic passwords are absent from service logs.
+- Latest retained lab: `movemailbox-enospc-6f87038be6b7`, recovery job
+  `c666b236d613265d`. Earlier successful job: `b2bf54bd6b6c5647` in
+  `movemailbox-enospc-018ac609122e`. Containers stopped; worker tmpfs contents
+  discarded on unmount, API volumes retained. No mail or user files deleted.
+
+Initial harness attempts stopped before filling because of mount inspection and
+SQLite permissions. Docker tmpfs metadata handling was corrected and the dedicated
+directory uses uid/gid 65534 with mode 0770. A normal WSL run then passed; namespace
+switching is not required. The host disk is never filled.
+
+```text
+sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:growth-pilot
+```
+
+Needs local Docker administrator access and free API port 8186; also runs in CI
+against its freshly built image. This proves admission rollback/recovery under
+actual ENOSPC, not an active transfer losing its final commit, host power loss,
+fsync failure, or durability after restarting a deliberately ephemeral tmpfs.
 
 ### Growth after admission through the guest API — September 9
 

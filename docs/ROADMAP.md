@@ -105,7 +105,9 @@ coordination belongs to stage 4, not the single-VPS preview.
 - September 9: worker event-write failure no longer allows false success; a
   permanent failure and cleanup are tested when terminal writes remain available.
   Real SQLITE_FULL snapshot rollback and recovery are covered without filling the
-  host disk. Container-level ENOSPC and complete storage outage remain gates.
+  host disk. Container-level ENOSPC admission now passes: 503 with no partial
+  job/envelope; new work succeeds after freeing bounded tmpfs, without restart.
+  Active-transfer ENOSPC and complete storage outage remain gates. See PILOT.md.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
