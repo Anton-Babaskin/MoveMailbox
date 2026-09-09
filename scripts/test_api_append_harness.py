@@ -14,6 +14,16 @@ def load(name, filename):
 
 
 class HarnessTests(unittest.TestCase):
+    def test_growth_fixtures_are_distinct_and_exceed_budget(self):
+        growth = load("growth", "smoke-api-growth.py")
+        first = growth.fixture("MoveMailbox-Growth-test", 1, 10000)
+        second = growth.fixture("MoveMailbox-Growth-test", 2, 10000)
+        self.assertNotEqual(first, second)
+        for raw in (first, second):
+            self.assertGreater(len(raw), 10000)
+            self.assertLess(len(raw), 20000)
+            self.assertIn(b"\r\n\r\n", raw)
+
     def test_recovery_gate_forwards_unmodified_bytes(self):
         drill = load("drill", "smoke-api-append-drop.py")
         gate, output = drill.PassGate(), bytearray()

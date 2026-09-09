@@ -84,6 +84,10 @@ coordination belongs to stage 4, not the single-VPS preview.
   See [mailbox quota](MAILBOX-QUOTA.md) for tests and snapshot limitations.
   Whole-message execution-time guard now fails permanently on native exit 118;
   strict byte accounting and per-customer cumulative quotas remain pending.
+- September 9: growth after both inventories verified through the guest API and
+  real worker/imapsync: one whole message over budget retained, second skipped,
+  permanent failure in one attempt, credentials removed. This is the documented
+  whole-message guard, not a hard traffic cap. See PILOT.md.
 - WSL Docker verification passed on September 8: actual worker quota rejection,
   6 MiB attachment integrity/flags/date, zero-duplicate repeats, real imapsync
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.

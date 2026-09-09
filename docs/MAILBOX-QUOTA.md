@@ -96,3 +96,12 @@ movemailbox:quota-pilot --allow-test-mail`, passed with two synthetic messages:
 a 2-byte threshold retained one complete message, skipped the second and exited
 118; the source stayed unchanged. This native test is separate from the Go worker
 integration test, not a live end-to-end runtime-budget API assertion.
+
+The subsequent full guest API/worker growth test also passed on September 9:
+both inventories admitted a source below 12,000,000 bytes, then a test execution
+gate allowed insertion of two 12,317,565-byte messages before native copying.
+One complete message was retained, the second skipped; the job failed permanently
+in one attempt and credentials were removed. Content/flags/date and guest
+isolation passed. See PILOT.md and `scripts/smoke-api-growth.py` for exact scope
+and reproduction. The observed 317,565-byte overshoot illustrates why this is
+not a strict byte cap.

@@ -201,7 +201,45 @@ limitation and separate Go worker integration coverage.
   fsync or read failure. If storage cannot accept even terminal state/cleanup,
   immediate durable failure and envelope deletion cannot be guaranteed; repairing
   storage and reviewing interrupted work remain necessary. Container-level ENOSPC
-  and growth-over-budget through the complete guest API are still pending.
+  remains pending. The full API growth test is recorded below.
+
+### Growth after admission through the guest API — September 9
+
+`scripts/smoke-api-growth.py` passed on `movemailbox:growth-pilot` (backend
+`07fb9de`, pinned imapsync 2.319). A temporary executable wrapper pauses native
+imapsync after both real whole-mailbox inventories succeed. It preserves the
+worker's arguments/environment; the test adds mail then releases execution.
+Neither API validation, TLS verification nor server-owned quota is bypassed.
+
+- Job `5a66a4da0f32b392`: budget 12,000,000 bytes; two distinct synthetic messages
+  of 12,317,565 bytes each added only after the execution gate was reached.
+- Exactly one complete message copied; the second was skipped. Its SHA-256,
+  flags and INTERNALDATE match. Both source messages remain unchanged.
+- Guest API reports mailbox-policy failure; worker SQLite confirms `failed`, one
+  attempt and zero credential envelopes. Another guest gets 404. Mailbox passwords
+  are absent from service logs.
+- Stopped lab retained: `movemailbox-growth-0f8dcd8c3cc2`; source fixture
+  `MoveMailbox-Growth-0f8dcd8c3cc2`; destination
+  `MoveMailbox-Growth-0f8dcd8c3cc2-Copy.MoveMailbox-Growth-0f8dcd8c3cc2`.
+  Two source messages and one destination message are retained; nothing deleted.
+
+This proves the documented whole-message guard, **not** a hard traffic cap:
+the last message exceeded the budget by 317,565 bytes. No automatic retry occurs.
+It does not cover cumulative per-customer billing or incoming mail in folders
+not selected for copying.
+
+Reproduce in WSL with Docker administrator access and process-only MM_* secrets:
+
+```text
+python3 scripts/smoke-api-growth.py --image movemailbox:growth-pilot --limit-bytes 12000000 --allow-test-mail
+```
+
+API port 8185 must be free. Use a disposable source whose **entire mailbox** is
+initially below the limit; retained fixtures from a previous run may prevent a
+second admission. The harness limits its budget to 20 MB to bound test writes.
+It stops only containers it created, removes its temporary wrapper and retains
+volumes/mail. Recreate the lab rather than restarting it with a missing wrapper.
+Fifteen offline Python harness tests pass, including distinct above-budget fixtures.
 
 ### Full API/worker APPEND faults — September 9
 
