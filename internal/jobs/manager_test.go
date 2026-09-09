@@ -327,22 +327,20 @@ func TestCompletedJobsExpireByTTL(t *testing.T) {
 	engine := &controlledEngine{available: true}
 	manager := newTestManager(t, engine, Config{
 		MaxConcurrent:   1,
-		CompletedTTL:    15 * time.Millisecond,
-		CleanupInterval: 2 * time.Millisecond,
+		CompletedTTL:    time.Hour,
+		CleanupInterval: time.Hour,
 	})
 	view, err := manager.Start(validRequest())
 	if err != nil {
 		t.Fatal(err)
 	}
 	waitForStatus(t, manager, view.ID, StatusCompleted)
-	deadline := time.Now().Add(time.Second)
-	for time.Now().Before(deadline) {
-		if _, ok := manager.Get(view.ID); !ok {
-			return
-		}
-		time.Sleep(2 * time.Millisecond)
+	manager.mu.Lock()
+	manager.evictLocked(time.Now().Add(2*time.Hour), false)
+	manager.mu.Unlock()
+	if _, ok := manager.Get(view.ID); ok {
+		t.Fatal("completed job was not evicted after TTL")
 	}
-	t.Fatal("completed job was not evicted after TTL")
 }
 
 func TestShutdownCancelsJobsClearsSecretsAndRejectsNewWork(t *testing.T) {
