@@ -291,6 +291,9 @@ criteria live in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Roadmap
 
+Working across computers? Follow [the shared GitHub workflow](docs/TWO-COMPUTERS.md).
+The current engineering handoff is in [docs/HANDOFF.md](docs/HANDOFF.md).
+
 - ✅ SQLite job persistence and restart-safe history.
 - Authentication, encrypted credential envelopes, audit logs, and hosted workers.
 - Signed Windows, macOS, and Linux desktop packages.

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Demo-only real ENOSPC drill in an 8 MiB Docker tmpfs. No IMAP credentials.
+"""Real ENOSPC drill in an 8 MiB Docker tmpfs; demo by default.
+
+Opt-in --real-imap pauses after a native copy, before worker finalization.
+Requires authorized disposable MM_* accounts; does not delete mail.
 
 Run as WSL Docker administrator. Fills only a validated dedicated tmpfs, then
 truncates its own filler file. Never fills/deletes user volumes or the host disk.
@@ -10,10 +13,12 @@ import importlib.util
 import json
 from pathlib import Path
 import secrets
+import re
 import sqlite3
 import subprocess
 import traceback
 import time
+import tempfile
 
 
 def load(name, filename):
@@ -23,19 +28,35 @@ def load(name, filename):
     return module
 
 
-def run(args):
+def run(args, temporary):
     pilot = load("pilot", "start-local-pilot.py")
     live = load("live", "smoke-live-quota.py")
     prefix = "movemailbox-enospc-" + secrets.token_hex(6)
     worker = prefix + "-worker"
     volume = prefix + "-fault"
     started = []
+    clients = []
     try:
+        worker_args = ["--mount", "type=volume,src=" + volume + ",dst=/fault"]
+        original, target_folder = None, None
+        if args.real_imap:
+            source, destination = live.endpoint("SOURCE"), live.endpoint("DESTINATION")
+            for account in (source, destination):
+                clients.append(live.connect(account))
+            original = live.snapshot(clients[0], args.folder)
+            if len(original) != 1:
+                raise RuntimeError("live source fixture must contain exactly one message")
+            # Normalize Windows checkout line endings in a disposable runtime copy.
+            gate = Path(temporary) / "storage-gate.sh"
+            gate.write_text(Path(__file__).with_name("test-storage-finalize-gate.sh").read_text())
+            gate.chmod(0o755)
+            worker_args += ["--mount", f"type=bind,src={gate},dst=/test-storage-gate,readonly",
+                            "--env", "MOVEMAILBOX_IMAPSYNC_BIN=/test-storage-gate"]
         if subprocess.run(["docker", "volume", "inspect", volume], capture_output=True).returncode == 0:
             raise RuntimeError("test volume already exists")
         pilot.docker("volume", "create", "--driver", "local", "--opt", "type=tmpfs", "--opt", "device=tmpfs", "--opt", "o=size=8m,mode=0770,uid=65534,gid=65534", volume)
-        pilot.start(prefix, args.port, args.image, 0, demo=True,
-                    worker_test_args=["--mount", "type=volume,src=" + volume + ",dst=/fault"],
+        pilot.start(prefix, args.port, args.image, 100000000 if args.real_imap else 0, demo=not args.real_imap,
+                    worker_test_args=worker_args,
                     worker_test_database="/fault/worker.db", started_containers=started,
                     resume_interrupted=not args.crash or args.resume_interrupted)
         holder = None
@@ -64,16 +85,30 @@ def run(args):
         active_job = None
         if args.active:
             active_payload = {**payload, "options": {"strictMirror": args.strict_mirror, "strictMirrorConfirmed": args.strict_mirror}}
+            if args.real_imap:
+                target = "MoveMailbox-Storage-" + secrets.token_hex(6)
+                target_folder = target + "." + args.folder
+                payload = {"source": source, "destination": destination, "options": {
+                    "folders": [args.folder], "destinationSubfolder": target,
+                    "syncFlags": True, "preserveDates": True}}
+                active_payload = payload
             active_job, _ = api.request("/api/jobs", active_payload, 202)
-            deadline = time.monotonic() + 15
+            deadline = time.monotonic() + (180 if args.real_imap else 15)
             while True:
                 with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
                     row = db.execute("SELECT status, sequence FROM worker_jobs WHERE job_id=?", (active_job["id"],)).fetchone()
-                if row and row[0] == "running" and row[1] > 0:
+                gate_ready = not args.real_imap or subprocess.run(
+                    ["docker", "exec", worker, "test", "-f", "/tmp/storage-copy-ready"],
+                    capture_output=True, timeout=5).returncode == 0
+                if row and row[0] == "running" and row[1] > 0 and gate_ready:
                     break
                 if time.monotonic() > deadline:
                     raise RuntimeError("active job did not start")
-                time.sleep(0.05)
+                time.sleep(1 if args.real_imap else 0.05)
+            if args.real_imap:
+                if live.snapshot(clients[1], target_folder) != original:
+                    raise RuntimeError("native copy before fault failed content/flags/date comparison")
+                print("PASS: real native IMAP copy committed with matching hash/flags/date; wrapper holds worker finalization", flush=True)
             pilot.docker("pause", worker)
         try:
             with closing(sqlite3.connect(dbpath)) as db:
@@ -88,6 +123,8 @@ def run(args):
             raise RuntimeError("real ENOSPC not observed")
         if int(pilot.docker("exec", worker, "stat", "-f", "-c", "%a", "/fault")) != 0:
             raise RuntimeError("test filesystem still has available blocks")
+        if args.real_imap:
+            pilot.docker("exec", worker, "touch", "/tmp/storage-copy-release")
         if active_job:
             deadline = time.monotonic() + 20
             while True:
@@ -150,6 +187,12 @@ def run(args):
         recovered = api.run(payload)
         if recovered["status"] != "completed":
             raise RuntimeError("new job failed after restoring capacity")
+        if args.real_imap:
+            if recovered["transferred"] != 0:
+                raise RuntimeError("repeat copied an already committed message")
+            if live.snapshot(clients[1], target_folder) != original or live.snapshot(clients[0], args.folder) != original:
+                raise RuntimeError("recovery duplicated mail, damaged metadata or changed source")
+            print("PASS: recovered real mailbox exactly matches source hash/flags/date; repeat copied zero messages; source unchanged", flush=True)
         with closing(sqlite3.connect(dbpath.as_uri() + "?mode=ro", uri=True)) as db:
             row = db.execute("SELECT status, attempts FROM worker_jobs WHERE job_id=?", (recovered["id"],)).fetchone()
             if row != ("completed", 1) or db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0] != 0:
@@ -161,12 +204,19 @@ def run(args):
         if any(payload[side]["password"] in logs for side in ("source", "destination")):
             raise RuntimeError("synthetic credentials in service logs")
         print("PASS: new job completes after recovery in one attempt, no envelopes, integrity ok, guest isolation, no secrets in logs", flush=True)
-        print(json.dumps({"lab": prefix, "activeJob": active_job["id"] if active_job else None, "recoveredJob": recovered["id"], "tmpfsBytes": 8388608}), flush=True)
+        print(json.dumps({"lab": prefix, "activeJob": active_job["id"] if active_job else None, "recoveredJob": recovered["id"], "tmpfsBytes": 8388608,
+                          "realImap": args.real_imap, "destinationFolder": target_folder}), flush=True)
     finally:
         for name in reversed(started):
             pilot.docker("stop", "--time=20", name)
+        for client in clients:
+            try:
+                client.logout()
+            except (OSError, live.imaplib.IMAP4.error):
+                pass
         if started:
-            print("Containers stopped; disposable worker tmpfs discarded, API volume retained. No mail was accessed.", flush=True)
+            print("Containers stopped; disposable worker tmpfs discarded, API volume retained. " +
+                  ("Test mail retained; no mail deleted." if args.real_imap else "No mail was accessed."), flush=True)
 
 
 if __name__ == "__main__":
@@ -177,13 +227,23 @@ if __name__ == "__main__":
     parser.add_argument("--crash", action="store_true", help="SIGKILL pending worker; preserve database with a holder")
     parser.add_argument("--resume-interrupted", action="store_true", help="explicitly opt into recovery after crash")
     parser.add_argument("--strict-mirror", action="store_true", help="demo-only destructive-mode replay guard")
+    parser.add_argument("--real-imap", action="store_true", help="authorized live copy; ENOSPC after native copy before finalization")
+    parser.add_argument("--folder", help="existing isolated one-message source fixture")
+    parser.add_argument("--allow-test-mail", action="store_true")
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535:
         parser.error("unprivileged API port required")
     if (args.crash and not args.active) or ((args.resume_interrupted or args.strict_mirror) and not args.crash):
         parser.error("crash requires active; resume/mirror require crash")
+    if args.real_imap and (not args.active or not args.allow_test_mail or args.strict_mirror or
+                          not re.fullmatch(r"MoveMailbox-Attachment-[a-zA-Z0-9-]+", args.folder or "")):
+        parser.error("real IMAP requires active, allow-test-mail and an isolated fixture; mirror is demo-only")
+    if not args.real_imap and (args.folder or args.allow_test_mail):
+        parser.error("mail fixture options require real-imap")
     try:
-        run(args)
+        with tempfile.TemporaryDirectory(prefix="movemailbox-storage-") as temporary:
+            Path(temporary).chmod(0o755)
+            run(args, temporary)
     except Exception as exc:
         frame = traceback.extract_tb(exc.__traceback__)[-1]
         print("FAIL:", type(exc).__name__, getattr(exc, "sqlite_errorname", ""), "line", frame.lineno, "(sensitive details withheld)", flush=True)

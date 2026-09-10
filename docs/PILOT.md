@@ -421,6 +421,59 @@ counts and sanitized job ID/log excerpt. Remove mailbox credentials, cookies,
 authorization headers and message bodies before sharing diagnostics. Revoke
 app passwords after the test, then remove the disposable accounts yourself.
 
+### September 10: real copy, ENOSPC finalization and worker crash
+
+Both runs used `smoke-worker-enospc.py --active --real-imap` in WSL Docker,
+native imapsync with verified TLS, public guest API and encrypted worker queue.
+Backend code is unchanged from merged PR #8 (`main` baseline `5315ce2`);
+local image `movemailbox:active-enospc`, image ID
+`sha256:61f822837e672731c9d3a00d891b063d6a8053d6eee402a14323cb3bb5826328`.
+
+The existing one-message 6 MiB attachment fixture was copied into a unique
+destination subfolder. A test-only wrapper held process exit after native copy
+success. The harness verified destination hash/flags/date, checkpointed SQLite,
+filled a validated **8 MiB tmpfs** (not the host disk), then released the wrapper.
+Actual ENOSPC and zero available blocks were asserted. Worker became unavailable
+while final state could not commit and never reported false success.
+
+| Case | Original job | Result after capacity returned | New repeat |
+| --- | --- | --- | --- |
+| No restart | `6b32adb3fdd4afcf` | failed, 1 attempt, envelope removed | `cd934e3b094d7bb2`, completed, zero copied |
+| SIGKILL, ordinary resume opted in | `fa6938ea88dbfc37` | completed, 2 attempts, envelope removed | `613a87c332847a08`, completed, zero copied |
+
+For the crash case a holder kept the **same** tmpfs/database mounted; the
+running record survived SIGKILL. Restart respected the retained lease before
+retrying. Both final mailbox snapshots matched the original SHA-256, flags and
+INTERNALDATE, with exactly one message. Source remained unchanged. Both databases
+passed integrity checks, terminal envelopes were empty, another guest got 404
+and neither mailbox password appeared in service logs.
+
+Stopped labs: `movemailbox-enospc-c356b76be83a` and
+`movemailbox-enospc-a518382c5e80`. Mail retained under destination prefixes
+`MoveMailbox-Storage-88e36149cb7e` and `MoveMailbox-Storage-25b62554b8f6`.
+No mail deleted. Only the exact test filler file was truncated. Worker tmpfs
+data disappeared after the last holder stopped; ordinary lab volumes remain.
+The temporary wrapper bind mount is removed: rerun, do not restart these labs.
+
+To reproduce, supply authorized disposable `MM_SOURCE_*` and `MM_DESTINATION_*`
+credentials via the local process environment, not shell arguments or Git:
+
+```text
+python3 scripts/smoke-worker-enospc.py --image <current-image> --active --real-imap --allow-test-mail --folder MoveMailbox-Attachment-<fixture>
+python3 scripts/smoke-worker-enospc.py --image <current-image> --active --real-imap --allow-test-mail --folder MoveMailbox-Attachment-<fixture> --crash --resume-interrupted
+```
+
+This opt-in live mode refuses strict mirror and non-isolated fixtures. Default
+CI modes remain demo-only and never access external mail. Four new offline
+tests cover native exit preservation, exact arguments/environment, bounded gate,
+restart bypass and unsafe CLI combinations (19 total tests passed). An initial
+unit-fixture path substitution bug was fixed before that passing run.
+
+Limit: the combined fault is at **finalization after APPEND**, not during its
+literal. The earlier exact APPEND disconnect/lost-ACK drills remain separate.
+This confirms recovery for the tested Mail-in-a-Box fixture, not all providers,
+production storage, destructive mirror, or a public deployment.
+
 Before public launch also verify HTTPS, worker egress restrictions, key storage,
 disk limits, metadata backup/restore and the actual free-tier quota. A passing
 mailbox pilot alone does not establish public-service readiness.

@@ -111,7 +111,10 @@ coordination belongs to stage 4, not the single-VPS preview.
   after capacity returns without replay; worker reports unavailable while pending.
   Crash during pending terminal commit now passes in the demo Docker drill:
   no-resume and mirror fail without replay; opted-in ordinary copy resumes after
-  lease expiry. Combined live-IMAP ENOSPC/crash remains a gate. See PILOT.md.
+  lease expiry. September 10: real IMAP copy + ENOSPC at post-copy finalization
+  passes with and without SIGKILL; hashes/flags/dates preserved, repeat copies
+  zero messages, terminal credentials removed. This does not inject ENOSPC
+  inside the APPEND literal. See PILOT.md and the current HANDOFF.md.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.
