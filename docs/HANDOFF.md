@@ -26,6 +26,13 @@
 6. Both runs: SHA-256, flags, INTERNALDATE and message count matched; subsequent
    transfers copied zero messages; source unchanged, guest isolation and empty
    terminal envelopes verified, no mailbox passwords in service logs.
+7. Added an operator-safe `age` metadata backup utility with atomic object commit,
+   manifest/checksum validation, traversal/link/size limits and no-overwrite
+   restore. It never includes worker private keys or mailbox contents.
+8. Added 26 offline tests and a Docker backup drill. Demo encrypted backup,
+   interrupted/corrupt/truncated object rejection, fresh-volume restore and a
+   post-restore migration all pass. Rotation guard and coordinated key/token
+   rotation pass in the Docker remote-worker drill.
 
 Evidence, sanitized job IDs and reproduction: [PILOT.md](PILOT.md), September 10
 section. All temporary lab containers were stopped. Test mail and ordinary lab
@@ -36,7 +43,8 @@ do not just restart their stopped containers.
 ## Verification and honest limits
 
 - Local Windows Go 1.27: `go test ./...` and `go vet ./...` passed.
-- WSL Python: 19 offline harness tests passed, including 4 new gate/CLI tests.
+- WSL Python: 26 offline harness tests passed, including age round-trip, archive
+  commit, corruption, path-safety, rotation-gate and ENOSPC tests.
 - Both new live-mail modes passed with native imapsync and verified IMAP TLS,
   guest API and encrypted remote-worker queue, not the demo engine.
 - CI is authoritative for the exact pushed SHA: inspect the current branch PR
@@ -48,17 +56,16 @@ do not just restart their stopped containers.
 - Live strict mirror was not rerun here; destructive replay remains forbidden
   and is covered by the earlier demo crash matrix. No production policy changed.
 - No VPS, production KMS, off-site provider or public launch is implied.
+- The encrypted backup drill uses a local directory as an object-store model; it
+  is not evidence of an actual S3/B2/Wasabi off-site upload or provider ACL.
 
 ## Next two proposed technical steps
 
-1. Reproduce coordinated API/worker key rotation in isolated Docker, including
-   already queued envelopes, correct key retention and fail-closed behavior for
-   a missing/wrong old key. Record the actual supported operational procedure;
-   do not weaken the cryptographic boundary to make rotation pass.
-2. Exercise encrypted off-site backup/restore using a separate local test target
-   first: interrupted upload, corrupt/incomplete objects, clean restore and a
-   post-restore migration. Real off-site credentials/VPS are a later user-provided
-   deployment step; local storage alone must not be called an off-site proof.
+1. Run the same backup/restore against a user-provided encrypted off-site bucket
+   on the VPS, with object lock/versioning and independent checksum retrieval.
+2. Add paid-account/magic-link entitlements and a production deployment gate
+   only after VPS egress firewall, HTTPS, retention and incident contacts are
+   configured. Keep free guest migration without registration.
 
 MVP release gates still include deployment egress/SSRF enforcement, external
 provider coverage, load/abuse tests, ownership of retention/alerts, HTTPS and

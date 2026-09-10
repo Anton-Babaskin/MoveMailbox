@@ -55,6 +55,11 @@ jobs:
       - name: Check Python test harness syntax
         run: python3 -m compileall -q scripts
 
+      - name: Install pinned backup encryption test tools
+        run: |
+          GOBIN="${RUNNER_TEMP}/age-bin" go install filippo.io/age/cmd/age@v1.3.2 filippo.io/age/cmd/age-keygen@v1.3.2
+          echo "${RUNNER_TEMP}/age-bin" >> "$GITHUB_PATH"
+
       - name: Test APPEND framing and backup rejection
         run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
@@ -134,7 +139,18 @@ jobs:
         run: docker build --target tls-test --progress=plain .
 
       - name: Verify independent API and worker hard-kill recovery
-        run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci
+        run: python3 scripts/smoke-remote-worker.py --image movemailbox:ci --rotation
+
+      - name: Set up Go for pinned backup tools
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Verify encrypted snapshot restore and post-restore demo migration
+        run: |
+          GOBIN="${RUNNER_TEMP}/age-bin" go install filippo.io/age/cmd/age@v1.3.2 filippo.io/age/cmd/age-keygen@v1.3.2
+          sudo python3 scripts/smoke-backup-restore.py --image movemailbox:ci --encrypted --age "${RUNNER_TEMP}/age-bin/age" --age-keygen "${RUNNER_TEMP}/age-bin/age-keygen"
 
       - name: Verify worker ENOSPC admission and recovery in bounded tmpfs
         run: sudo python3 scripts/smoke-worker-enospc.py --image movemailbox:ci

@@ -1,4 +1,4 @@
-name: Release MoveMailbox Windows preview
+name: Release MoveMailbox preview packages
 
 on:
   push:
@@ -42,26 +42,46 @@ jobs:
       - name: Scan reachable dependencies for vulnerabilities
         run: go run golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} ./...
 
-      - name: Build Windows preview
+      - name: Verify backup and fault harnesses
+        run: |
+          GOBIN="${RUNNER_TEMP}/age-bin" go install filippo.io/age/cmd/age@v1.3.2 filippo.io/age/cmd/age-keygen@v1.3.2
+          AGE_BINARY="${RUNNER_TEMP}/age-bin/age" AGE_KEYGEN_BINARY="${RUNNER_TEMP}/age-bin/age-keygen" python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Build Windows, Linux and macOS previews
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          [[ "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
           version="${RELEASE_TAG#v}"
-          package="movemailbox-windows-amd64-${RELEASE_TAG}"
-          mkdir -p "dist/${package}"
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build \
-            -trimpath \
-            -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=${version}" \
-            -o "dist/${package}/movemailbox.exe" \
-            ./cmd/mailbox-migrator
-          cp scripts/windows/START-DEMO.cmd "dist/${package}/"
-          cp scripts/windows/START-DEMO-DEBUG.cmd "dist/${package}/"
-          cp scripts/windows/START-REAL.cmd "dist/${package}/"
-          cp scripts/windows/README-RU.txt "dist/${package}/"
+          for target in windows/amd64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            goos="${target%/*}"
+            goarch="${target#*/}"
+            package="movemailbox-${goos}-${goarch}-${RELEASE_TAG}"
+            suffix=""
+            if [[ "${goos}" == windows ]]; then suffix=".exe"; fi
+            mkdir -p "dist/${package}/operations"
+            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath \
+              -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=${version}" \
+              -o "dist/${package}/movemailbox${suffix}" ./cmd/mailbox-migrator
+            cp README.md SECURITY.md docs/LICENSING.md "dist/${package}/"
+            cp docs/WORKER.md docs/BACKUP-RUNBOOK.md "dist/${package}/operations/"
+            cp scripts/backup_archive.py scripts/backup_validation.py "dist/${package}/operations/"
+            printf 'Version: %s\nCommit: %s\nPlatform: %s\n' "${RELEASE_TAG}" "${GITHUB_SHA}" "${target}" > "dist/${package}/BUILD-INFO.txt"
+            if [[ "${goos}" == windows ]]; then
+              cp scripts/windows/START-DEMO.cmd scripts/windows/START-DEMO-DEBUG.cmd scripts/windows/START-REAL.cmd scripts/windows/README-RU.txt "dist/${package}/"
+              (cd dist && zip -qr "${package}.zip" "${package}")
+            else
+              cp scripts/README-UNIX.txt "dist/${package}/"
+              tar -czf "dist/${package}.tar.gz" -C dist "${package}"
+            fi
+          done
           cd dist
-          zip -r "${package}.zip" "${package}"
-          sha256sum "${package}.zip" > "${package}.zip.sha256"
+          sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+
+      - name: Smoke test packaged Linux binary
+        run: |
+          python3 scripts/smoke-remote-worker.py --binary "dist/movemailbox-linux-amd64-${GITHUB_REF_NAME}/movemailbox"
 
       - name: Publish GitHub release
         env:
@@ -72,9 +92,14 @@ jobs:
           if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
             release_flags+=(--prerelease)
           fi
+          if [[ -f "docs/releases/${GITHUB_REF_NAME}.md" ]]; then
+            release_flags+=(--notes-file "docs/releases/${GITHUB_REF_NAME}.md")
+          else
+            release_flags+=(--generate-notes)
+          fi
           gh release create "${GITHUB_REF_NAME}" \
             dist/*.zip \
-            dist/*.zip.sha256 \
+            dist/*.tar.gz \
+            dist/SHA256SUMS.txt \
             --title "MoveMailbox ${GITHUB_REF_NAME}" \
-            --generate-notes \
             "${release_flags[@]}"

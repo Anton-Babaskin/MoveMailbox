@@ -474,6 +474,25 @@ literal. The earlier exact APPEND disconnect/lost-ACK drills remain separate.
 This confirms recovery for the tested Mail-in-a-Box fixture, not all providers,
 production storage, destructive mirror, or a public deployment.
 
+### September 10: rotation and encrypted backup stages
+
+The Docker remote-worker rotation drill passed: a non-drained queue is refused
+by the read-only backup/rotation gate; the old key finishes its accepted job;
+after drain, a fresh snapshot passes. Missing private key, mismatched recipient
+key and stale internal token all fail closed. API/worker recipient public/private
+halves and the bearer token were then rotated together; a new 954-message demo
+job completed and existing owner history remained available. Worker liveness is
+public at `/healthz`; authenticated availability is `/v1/health`.
+
+`backup_archive.py` now provides four operator actions: `seal`/`open` for age
+encryption, and `put`/`get` for an atomic directory object-store model. It uses
+only drained paired SQLite databases, excludes worker keys and mailbox data,
+checks SHA-256/SQLite integrity, refuses links/traversal/oversized members,
+rejects incomplete uploads and never overwrites a target. Age v1.3.2 integration
+passed with wrong-key, tamper and truncation cases. The encrypted Docker demo
+then restored into empty volumes and completed a new migration without replay.
+The local object directory is not an off-site provider; that remains a VPS gate.
+
 Before public launch also verify HTTPS, worker egress restrictions, key storage,
 disk limits, metadata backup/restore and the actual free-tier quota. A passing
 mailbox pilot alone does not establish public-service readiness.

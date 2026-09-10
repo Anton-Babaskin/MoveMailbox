@@ -94,11 +94,9 @@ func (*RemoteRunner) ExecutionMode() string { return "remote-worker" }
 func (runner *RemoteRunner) Available() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, runner.baseURL+"/healthz", nil)
-	if err != nil {
-		return false
-	}
-	response, err := runner.client.Do(request)
+	// Liveness alone cannot prove that this API can authenticate to the worker,
+	// notably during token rotation. Do not fall back to public /healthz.
+	response, err := runner.do(ctx, http.MethodGet, "/v1/health", nil, "")
 	if err != nil {
 		return false
 	}

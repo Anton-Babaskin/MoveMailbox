@@ -5,6 +5,19 @@ import json
 import sqlite3
 
 
+def ensure_worker_drained(path):
+    """Read-only rotation/backup gate. Caller must first stop admissions/writer."""
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("worker database is missing or linked")
+    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+        if db.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
+            raise ValueError("worker integrity failed")
+        if db.execute("SELECT count(*) FROM credential_envelopes").fetchone()[0]:
+            raise ValueError("worker still holds credential envelopes; retain old key")
+        if db.execute("SELECT count(*) FROM worker_jobs WHERE status NOT IN ('completed','failed','cancelled')").fetchone()[0]:
+            raise ValueError("worker queue is not drained; retain old key")
+
+
 def validate_pair(directory, manifest):
     if set(manifest.get("files", {})) != {"api", "worker"}:
         raise ValueError("both database checksums are required")
