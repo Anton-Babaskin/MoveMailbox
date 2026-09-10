@@ -5,7 +5,8 @@
 - Repository: `Anton-Babaskin/MoveMailbox` (GitHub is canonical).
 - Baseline: `main` at `5315ce2`, merged PR #8. Its CI run `34399888643` passed.
 - Current task branch: `feature/live-imap-storage-recovery`, based on that main.
-  Find its current PR and CI by branch, not by the old merged PR #8.
+  [PR #9](https://github.com/Anton-Babaskin/MoveMailbox/pull/9). Verify its current
+  state and CI by branch, not by the old merged PR #8.
 - Follow root `AGENTS.md` and [two-computer workflow](TWO-COMPUTERS.md). Fetch all
   branches first; do not reset another computer's local work or merge all refs.
 
