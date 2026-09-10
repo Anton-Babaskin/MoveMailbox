@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title desc">
+<title id="title">MoveMailbox — email migration, without the terminal</title>
+<desc id="desc">Original brand illustration: envelopes travel along a curved mint-colored path between two mailboxes. Local client, self-hosted worker, powered by imapsync.</desc>
+<defs>
+ <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071c29"/><stop offset="1" stop-color="#103e40"/></linearGradient>
+ <linearGradient id="card" x2="1" y2="1"><stop stop-color="#183a47"/><stop offset="1" stop-color="#102c36"/></linearGradient>
+ <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#29515a" stroke-opacity=".3"/></pattern>
+</defs>
+<rect width="1280" height="420" rx="24" fill="url(#bg)"/>
+<rect width="1280" height="420" rx="24" fill="url(#grid)"/>
+<circle cx="1090" cy="190" r="165" fill="none" stroke="#2b6862" stroke-opacity=".45"/>
+<circle cx="1090" cy="190" r="205" fill="none" stroke="#2b6862" stroke-opacity=".2"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+ <rect x="56" y="48" width="44" height="44" rx="13" fill="#55dfb6"/>
+ <path d="M66 77V62l12 11 12-11v15M70 81h20m-5-5 5 5-5 5" fill="none" stroke="#082e2a" stroke-width="2.5" stroke-linejoin="round"/>
+ <text x="114" y="79" fill="#f0fbf8" font-size="26" font-weight="700">MoveMailbox</text>
+ <text x="56" y="170" fill="#f3fafc" font-size="49" font-weight="700">Email migration,</text>
+ <text x="56" y="229" fill="#6ce8c0" font-size="49" font-weight="700">without the terminal.</text>
+ <text x="58" y="273" fill="#b4cdd4" font-size="20">Your mail. A new home. A clear way there.</text>
+ <rect x="56" y="318" width="128" height="34" rx="17" fill="#173c46" stroke="#39616a"/>
+ <text x="120" y="341" text-anchor="middle" fill="#dcf2f2" font-size="14">LOCAL CLIENT</text>
+ <rect x="196" y="318" width="140" height="34" rx="17" fill="#173c46" stroke="#39616a"/>
+ <text x="266" y="341" text-anchor="middle" fill="#dcf2f2" font-size="14">SELF-HOSTED</text>
+ <text x="58" y="392" fill="#97b9c2" font-size="13" letter-spacing="2">POWERED BY IMAPSYNC</text>
+</g>
+<path d="M790 173C924 79 968 323 1111 231" fill="none" stroke="#183e42" stroke-width="25"/>
+<path d="M790 173C924 79 968 323 1111 231" fill="none" stroke="#64e1b5" stroke-width="2" stroke-dasharray="7 8"/>
+<g transform="translate(716 113) rotate(-9 68 65)">
+ <rect width="136" height="130" rx="23" fill="url(#card)" stroke="#4b7d82"/>
+ <rect x="26" y="32" width="84" height="60" rx="9" fill="#224f57" stroke="#b8d9df" stroke-width="2"/>
+ <path d="m29 38 39 30 39-30" fill="none" stroke="#b8d9df" stroke-width="2"/>
+ <circle cx="110" cy="108" r="17" fill="#37616b"/>
+ <text x="110" y="113" fill="#fff" font-family="Arial,sans-serif" font-size="14" text-anchor="middle">01</text>
+</g>
+<g transform="translate(1050 171) rotate(10 68 65)">
+ <rect width="136" height="130" rx="23" fill="url(#card)" stroke="#58d7ae"/>
+ <rect x="26" y="32" width="84" height="60" rx="9" fill="#215e55" stroke="#7ff2cc" stroke-width="2"/>
+ <path d="m29 38 39 30 39-30" fill="none" stroke="#7ff2cc" stroke-width="2"/>
+ <circle cx="110" cy="108" r="17" fill="#55dfb6"/>
+ <path d="m102 108 5 5 10-11" fill="none" stroke="#082e2a" stroke-width="2.5"/>
+</g>
+<g transform="translate(936 187) rotate(25)">
+ <rect x="-28" y="-19" width="56" height="38" rx="6" fill="#65e1b8"/>
+ <path d="m-24-14 24 18 24-18" fill="none" stroke="#0b4c40" stroke-width="2"/>
+</g>
+<text x="962" y="363" fill="#b4d1d5" font-family="Segoe UI,Arial,sans-serif" text-anchor="middle" font-size="15">IMAP → IMAP · engineering preview</text>
+</svg>

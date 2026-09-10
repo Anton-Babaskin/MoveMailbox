@@ -55,6 +55,9 @@ jobs:
       - name: Check Python test harness syntax
         run: python3 -m compileall -q scripts
 
+      - name: Check documentation links and static artwork
+        run: python3 scripts/check-docs.py
+
       - name: Install pinned backup encryption test tools
         run: |
           GOBIN="${RUNNER_TEMP}/age-bin" go install filippo.io/age/cmd/age@v1.3.2 filippo.io/age/cmd/age-keygen@v1.3.2

@@ -1,8 +1,31 @@
 # Changelog
 
-All notable changes to MoveMailbox are documented here.
+Release notes describe shipped behavior, not a production-readiness guarantee.
+Preview tags are immutable and are not silently promoted to stable.
 
-## [Unreleased]
+## Unreleased
+
+- New repository presentation, original SVG artwork and English/Russian overviews.
+- Separate setup/configuration reference and documentation directory.
+- Contribution/support guides, structured issue forms and a PR checklist.
+- Local documentation link and SVG safety checks.
+
+## v0.4.0-preview — 2026-09-10
+
+- Authenticated worker readiness: stale internal tokens fail closed.
+- Coordinated key/token rotation drill with a drained-queue guard.
+- Encrypted metadata archive, atomic object commit and validated no-overwrite restore.
+- Corrupt, incomplete and unsafe archive rejection tests.
+- Real IMAP ENOSPC finalization tests, with and without worker restart.
+- Windows amd64, Linux amd64/arm64 and macOS amd64/arm64 preview archives.
+- Portable development instructions and two-computer handoff.
+
+[Release](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview)
+· [Detailed notes](docs/releases/v0.4.0-preview.md)
+· [Integrated PR #9](https://github.com/Anton-Babaskin/MoveMailbox/pull/9)
+
+Native archives do not bundle imapsync and are unsigned. The off-site object-store
+drill uses a local directory model; actual VPS/provider restore is still pending.
 
 ### Security
 
