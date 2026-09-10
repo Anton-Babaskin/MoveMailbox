@@ -93,7 +93,9 @@ coordination belongs to stage 4, not the single-VPS preview.
   cancellation and worker SIGKILL recovery with two attempts. See PILOT.md.
   Production backup retention remains pending.
 - September 8: key separation verified by unit tests; coordinated deployed key
-  rotation remains pending. Corrected backup validation rejects corrupt/truncated,
+  rotation now passes in an isolated Docker drill with drained-queue guard,
+  mismatched-key/token fail-closed checks and coordinated recipient rotation.
+  Corrected backup validation rejects corrupt/truncated,
   missing and inconsistent pairs; clean Docker restore passes. See PILOT.md.
 - September 8 corrected streaming proxy: exact 131,072-byte APPEND cut, exit 114,
   zero committed partial messages, successful recovery and repeat without duplicates.
@@ -101,7 +103,9 @@ coordination belongs to stage 4, not the single-VPS preview.
   recovery and repeat. September 9: both exact faults also pass through the
   guest API and encrypted remote worker queue, automatic recovery in two attempts,
   no duplicates, guest isolation and terminal envelope cleanup. See PILOT.md.
-- Production backup/off-site runbook is documented; encrypted provider drill remains.
+- Production backup/off-site runbook is documented; local age archive/commit/
+  restore and corruption drills pass. An actual encrypted provider/VPS upload and
+  restore remains a deployment gate.
 - September 9: worker event-write failure no longer allows false success; a
   permanent failure and cleanup are tested when terminal writes remain available.
   Real SQLITE_FULL snapshot rollback and recovery are covered without filling the
@@ -111,7 +115,10 @@ coordination belongs to stage 4, not the single-VPS preview.
   after capacity returns without replay; worker reports unavailable while pending.
   Crash during pending terminal commit now passes in the demo Docker drill:
   no-resume and mirror fail without replay; opted-in ordinary copy resumes after
-  lease expiry. Combined live-IMAP ENOSPC/crash remains a gate. See PILOT.md.
+  lease expiry. September 10: real IMAP copy + ENOSPC at post-copy finalization
+  passes with and without SIGKILL; hashes/flags/dates preserved, repeat copies
+  zero messages, terminal credentials removed. This does not inject ENOSPC
+  inside the APPEND literal. See PILOT.md and the current HANDOFF.md.
 - configurable free-tier, mailbox-size and concurrency quotas;
 - resumable dashboard event delivery and retention policies;
 - backups for metadata only, with tested restoration.

@@ -163,6 +163,13 @@ func (service *Service) Start(parent context.Context) error {
 func (service *Service) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", service.health)
+	mux.HandleFunc("/v1/health", func(response http.ResponseWriter, request *http.Request) {
+		if !service.authorized(request) {
+			writeServiceJSON(response, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			return
+		}
+		service.health(response, request)
+	})
 	mux.HandleFunc("/v1/jobs/", service.jobsEndpoint)
 	mux.HandleFunc("/v1/operations/", service.operationEndpoint)
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {

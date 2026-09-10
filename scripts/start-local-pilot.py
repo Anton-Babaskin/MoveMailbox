@@ -10,6 +10,7 @@ a trusted local HTTPS proxy. Never disable public mode to bypass cookie handling
 """
 import base64
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -41,7 +42,10 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, d
             if result.returncode == 0:
                 raise RuntimeError("Pilot resources already exist; restart them instead of overwriting")
     keys = dict(line.split("=", 1) for line in docker("run", "--rm", image, "keygen").splitlines())
-    docker("network", "create", prefix)
+    # Explicitly allocate a tiny private subnet. Developer machines often retain
+    # stopped test labs until inspection, exhausting Docker's default pools.
+    subnet_octet = 16 + (int.from_bytes(hashlib.sha256(prefix.encode()).digest()[:2], "big") % 200)
+    docker("network", "create", "--subnet", f"10.254.{subnet_octet}.0/28", prefix)
     for role in ("worker", "api"):
         volume = prefix + "-" + role + "-data"
         docker("volume", "create", volume)

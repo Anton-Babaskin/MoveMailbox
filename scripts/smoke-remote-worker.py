@@ -7,6 +7,7 @@ Only generated processes/containers/volumes are removed by this test.
 
 import argparse
 import base64
+import hashlib
 from contextlib import closing
 import json
 import os
@@ -20,6 +21,8 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+
+from backup_validation import ensure_worker_drained
 
 
 def free_port():
@@ -36,7 +39,7 @@ def command(args, env=None):
     return result.stdout
 
 
-def run(binary, image, directory):
+def run(binary, image, directory, rotation=False):
     if binary:
         copied_binary = directory / Path(binary).name
         shutil.copy2(binary, copied_binary)
@@ -147,7 +150,8 @@ def run(binary, image, directory):
 
     try:
         if image:
-            command(["docker", "network", "create", prefix]); network_created = True
+            subnet_octet = 16 + (int.from_bytes(hashlib.sha256(prefix.encode()).digest()[:2], "big") % 200)
+            command(["docker", "network", "create", "--subnet", f"10.254.{subnet_octet}.0/28", prefix]); network_created = True
         start("worker")
         until(lambda: request("worker", "/healthz")[0]["available"])
         start("api")
@@ -204,6 +208,58 @@ def run(binary, image, directory):
             assert outcome["transferred"] == 0 and outcome["bytes"] == 0, f"{mode} reported copied mail"
         for options in ({"justLogin": True, "justFolders": True}, {"justFolders": True, "strictMirror": True, "strictMirrorConfirmed": True}):
             request("api", "/api/jobs", payload | {"options": options}, cookie, csrf, 400)
+        if rotation:
+            # Stop new admissions operationally; test requests below are the only
+            # clients in this isolated lab. Keep the old recipient key until drain.
+            retained, _ = request("api", "/api/jobs", payload, cookie, csrf, 202)
+            retained_path = "/api/jobs/" + retained["id"]
+            until(lambda: request("api", retained_path, cookie=cookie)[0]["transferred"] > 0)
+            command(["docker", "stop", "--time=20", prefix + "-worker"])
+            snapshot = directory / "rotation-worker.db"
+            command(["docker", "cp", prefix + "-worker:/worker-data/worker.db", str(snapshot)])
+            try:
+                ensure_worker_drained(snapshot)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("rotation guard allowed a retained envelope/queue")
+            command(["docker", "start", prefix + "-worker"])
+            until(lambda: completed(retained_path))
+            command(["docker", "stop", "--time=20", prefix + "-worker"])
+            command(["docker", "cp", prefix + "-worker:/worker-data/worker.db", str(snapshot)])
+            ensure_worker_drained(snapshot)
+            print("PASS: rotation guard refuses non-drained queue; old key recovers accepted job; drained snapshot passes", flush=True)
+            new_keys = dict(line.split("=", 1) for line in command(key_command, base_env).decode().splitlines())
+            missing = subprocess.run(["docker", "run", "--rm", "--read-only", "--network=none",
+                                      "--env", "MOVEMAILBOX_WORKER_TOKEN", image, "worker-service"],
+                                     env=base_env | {"MOVEMAILBOX_WORKER_TOKEN": new_keys["MOVEMAILBOX_WORKER_TOKEN"]},
+                                     capture_output=True, timeout=10)
+            assert missing.returncode != 0, "worker started without recipient private key"
+            kill("worker")
+            worker_env["MOVEMAILBOX_WORKER_PRIVATE_KEY"] = new_keys["MOVEMAILBOX_WORKER_PRIVATE_KEY"]
+            start("worker")
+            until(lambda: request("worker", "/healthz")[0]["available"])
+            request("api", "/api/connections/test", endpoint, cookie, csrf, 502)
+            # Rotate API public half, keeping its cookie signing secret unchanged.
+            kill("api")
+            api_env["MOVEMAILBOX_WORKER_PUBLIC_KEY"] = new_keys["MOVEMAILBOX_WORKER_PUBLIC_KEY"]
+            start("api")
+            until(lambda: request("api", "/api/health")[0]["available"])
+            request("api", "/api/connections/test", endpoint, cookie, csrf)
+            kill("worker")
+            worker_env["MOVEMAILBOX_WORKER_TOKEN"] = new_keys["MOVEMAILBOX_WORKER_TOKEN"]
+            start("worker")
+            until(lambda: request("worker", "/healthz")[0]["available"])
+            assert not request("api", "/api/health")[0]["available"], "stale internal token still works"
+            kill("api")
+            api_env["MOVEMAILBOX_WORKER_TOKEN"] = new_keys["MOVEMAILBOX_WORKER_TOKEN"]
+            start("api")
+            until(lambda: request("api", "/api/health")[0]["available"])
+            rotated, _ = request("api", "/api/jobs", payload, cookie, csrf, 202)
+            assert until(lambda: completed("/api/jobs/" + rotated["id"]))["transferred"] == 954
+            assert completed(job_path)["status"] == "completed"
+            request("api", job_path, cookie=other_headers["Set-Cookie"].split(";", 1)[0], expected=404)
+            print("PASS: missing private key, mismatched recipient pair and stale token fail closed; coordinated rotation completes 954 simulated messages; history/ownership retained", flush=True)
         if image:
             for name, source in (("api", "/data/movemailbox.db"), ("worker", "/worker-data/worker.db")):
                 for suffix in ("", "-wal", "-shm"):
@@ -240,6 +296,9 @@ if __name__ == "__main__":
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--binary", type=lambda value: str(Path(value).resolve(strict=True)))
     mode.add_argument("--image")
+    parser.add_argument("--rotation", action="store_true", help="also verify coordinated recipient/token rotation in Docker")
     args = parser.parse_args()
+    if args.rotation and not args.image:
+        parser.error("rotation drill requires the isolated Docker mode")
     with tempfile.TemporaryDirectory(prefix="movemailbox-smoke-") as temporary:
-        run(args.binary, args.image, Path(temporary))
+        run(args.binary, args.image, Path(temporary), args.rotation)

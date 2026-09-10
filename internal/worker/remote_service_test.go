@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -24,6 +25,39 @@ type remoteTestEngine struct {
 	block     bool
 	steps     int
 	stepDelay time.Duration
+}
+
+func TestRemoteAvailabilityRequiresCurrentToken(t *testing.T) {
+	publicKey, privateKey, token := remoteTestSecrets(t)
+	staleToken := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0xEF}, 32))
+	service := newRemoteTestService(t, filepath.Join(t.TempDir(), "worker.db"), privateKey, token, &remoteTestEngine{})
+	defer shutdownRemoteTestService(t, service)
+	server := httptest.NewServer(service.Handler())
+	defer server.Close()
+	for _, path := range []string{"/healthz", "/v1/health"} {
+		response, err := http.Get(server.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response.Body.Close()
+		want := http.StatusOK
+		if path == "/v1/health" {
+			want = http.StatusUnauthorized
+		}
+		if response.StatusCode != want {
+			t.Fatalf("%s returned %d, want %d", path, response.StatusCode, want)
+		}
+	}
+	for _, test := range []struct {
+		token string
+		want  bool
+	}{{token, true}, {staleToken, false}} {
+		runner := newRemoteTestRunner(t, server.URL, publicKey, test.token)
+		if got := runner.Available(); got != test.want {
+			t.Errorf("availability = %t, want %t", got, test.want)
+		}
+		runner.Close()
+	}
 }
 
 func (*remoteTestEngine) Name() string    { return "remote-test" }
