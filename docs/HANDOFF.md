@@ -3,10 +3,17 @@
 ## Where to continue
 
 - Repository: `Anton-Babaskin/MoveMailbox` (GitHub is canonical).
-- Baseline: `main` at `5315ce2`, merged PR #8. Its CI run `34399888643` passed.
-- Current task branch: `feature/live-imap-storage-recovery`, based on that main.
-  [PR #9](https://github.com/Anton-Babaskin/MoveMailbox/pull/9). Verify its current
-  state and CI by branch, not by the old merged PR #8.
+- Integrated baseline: `main`, merge commit `c1b2c601fe128baa31505f4b6e247a5522081d3f`.
+  [PR #9](https://github.com/Anton-Babaskin/MoveMailbox/pull/9) was merged on
+  September 10 with the owner's authorization. Its development branch
+  `feature/live-imap-storage-recovery` is retained for reference, not active work.
+- Continue new implementation on a fresh feature branch from safely updated main.
+  Fetch and inspect the current main CI; do not mistake pre-merge checks for a
+  completed post-merge run.
+- Published [v0.4.0-preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview)
+  still points to `b1eca4b2494712b1492ddcc165187b76056bb8c5`, now an ancestor of main.
+  Its tag and five platform archives were not rewritten or promoted to stable.
+  CI `34469906451` and release workflow `34470545536` passed for that exact SHA.
 - Follow root `AGENTS.md` and [two-computer workflow](TWO-COMPUTERS.md). Fetch all
   branches first; do not reset another computer's local work or merge all refs.
 
