@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/Anton-Babaskin/MoveMailbox/security/advisories/new
+    about: Do not publish vulnerabilities, mailbox passwords or tokens in issues.
+  - name: Setup and troubleshooting
+    url: https://github.com/Anton-Babaskin/MoveMailbox/blob/main/SUPPORT.md
+    about: Read the support guide before filing a report.

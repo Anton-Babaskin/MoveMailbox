@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem without sharing mailbox data.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security issue? Use private vulnerability reporting instead.
+        Never post passwords, cookies, tokens, private keys, databases or message content.
+  - type: input
+    id: version
+    attributes:
+      label: Version and platform
+      description: Release tag or commit, OS and CPU architecture.
+      placeholder: v0.4.0-preview, Windows 11, amd64
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Deployment
+      options:
+        - Local demo
+        - Local real migration
+        - Docker private deployment
+        - Separate hosted API and worker
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Use synthetic mailbox identifiers. Include imapsync version if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Minimal redacted error
+      description: Review text manually. Do not upload raw logs or database files.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked for existing issues and removed secrets and personal mailbox data.
+          required: true

@@ -3,6 +3,25 @@
 ## Where to continue
 
 - Repository: `Anton-Babaskin/MoveMailbox` (GitHub is canonical).
+- Presentation task: `docs/repository-showcase`, based on main `162353a`.
+  The owner authorized merging its PR only after green CI. Resolve its PR by
+  branch and check the current state before continuing; after merge, start new
+  work from updated main rather than the old engineering branch.
+- This task adds a new English/Russian repository overview, original SVG banner
+  and mail-flow diagram, setup/configuration guides, documentation index,
+  contribution/support instructions, issue/PR templates and a changelog.
+  GitHub description, website and topics were refreshed; private vulnerability
+  reporting was verified enabled. No release tag or asset was replaced.
+- Local verification: Go tests/vet, documentation links and all 30 Python tests
+  passed in Linux/WSL with age installed, including four docs-checker tests.
+  The full backup suite is not native-Windows compatible (POSIX directory fsync
+  and symlinks); its initial Windows attempt failed and was rerun in WSL.
+  Both SVGs were rasterized and visually inspected. Consult this
+  task's exact PR SHA for full CI results; no production behavior was changed.
+- The MoveMailbox license choice is still awaiting the owner. Do not select a
+  license, label the project open source or reinterpret imapsync's license as
+  permission for the whole repository. THIRD_PARTY_NOTICES.md is a scoped
+  inventory, not a completed transitive/container redistribution audit.
 - Integrated baseline: `main`, merge commit `c1b2c601fe128baa31505f4b6e247a5522081d3f`.
   [PR #9](https://github.com/Anton-Babaskin/MoveMailbox/pull/9) was merged on
   September 10 with the owner's authorization. Its development branch

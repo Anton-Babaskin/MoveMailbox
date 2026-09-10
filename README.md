@@ -1,313 +1,190 @@
 <div align="center">
 
+<img src="docs/assets/banner.svg" alt="MoveMailbox — email migration, without the terminal. Local client and self-hosted worker powered by imapsync." width="100%">
+
 # MoveMailbox
 
-### Move email between IMAP servers without living in a terminal
+**Your mail. A new home. A clear way there.**
 
-[Website](https://movemailbox.com) · [Downloads](https://github.com/Anton-Babaskin/MoveMailbox/releases) · [Documentation](docs/ARCHITECTURE.md) · [Security](SECURITY.md)
+An IMAP migration tool with a browser UI, a local client and a separate hosted worker.
 
-[![CI](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml/badge.svg)](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/Anton-Babaskin/MoveMailbox?include_prereleases&label=release)](https://github.com/Anton-Babaskin/MoveMailbox/releases)
-[![Go](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go&logoColor=white)](go.mod)
-[![Powered by imapsync](https://img.shields.io/badge/engine-imapsync-0f9f79)](https://imapsync.lamiral.info/)
+[Website](https://movemailbox.com) · [Download preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview) · [Documentation](docs/README.md) · [Русский](docs/README.ru.md)
+
+[![CI](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
+[![Preview](https://img.shields.io/github/v/release/Anton-Babaskin/MoveMailbox?include_prereleases&label=preview&color=087f66)](https://github.com/Anton-Babaskin/MoveMailbox/releases)
+[![Go toolchain](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Engine](https://img.shields.io/badge/powered_by-imapsync-087f66)](https://imapsync.lamiral.info/)
+[![License status](https://img.shields.io/badge/license-pending_owner_choice-8b6508)](docs/LICENSING.md)
 
 </div>
 
-MoveMailbox is a friendly interface for controlled IMAP-to-IMAP migrations. It
-wraps the proven `imapsync` engine with connection checks, automatic ports,
-folder selection, live progress, cancellation, readable errors, and migration
-history.
-
 > [!IMPORTANT]
-> MoveMailbox is currently a preview. The local client can run real migrations
-> when `imapsync` is installed. The online form at
-> [movemailbox.com](https://movemailbox.com) remains a no-data demo until the
-> authenticated hosted backend and durable job storage are ready.
+> **Engineering preview, not a public-cloud launch.** Real migrations work locally
+> with imapsync and in controlled self-hosted deployments. The hosted API/worker
+> is implemented and tested; public deployment still needs HTTPS, enforced
+> network egress, operations and the [launch gates](docs/ROADMAP.md).
+> A separate website mockup is not proof of a live migration service.
 
-## Why MoveMailbox
+## Why MoveMailbox?
 
-- **Simple by default:** enter a server or IP address, mailbox username, and
-  app password. The free hosted flow does not require a MoveMailbox account.
-- **Automatic connection settings:** port `993` for SSL/TLS and `143` for
-  STARTTLS, with a manual override when a provider needs something different.
-- **Safe preflight:** source and destination are tested before migration starts.
-- **Useful control:** migrate every folder or choose specific folders, place the
-  result under a destination subfolder, preserve dates and flags, run dry, or
-  use an imapsync preflight mode without copying messages.
-- **Visible work:** Server-Sent Events stream progress, folder names, metrics,
-  logs, completion, and cancellation state into the UI.
-- **Durable local history:** credential-free SQLite snapshots survive restarts;
-  interrupted jobs are marked failed and can be safely started again.
-- **Local-first security:** passwords are supplied only to the child `imapsync`
-  process through dedicated environment variables and are not stored by the app.
-- **Portable deployment:** one Go binary for the web UI and API, plus Docker and
-  Compose files for self-hosting.
+| Start simply | Stay in control | Know what happened |
+| :--- | :--- | :--- |
+| Server **name or IP**, login and password | Select folders and a destination subfolder | Progress, counters and readable logs |
+| Automatic TLS ports; local manual override | Preview changes or run preflight-only modes | Credential-free API job history |
+| Browser UI throughout the migration | Copy by default; confirm destructive mirror | Tested recovery and documented limits |
 
-## Editions
+- **Built on imapsync:** a UI, API and orchestration layer around the established engine.
+- **Local or self-hosted:** our infrastructure is not required.
+- **Guest-first hosted design:** no account wall for the planned free tier. Paid accounts, OAuth and billing remain roadmap work.
+- **Operational depth:** encrypted envelopes, durable queues, bounded retries, key rotation and metadata-backup drills.
 
-| Edition | Best for | Current status |
-| --- | --- | --- |
-| Windows/local client | Personal migrations and IT work without a cloud size limit | Preview releases available |
-| Docker/Linux | Administrators and self-hosted infrastructure | Ready for controlled private deployment |
-| Hosted at movemailbox.com | Occasional browser-based migration without registration, planned free tier up to 5 GB | Interface demo; protected backend in development |
+## Choose where it runs
 
-## Migration controls
+| Mode | Available today | Important |
+| :--- | :--- | :--- |
+| **Windows** | ZIP with launchers and a local browser UI | Install imapsync separately |
+| **Linux / macOS** | Native launcher with the same UI; amd64 and arm64 | Install imapsync separately |
+| **Docker** | Pinned imapsync runtime and hardened Compose setup | linux/amd64; private deployment first |
+| **Hosted worker** | Separate API/worker, guest ownership and quotas | Closed pilot; public launch pending |
 
-### Folder selection
+The planned free hosted tier admits a **whole source mailbox up to 5 GB**, not
+the first 5 GB of a larger mailbox. Local use has no MoveMailbox cloud-size cap;
+provider quotas and machine resources still apply. See [quota behavior](docs/MAILBOX-QUOTA.md),
+including mailbox growth during a transfer.
 
-After testing the source connection, MoveMailbox reads selectable IMAP folders.
-Choose any subset; leaving the selection at “All folders” keeps the normal
-imapsync behavior.
+## Get started
 
-### Destination subfolder
+### Windows
 
-Set a name such as `Imported mail` to keep the copied hierarchy grouped under a
-single folder in the destination mailbox.
+[Download Windows amd64](https://github.com/Anton-Babaskin/MoveMailbox/releases/download/v0.4.0-preview/movemailbox-windows-amd64-v0.4.0-preview.zip) → extract the ZIP → run **START-DEMO.cmd**.
 
-### Strict mirror
+Demo mode contacts no mail servers. For real work, install imapsync and run
+**START-REAL.cmd**. Administrator privileges are not required.
 
-Strict mirror maps to imapsync's destination cleanup mode. Messages that do not
-exist in the source can be deleted from the corresponding destination folders.
-The UI marks this as destructive and requires a separate acknowledgement plus a
-confirmation action. The API also rejects unconfirmed strict-mirror requests.
+### Linux & macOS
 
-> [!CAUTION]
-> Test strict mirror with **Dry run** and make a backup before using it on an
-> important destination mailbox. The source mailbox is not deleted or modified,
-> but destination cleanup can be irreversible.
+Extract the matching archive from [v0.4.0-preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview), then run:
 
-### Advanced preflight modes
+```sh
+./movemailbox --demo --open=true
+```
 
-The expanded **Migration options** menu also exposes the same useful preflight
-modes as imapsync's online UI:
+Native archives do **not** bundle imapsync. Previews are not signed/notarized.
+Compare downloads with **SHA256SUMS.txt** and inspect **BUILD-INFO.txt**.
+Checksums verify a match to the published file, not an independent publisher signature.
 
-- **Dry run** (`--dry`) previews the planned operations without modifying mailboxes.
-- **Check credentials only** (`--justlogin`) verifies authentication on both
-  mailboxes.
-- **Show folder sizes only** (`--justfoldersizes`) reports message counts and
-  mailbox volume without copying.
-- **Create folders only** (`--justfolders`) creates the destination folder
-  structure without transferring messages.
+### From source
 
-Choose at most one of credential check, folder-size report or folder creation.
-These modes may be combined with **Dry run**, but not with **Strict mirror**.
-Dry run alone can preview a confirmed strict mirror. The legacy API field
-`justVerbose` is an alias for `dryRun`, not an imapsync command-line option.
-The default remains a normal copy. The bundled utility sends these options to
-the backend; the separate marketing website is still a no-data demo.
+Go 1.25+ is required; `go.mod` pins the Go 1.27.0 toolchain.
 
-## Quick start
-
-### Windows preview
-
-1. Download the newest ZIP from [Releases](https://github.com/Anton-Babaskin/MoveMailbox/releases).
-2. Extract the archive completely.
-3. Run `START-DEMO.cmd` to explore the interface without contacting mail servers.
-4. After installing a compatible `imapsync`, run `START-REAL.cmd` for real work.
-
-Keep the small console window open while the app is running. Diagnostics are
-written to `movemailbox.log` next to the executable. If port `8080` is occupied,
-MoveMailbox opens the existing instance or selects another free local port.
-Migration history is stored in `%AppData%\MoveMailbox\movemailbox.db` by default.
-The database contains mailbox identifiers, status, counters and bounded logs,
-but never IMAP passwords. Use `--database` to select another location.
-
-### Go demo
-
-The module requires Go 1.25 or newer and declares a reproducible Go
-toolchain in `go.mod`.
-
-```bash
+```sh
+git clone https://github.com/Anton-Babaskin/MoveMailbox.git
+cd MoveMailbox
 go run ./cmd/mailbox-migrator --demo --open
 ```
 
-Open <http://127.0.0.1:8080>. Demo credentials are filled automatically and no
-external IMAP servers are contacted.
+Open **http://127.0.0.1:8080**. For real work, install imapsync and omit `--demo`.
 
-### Real migration with imapsync
+### Docker / private deployment
 
-Install `imapsync`, make sure it is available in `PATH`, then run:
-
-```bash
-go run ./cmd/mailbox-migrator --open
-```
-
-Or pass an explicit binary path:
-
-```bash
-go run ./cmd/mailbox-migrator --imapsync /opt/imapsync/imapsync --open
-```
-
-### Docker
-
-```bash
+```sh
 docker compose up --build
 ```
 
-Compose publishes MoveMailbox only on `127.0.0.1:8080`. The service runs with a
-read-only root filesystem, drops Linux capabilities, uses memory-backed working
-directories, persists credential-free history in the `movemailbox-data` volume,
-and applies configurable CPU, memory, and process limits.
+Builds locally and binds the UI to **127.0.0.1:8080**; it does not open a public
+service. For separate API/worker deployment, follow the [worker guide](docs/WORKER.md).
 
-The upstream imapsync image is currently built for `linux/amd64`, so the Compose
-service declares that platform explicitly.
+[Full setup](docs/GETTING-STARTED.md) · [Configuration](docs/CONFIGURATION.md) · [VPS checklist](docs/STAGING-VPS.md)
 
-For the separated hosted topology, generate a recipient key pair and internal
-token once, copy the output into a private environment file, and add the public
-gateway settings:
+## How mail moves
 
-```bash
-umask 077
-./movemailbox keygen > .env.hosted
-chmod 600 .env.hosted
-# Add MOVEMAILBOX_PUBLIC_MODE=true, MOVEMAILBOX_SESSION_SECRET and
-# MOVEMAILBOX_ALLOWED_HOSTS=movemailbox.com to .env.hosted.
-docker compose --env-file .env.hosted --profile hosted up --build
-```
+<img src="docs/assets/mail-flow.svg" alt="Hosted topology: browser to API over HTTPS; API submits encrypted credentials and commands to worker. Worker runs imapsync, reading source and writing destination over TLS. API metadata and encrypted worker queue have separate stores." width="100%">
 
-Never commit `.env.hosted`. The API container receives only the X25519 public
-key and the internal authentication token. The private recipient key and
-encrypted job queue live only in `movemailbox-worker`, on a separate volume.
-The worker continues accepted jobs across API restarts and applies bounded
-retries after an interrupted worker run. Destructive strict-mirror jobs never
-automatically retry after failure or interruption. This topology is a security boundary,
-but not by itself a public-launch approval: trusted HTTPS, egress filtering,
-operational monitoring and the remaining roadmap gates are still required.
+Mail passes through **your computer or your worker server**. The source does not
+push directly to the destination. The API creates credential envelopes; the worker
+holds the recipient private key. This is not browser-to-worker end-to-end encryption.
+In local mode, the UI and engine run on your machine.
 
-See the [worker deployment and recovery guide](docs/WORKER.md) for key isolation,
-transport security, native-process limitations and the reproducible crash drill.
-Keep `.env.hosted` as a Compose interpolation file: **do not source it into the
-API process**, which deliberately refuses to start with a worker private key.
+[Architecture](docs/ARCHITECTURE.md) · [Credential boundaries](SECURITY.md)
 
-## How it works
+## Migration controls
 
-```text
-Source IMAP server
-        │
-        │ encrypted IMAP connection
-        ▼
-MoveMailbox + imapsync on your computer or server
-        │
-        │ encrypted IMAP connection
-        ▼
-Destination IMAP server
-```
+| Control | Behavior |
+| :--- | :--- |
+| Connection checks | Verify authentication and TLS on both endpoints |
+| Folder selection | Choose source folders after discovery |
+| Destination subfolder | Group imports under a name such as `Imported mail` |
+| Dry run | Preview planned work without modifying mailboxes |
+| Credentials / sizes / folders only | Check logins, estimate volume or create folders without copying messages |
+| Start / stop / progress | Submit work, request cancellation and follow streamed events |
+| Strict mirror | Delete destination-only messages in relevant folders; explicit acknowledgement required |
 
-Messages pass through the machine running MoveMailbox. The app does not relay a
-direct server-to-server command, and normal migration does not remove messages
-from the source.
+> [!CAUTION]
+> **Strict mirror can permanently delete destination mail.** Back up and inspect
+> a dry run first. Destructive jobs are never automatically replayed after failure
+> or interruption. Ordinary reruns still need verification; universal exactly-once
+> delivery is not guaranteed across IMAP providers.
 
-## Configuration
+## Reliability with evidence
 
-| Flag | Environment | Default | Purpose |
-| --- | --- | --- | --- |
-| `--addr` | `MOVEMAILBOX_ADDR` | `127.0.0.1:8080` | HTTP listen address |
-| `--imapsync` | `MOVEMAILBOX_IMAPSYNC_BIN` | `imapsync` | imapsync executable |
-| `--max-concurrent` | `MOVEMAILBOX_MAX_CONCURRENT` | `2` | simultaneous migrations |
-| `--max-jobs` | `MOVEMAILBOX_MAX_JOBS` | `256` | queued and retained jobs |
-| `--history-ttl` | `MOVEMAILBOX_HISTORY_TTL` | `24h` | completed-job history retention |
-| `--database` | `MOVEMAILBOX_DATABASE` | platform default | SQLite history path; use `off` for memory-only history |
-| `--demo` | `MOVEMAILBOX_DEMO` | `false` | use the safe simulated engine |
-| `--open` | `MOVEMAILBOX_OPEN_BROWSER` | `true` | open the default browser |
-| `--allowed-hosts` | `MOVEMAILBOX_ALLOWED_HOSTS` | empty | additional exact HTTP `Host` values |
-| `--public` | `MOVEMAILBOX_PUBLIC_MODE` | `false` | protected guest sessions behind HTTPS |
-| — | `MOVEMAILBOX_SESSION_SECRET` | empty | secret of at least 32 random bytes; required in public mode |
-| `--session-ttl` | `MOVEMAILBOX_SESSION_TTL` | `24h` | guest session lifetime |
-| `--max-active-per-session` | `MOVEMAILBOX_MAX_ACTIVE_PER_SESSION` | `1` | active migrations per public guest session |
-| `--session-rate` | `MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE` | `120` | request limit for one public session per minute |
-| `--ip-rate` | `MOVEMAILBOX_IP_REQUESTS_PER_MINUTE` | `600` | request limit for a directly connected client IP per minute |
-| `--credential-ttl` | `MOVEMAILBOX_CREDENTIAL_TTL` | `24h` | maximum encrypted credential-envelope lifetime |
-| `--worker-lease-ttl` | `MOVEMAILBOX_WORKER_LEASE_TTL` | `2h` | renewable exclusive worker lease |
-| `--worker-url` | `MOVEMAILBOX_WORKER_URL` | empty | independent worker service URL required for hosted public mode |
-| `--worker-public-key` | `MOVEMAILBOX_WORKER_PUBLIC_KEY` | empty | worker X25519 public recipient key |
-| — | `MOVEMAILBOX_WORKER_TOKEN` | empty | internal API/worker authentication token; environment only |
-| — | `MOVEMAILBOX_WORKER_ALLOW_HTTP` | `false` | opt in to cleartext HTTP only on a trusted private network; Compose enables it |
-| `--embedded-worker` | `MOVEMAILBOX_EMBEDDED_WORKER` | `false` | development-only child-worker fallback |
-| — | `MOVEMAILBOX_MASTER_KEY` | empty | legacy embedded-worker key; never use for the hosted topology |
+Scenario tests — **not benchmarks, certifications or an uptime guarantee**.
 
-Legacy `MM_*` variables remain supported during the preview transition.
-Loopback hostnames are allowed automatically. Do not use wildcards in
-`MOVEMAILBOX_ALLOWED_HOSTS`; include a non-default port when the reverse proxy
-forwards one.
+| Scenario | Recorded evidence |
+| :--- | :--- |
+| Disconnect inside APPEND / lose the final acknowledgement | Real IMAP fault-proxy drills; content and repeat-copy checks |
+| API / worker restart | Durable recovery, guest ownership and bounded retry checks |
+| Worker disk full | Bounded tmpfs tests; no false success during pending finalization |
+| Mailbox grows after estimation | Runtime whole-message quota rejection; overshoot limitation documented |
+| Credential rotation | Drained-queue guard; mismatched keys and stale tokens fail closed |
+| Damaged or incomplete backup | Archive validation, encrypted round trip and fresh-volume demo restore |
 
-Public mode issues a signed `HttpOnly`, `Secure`, `SameSite=Lax` guest cookie,
-requires a CSRF token for state changes and returns only jobs owned by that
-session. The application deliberately ignores forwarded client-IP headers;
-configure the HTTPS proxy to enforce its own IP limit before forwarding traffic.
-It accepts public hostnames and public IP addresses on standard IMAP ports 143
-and 993, while rejecting private, loopback, link-local and reserved targets.
-The unrestricted manual-port option remains available in local/self-hosted mode.
-Generate the worker recipient keys and token with `movemailbox keygen`. Changing
-the private key invalidates pending worker envelopes, so rotate it only after
-draining or explicitly cancelling the queue.
+[Pilot evidence](docs/PILOT.md) · [Backup runbook](docs/BACKUP-RUNBOOK.md) · [CI runs](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
 
-## Development
+## Security, plainly
 
-```bash
-gofmt -w .
-go test ./...
-go vet ./...
-go run ./cmd/mailbox-migrator --demo
-```
+- Verified IMAP certificate chains and peer names; no "ignore TLS errors" switch.
+- Hosted guest ownership, CSRF checks, limits and restricted public targets.
+- Credential-free API history; encrypted envelopes in the separate worker queue.
+- Passwords passed through imapsync's child environment, not command-line arguments.
+- Privileged host access can expose runtime secrets. Deletion does not securely erase WAL or backups.
+- Docker hardening is not a per-job container guarantee or a substitute for a firewall.
 
-Independent process recovery smoke test (Python 3.9+, demo only, no real IMAP traffic):
+**Found a vulnerability?** Use [private reporting](https://github.com/Anton-Babaskin/MoveMailbox/security/advisories/new),
+not a public issue. Never attach passwords, cookies, tokens or message content.
 
-```bash
-go build -o bin/movemailbox ./cmd/mailbox-migrator
-python3 scripts/smoke-remote-worker.py --binary bin/movemailbox
-```
+## Documentation & project
 
-On Windows use `bin/movemailbox.exe`. CI runs the same drill against two hardened
-containers with fresh persistent volumes, including strict-mirror crash protection.
+| I want to… | Start here |
+| :--- | :--- |
+| Install or configure | [Getting started](docs/GETTING-STARTED.md) · [Configuration](docs/CONFIGURATION.md) |
+| Understand the system | [Architecture](docs/ARCHITECTURE.md) · [Worker](docs/WORKER.md) |
+| Operate a private pilot | [VPS](docs/STAGING-VPS.md) · [Backups](docs/BACKUP-RUNBOOK.md) |
+| See what shipped / what is next | [Changelog](CHANGELOG.md) · [Roadmap](docs/ROADMAP.md) |
+| Report a bug or propose a change | [Support](SUPPORT.md) · [Contributing](CONTRIBUTING.md) |
+| Continue on another computer | [Shared workflow](docs/TWO-COMPUTERS.md) · [Handoff](docs/HANDOFF.md) |
 
-CI also runs the race detector, vulnerability scanning, cross-platform builds,
-and a hardened Docker build.
+### Next milestones
 
-```text
-cmd/mailbox-migrator/   process entry point
-internal/api/           local HTTP API and security headers
-internal/credentials/   authenticated encrypted envelopes and leases
-internal/jobs/          queue, lifecycle, events, cancellation, history
-internal/migrator/      IMAP preflight and imapsync integration
-internal/worker/        embedded and independently deployable worker runtimes
-internal/webui/dist/    embedded browser interface
-scripts/windows/        Windows launchers and release helpers
-```
+1. **Closed VPS pilot:** HTTPS, egress enforcement, monitoring, retention and real off-site restore.
+2. **Commercial layer:** verified email, magic links and payment entitlements without registration for free transfers.
+3. **Broader compatibility:** provider coverage, OAuth, signing and business workflows.
 
-Architecture and hosted-service boundaries are documented in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/HOSTED-PRODUCT.md](docs/HOSTED-PRODUCT.md). The agreed MVP scope is in
-[docs/MVP.md](docs/MVP.md). Public-launch stages and exit
-criteria live in [docs/ROADMAP.md](docs/ROADMAP.md).
+### License & credits
 
-## Security and responsible use
+The owner has **not yet selected a license for MoveMailbox**. Public source is
+not automatically open-source permission. Read [licensing status](docs/LICENSING.md)
+before reusing or redistributing code.
 
-- Keep the local service bound to loopback. A hosted pilot additionally needs
-  public mode, trusted HTTPS and the remaining worker/credential security gates.
-- Use provider app passwords or OAuth credentials where available.
-- Verify migrated counts and folders before deleting or disabling the source.
-- Report vulnerabilities privately through
-  [GitHub Security Advisories](https://github.com/Anton-Babaskin/MoveMailbox/security/advisories/new).
-
-## Roadmap
-
-Working across computers? Follow [the shared GitHub workflow](docs/TWO-COMPUTERS.md).
-The current engineering handoff is in [docs/HANDOFF.md](docs/HANDOFF.md).
-
-- ✅ SQLite job persistence and restart-safe history.
-- Authentication, encrypted credential envelopes, audit logs, and hosted workers.
-- Signed Windows, macOS, and Linux desktop packages.
-- CSV bulk migrations, reusable provider profiles, and scheduling.
-- Gmail and Microsoft 365 OAuth, teams, billing, and multi-tenant SaaS mode.
-
-## Licensing status
-
-MoveMailbox does not yet include a project `LICENSE` file. A public repository
-does not by itself grant reuse rights. The project owner must choose the final
-distribution model before a non-preview commercial release. See
-[docs/LICENSING.md](docs/LICENSING.md) for the separate imapsync licensing notes.
+imapsync is a separate project by **Gilles Lamiral**, under its own
+[NO LIMIT PUBLIC LICENSE](https://imapsync.lamiral.info/LICENSE).
+Our [third-party inventory](THIRD_PARTY_NOTICES.md) does not relicense upstream software.
 
 ---
 
-Created and maintained by [Anton Babaskin](https://github.com/Anton-Babaskin) ·
-[movemailbox.com](https://movemailbox.com)
+<div align="center">
+
+Created and maintained by [Anton Babaskin](https://github.com/Anton-Babaskin)
+
+[movemailbox.com](https://movemailbox.com) · Built for the next home of your mail.
+
+</div>

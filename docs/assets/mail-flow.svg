@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="530" viewBox="0 0 1200 530" role="img" aria-labelledby="title desc">
+<title id="title">MoveMailbox hosted architecture</title>
+<desc id="desc">Control path: browser to API over HTTPS, then API to worker using encrypted credentials and an authenticated private transport. Mail path: source to imapsync inside the worker to destination over IMAP TLS. API metadata and encrypted worker queue use separate stores. API creates credential envelopes and worker holds the private key.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="m0 0 10 5-10 5z" fill="#267266"/></marker></defs>
+<rect width="1200" height="530" rx="20" fill="#f3f8f7"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+<text x="40" y="48" fill="#143c38" font-size="22" font-weight="700">One control path. One mail path.</text>
+<text x="40" y="76" fill="#4c6669" font-size="15">Hosted topology · the worker machine carries the migration traffic</text>
+<g fill="#fff" stroke="#c2d7d2">
+ <rect x="40" y="115" width="215" height="95" rx="14"/>
+ <rect x="385" y="115" width="215" height="95" rx="14"/>
+ <rect x="755" y="115" width="405" height="95" rx="14" fill="#dcf3e9" stroke="#65aa92"/>
+ <rect x="400" y="263" width="185" height="74" rx="12"/>
+ <rect x="970" y="263" width="190" height="74" rx="12"/>
+ <rect x="40" y="375" width="215" height="85" rx="14"/>
+ <rect x="455" y="375" width="290" height="85" rx="14" fill="#dcf3e9" stroke="#65aa92"/>
+ <rect x="945" y="375" width="215" height="85" rx="14"/>
+</g>
+<g fill="#153b38" font-size="20" font-weight="700" text-anchor="middle">
+ <text x="147" y="153">Browser</text><text x="492" y="153">API</text>
+ <text x="958" y="153">Worker service</text>
+ <text x="147" y="412">Source mailbox</text><text x="600" y="412">imapsync process</text><text x="1053" y="412">Destination</text>
+</g>
+<g fill="#486566" font-size="14" text-anchor="middle">
+ <text x="147" y="181">Form · progress · logs</text><text x="492" y="181">Guest ownership · envelopes</text>
+ <text x="958" y="181">Private key · leases · bounded retries</text>
+ <text x="492" y="293">API database</text><text x="492" y="317">Credential-free history</text>
+ <text x="1065" y="293">Worker database</text><text x="1065" y="317">Encrypted queue</text>
+ <text x="147" y="439">Read mail</text><text x="600" y="439">Runs on the worker machine</text><text x="1053" y="439">Write mail</text>
+</g>
+<g fill="none" stroke="#267266" stroke-width="2" marker-end="url(#arrow)">
+ <path d="M255 163h124"/><path d="M600 163h149"/>
+ <path d="M492 210v47"/><path d="M1065 210v47"/>
+ <path d="M835 210v80H600v79"/>
+ <path d="M255 419h194"/><path d="M745 419h194"/>
+</g>
+<g fill="#236052" font-size="13" text-anchor="middle">
+ <text x="320" y="144">HTTPS</text>
+ <text x="678" y="133">Commands +</text><text x="678" y="150">encrypted credentials</text>
+ <text x="705" y="279">Starts / supervises</text>
+ <text x="355" y="402">IMAP over TLS</text><text x="845" y="402">IMAP over TLS</text>
+</g>
+<text x="40" y="501" fill="#4c6669" font-size="14">Separate stores, not a container per job. API ↔ worker transport must use HTTPS or a trusted private network.</text>
+</g>
+</svg>
