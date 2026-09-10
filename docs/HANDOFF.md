@@ -3,10 +3,11 @@
 ## Where to continue
 
 - Repository: `Anton-Babaskin/MoveMailbox` (GitHub is canonical).
-- Presentation task: `docs/repository-showcase`, based on main `162353a`.
-  The owner authorized merging its PR only after green CI. Resolve its PR by
-  branch and check the current state before continuing; after merge, start new
-  work from updated main rather than the old engineering branch.
+- Presentation task: `docs/repository-showcase`, based on main `162353a`, is
+  complete. PR #10 passed CI run `34491518564` and was integrated into main as
+  merge commit `1949d02ac83b4eae35e18d3dda7746e8780df102` on September 10.
+  The branch remains as a historical remote ref; start new work from updated
+  `main`, not from the presentation branch.
 - This task adds a new English/Russian repository overview, original SVG banner
   and mail-flow diagram, setup/configuration guides, documentation index,
   contribution/support instructions, issue/PR templates and a changelog.
