@@ -1,0 +1,43 @@
+# Used with the root compose.yaml by install-private-staging.py.
+# Fixed addresses must match egress rules; never use this subnet for other services.
+services:
+  movemailbox:
+    image: ${MOVEMAILBOX_STAGING_IMAGE:?Run the staging installer first}
+    pull_policy: never
+    dns: [1.1.1.1, 1.0.0.1]
+    environment:
+      MOVEMAILBOX_MAX_CONCURRENT: "1"
+      MOVEMAILBOX_MAX_ACTIVE_PER_SESSION: "1"
+    networks:
+      default:
+        ipv4_address: 172.30.80.2
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+  movemailbox-worker:
+    image: ${MOVEMAILBOX_STAGING_IMAGE:?Run the staging installer first}
+    pull_policy: never
+    dns: [1.1.1.1, 1.0.0.1]
+    environment:
+      MOVEMAILBOX_WORKER_MAX_CONCURRENT: "1"
+    networks:
+      default:
+        ipv4_address: 172.30.80.3
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  default:
+    name: movemailbox-staging
+    driver: bridge
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.bridge.name: br-movemailbox
+    ipam:
+      config:
+        - subnet: 172.30.80.0/28
+          gateway: 172.30.80.1

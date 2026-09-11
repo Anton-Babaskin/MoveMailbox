@@ -91,7 +91,7 @@ services:
     cpus: ${MOVEMAILBOX_WORKER_CPU_LIMIT:-2.0}
     mem_limit: ${MOVEMAILBOX_WORKER_MEMORY_LIMIT:-1g}
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8090/healthz"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:8090/healthz"]
       interval: 30s
       timeout: 5s
       start_period: 10s
