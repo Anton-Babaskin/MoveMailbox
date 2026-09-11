@@ -1,4 +1,41 @@
-# Engineering handoff — 2026-09-10
+# Engineering handoff — 2026-09-11
+
+## Active task: public static website
+
+- Branch `web/github-pages-seo`, based on main `be9af16`. User requested public
+  website publishing on GitHub Pages with movemailbox.com; deployment from this
+  branch is authorized, but no backend PR merge or release is implied.
+- Imported the owner's Next.js website into `web/`; preserved the framework,
+  stylesheet and design. Did not import replacement Dockerfile, Go handlers or
+  permissive CSP instructions. Backend and Proxmox were not modified.
+- Public Pages is a documentation/product preview, not an online migration
+  backend. Server-rendered disabled fieldset prevents credential entry; its API
+  adapter is retained but not imported/initialized. No payment collection.
+- Static export: 30 sitemap URLs, trailing-slash directory routes, matching
+  canonical links, unique titles/descriptions and h1 headings, valid JSON-LD.
+  Removed nonexistent-language hreflang, fake health status and open-source
+  license claim; corrected missing assets and preview download links.
+- Blog/legal drafts have noindex and are excluded from sitemap. Placeholder
+  legal claims replaced with honest current static-site notices. Owner must
+  supply full online-service terms before backend/payment launch.
+- Local production build and TypeScript validation passed; export checker
+  passed 30 indexable pages and 1090 local link/asset references. npm audit found
+  zero vulnerabilities after Next 15.5.24 and scoped PostCSS/sharp overrides.
+  Live public DNS/HTTPS is not yet validated: owner must change Namecheap DNS.
+- Pages custom domain configured; deployment workflow only publishes on explicit
+  main/site-branch pushes, never PR events. Inspect the site PR and Pages run for
+  exact commit/deployment result. Initial site branch allowed in github-pages
+  environment; remove that allowance and workflow branch after merging.
+- Existing backend PR #11 remains open and its CI passed. VM is closed; user
+  explicitly rejected changes to existing Proxmox services/443, which is occupied.
+  Read `ops/private-vm-staging` handoff for VM evidence. Do not add port forwards.
+- Next: (1) owner sets DNS from [website instructions](../web/README.md), verify
+  certificate/apex/www/deep routes and enforce HTTPS; (2) owner supplies Search
+  Console verification token, then submit sitemap; backend integration is separate.
+- User's unrelated ZIP exports, log and nested `website/` remain untouched and
+  uncommitted. Credentials and local machine paths are not synchronized.
+
+Historical records below describe earlier tasks.
 
 ## Where to continue
 
