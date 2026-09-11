@@ -2,7 +2,7 @@
 
 ## Active task: public static website
 
-- Branch `web/github-pages-seo`, based on main `be9af16`. User requested public
+- Branch `web/github-pages-seo`, synchronized with main `3889632`. User requested public
   website publishing on GitHub Pages with movemailbox.com; deployment from this
   branch is authorized, but no backend PR merge or release is implied.
 - Imported the owner's Next.js website into `web/`; preserved the framework,
@@ -26,7 +26,7 @@
   main/site-branch pushes, never PR events. Inspect the site PR and Pages run for
   exact commit/deployment result. Initial site branch allowed in github-pages
   environment; remove that allowance and workflow branch after merging.
-- Existing backend PR #11 remains open and its CI passed. VM is closed; user
+- Backend PR #11 was merged into main as `3889632` during this task; its CI passed. VM is closed; user
   explicitly rejected changes to existing Proxmox services/443, which is occupied.
   Read `ops/private-vm-staging` handoff for VM evidence. Do not add port forwards.
 - Next: (1) owner sets DNS from [website instructions](../web/README.md), verify
@@ -36,6 +36,45 @@
   uncommitted. Credentials and local machine paths are not synchronized.
 
 Historical records below describe earlier tasks.
+## Previous task: closed VM stage (PR #11 merged)
+
+- Historical branch `ops/private-vm-staging`, based on main `be9af16`, is merged
+  through PR #11. Continue on the active website branch above.
+- Deployed a closed Ubuntu 24.04 VM stage: Docker/Compose, separate API/worker,
+  root-only generated credentials, loopback-only API, host UFW allowing SSH,
+  project-scoped nftables egress policy and systemd startup ordering.
+- Application image was built from `be9af16fa7b718f16028c7b746f7807d5c896d7d`:
+  `sha256:15d062fa52b8d9bb3e3cdea83045e4481ae72eb7476be87087404ccaafd476b3`.
+  Ops files are deployed separately from that immutable application image.
+- Fixed worker Compose healthcheck: GET instead of wget spider/HEAD. The old
+  probe falsely reported unhealthy although GET and authenticated API health
+  succeeded. Both services are now healthy after stage service restart.
+- VM checks passed: non-root/read-only/capability/resource limits, API loopback
+  binding, worker unpublished, real remote-worker health, Secure/HttpOnly guest
+  cookie, CSRF rejection, private-target rejection and untrusted Host rejection.
+- Live network checks passed: metadata, bridge-host, NAT hairpin and arbitrary
+  HTTPS denied with increasing nftables rejection counters; API direct IMAP
+  denied; worker DNS and certificate-verified IMAP TLS reached two authorized
+  servers. No mailbox login, migration job or message mutation in this stage.
+- Python: all 36 tests passed in WSL with age, including six new staging tests.
+  Native Windows Go could not run: incomplete temporary toolchain, missing
+  standard-library `unsafe`. Do not describe that attempt as a test pass.
+- Fallback verification passed on the VM in the pinned Go builder container:
+  `go test -race ./...` and `go vet ./...`, with no network and bounded resources.
+  Application Go sources are unchanged from the image baseline. Documentation
+  checker passed (92 local link references); Python syntax compilation passed.
+- No DNS/NAT, HTTPS, Proxmox settings, filesystem resize, full VM reboot,
+  off-site backup or public deployment was performed. SSH authentication was
+  not weakened or disabled. Temporary deployment sudo access remains; arrange
+  its removal only after verifying a normal administrative fallback.
+- Next two steps: (1) owner confirms staging DNS and NAT/reverse proxy, then
+  configure HTTPS and a restricted pilot; (2) configure an owner-provided off-site
+  backup destination, prove restore, then schedule VM reboot acceptance.
+- See [private staging runbook](../deploy/staging/README.md). Server addresses,
+  SSH keys and generated secrets are intentionally absent from the repository.
+
+The sections below retain historical implementation evidence; their statements
+about no VPS refer to the earlier tasks, not the current closed stage.
 
 ## Where to continue
 

@@ -1,5 +1,10 @@
 # Staging VPS preparation
 
+September 11: a closed Ubuntu VM stage has been deployed and checked. See the
+[private staging installer and acceptance procedure](../deploy/staging/README.md).
+The API remains loopback-only, with a separate worker and tested egress denies.
+This does not complete the HTTPS, off-site backup or public-launch gates below.
+
 Recommended baseline: Ubuntu Server 24.04 LTS, amd64/x86_64, 4 vCPU, 8 GB RAM,
 80 GB SSD/NVMe and a dedicated public IPv4. Use a minimal image, no desktop,
 hosting control panel or local mail server. This is a staging baseline, not a

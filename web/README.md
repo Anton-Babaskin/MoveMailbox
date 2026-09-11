@@ -27,7 +27,8 @@ local assets/links, noindex drafts and disabled credentials in initial HTML.
 The Website Pages workflow builds and checks the site, then deploys the artifact.
 PRs only build/check. Initial publication is authorized from web/github-pages-seo;
 after review/merge, remove that branch from the workflow and the Pages environment
-allowlist. Main remains the long-term publishing branch. Backend PR #11 is separate.
+allowlist. Main remains the long-term publishing branch. Backend PR #11 was merged
+separately; the site does not deploy or change the VM.
 GitHub Pages is for the static site only, not a SaaS runtime or payment checkout.
 
 ## Domain and HTTPS
