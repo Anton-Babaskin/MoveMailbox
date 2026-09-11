@@ -2,6 +2,17 @@
 
 ## Active task: public static website
 
+### Synchronization snapshot — 2026-09-11
+
+- The requested live-mail test continuation was cancelled; no mailbox login,
+  migration or deletion was started in this session.
+- Mailbox credentials and server secrets are not stored in GitHub, this VM or
+  the handoff. The disposable test boxes remain runtime-only inputs if a later
+  pilot is explicitly authorized.
+- `web/github-pages-seo` is synchronized with `origin/web/github-pages-seo`;
+  PR #12 remains open with its required checks green. No release or merge was
+  performed in this sync step.
+
 - Branch `web/github-pages-seo`, synchronized with main `3889632`. User requested public
   website publishing on GitHub Pages with movemailbox.com; deployment from this
   branch is authorized, but no backend PR merge or release is implied.
