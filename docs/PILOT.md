@@ -1,5 +1,47 @@
 # Real-mailbox MVP acceptance test
 
+### September 12: real-mail acceptance on the deployed closed VM
+
+`scripts/smoke-private-staging-mail.py --allow-test-mail --allow-worker-interrupt`
+passed against the existing protected API and independent native imapsync worker.
+Application version `staging-be9af16`, image
+`sha256:15d062fa52b8d9bb3e3cdea83045e4481ae72eb7476be87087404ccaafd476b3`.
+The owner explicitly resumed testing; secrets were sent through SSH stdin and
+were not written to credential files, command-line arguments or Git.
+
+| Check | Evidence / result |
+| --- | --- |
+| Login and discovery | Both accounts authenticated through the worker with verified TLS; selected nested source folders discovered |
+| Login-only, sizes-only, dry-run | Jobs `51282db515e38837`, `72c960ea7ff0ace8`, `40b02ef47d06fd3e`; zero messages copied, no destination folders created |
+| Folders-only | `6fd4cdba61d7b6a7`; selected hierarchy created empty |
+| Forward copy / repeat | `fe2db9dc11c33293` / `b9e9a5ca42202944`; two / zero messages copied |
+| Reverse copy / repeat | `de65f8b1354229f1` / `aa9117c8375db6f6`; two / zero messages copied |
+| Cancel during native process | `1b3fad863fbb1aa0` cancelled; `cfa398eeb4576e5c` completed; repeat `12741ec6285eeb8f` copied zero |
+| Worker SIGKILL / recovery | `39afdbdae63d384a` recovered to completed in two attempts; repeat `12d884131d735709` copied zero |
+| Integrity and isolation | Message SHA-256, flags and INTERNALDATE exact in both directions and after interruptions; original INBOXes and source fixture unchanged; another guest cannot read/cancel any of the 13 jobs |
+| Storage and credentials | Both SQLite databases pass integrity checks; zero terminal envelopes; neither raw password found in inspected DB/WAL/SHM or stdout/stderr service logs |
+
+Synthetic prefix `MoveMailbox-Stage-3bb3565c5ff4` is retained in the disposable
+accounts. Two source messages include Unicode text and a 6 MiB random attachment;
+copy/return/cancel/kill destination subfolders remain for inspection. No message
+was deleted. API and worker were healthy after the test; API was not restarted.
+The existing private-stage acceptance checks also passed, including actual
+network denials, CSRF, host restrictions and TLS to the two authorized hosts.
+
+Limits: tests use the VM's loopback API with explicit Secure-cookie replay,
+not a public browser HTTPS flow. Cancellation/SIGKILL occur while native imapsync
+is present; this is not an exact APPEND-byte fault. Earlier isolated proxy drills
+cover that separately. This run did not repeat strict mirror, quota growth,
+key rotation, off-site restore, full VM reboot or additional provider coverage.
+Passing these fixtures is not a universal exactly-once or public-launch guarantee.
+
+The six new offline tests cover unsafe account input, fixed TLS/port policy,
+foreign/non-running queue interruption refusal, inclusion of stderr in secret
+scans and worker restart after a kill CLI error/timeout. The latter cleanup guard
+was added after the live pilot and verified offline, not by another mailbox run.
+Local WSL suite: 41 passed, one crypto integration test skipped because
+age tools were absent. CI installs the pinned tools and must be checked separately.
+
 Status: **local-engine pilot executed 2026-09-07; remote-worker pilot verified
 2026-09-08**. The initial lab had two containers but public mode was disabled,
 so the real migrations on September 7 ran inside the API container. They did

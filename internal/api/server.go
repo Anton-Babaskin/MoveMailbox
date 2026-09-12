@@ -58,6 +58,7 @@ func New(engine migrator.Engine, manager *jobs.Manager, config Config) http.Hand
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", server.health)
+	mux.HandleFunc("GET /api/ready", server.ready)
 	mux.HandleFunc("GET /api/session", server.session)
 	mux.HandleFunc("POST /api/connections/test", server.testConnection)
 	mux.HandleFunc("POST /api/connections/folders", server.listFolders)
@@ -109,6 +110,18 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 			"healthy": storageHealthy,
 		},
 	})
+}
+
+// Keep /api/health compatible with desktop instance discovery and existing
+// liveness probes. Readiness is a separate, non-cacheable admission diagnostic.
+func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
+	ready := s.manager.Ready() && s.engine.Available()
+	status, code := "ready", http.StatusOK
+	if !ready {
+		status, code = "not_ready", http.StatusServiceUnavailable
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, code, map[string]any{"status": status, "ready": ready})
 }
 
 func (s *Server) testConnection(w http.ResponseWriter, r *http.Request) {
@@ -273,11 +286,14 @@ func (s *Server) jobEvents(w http.ResponseWriter, r *http.Request) {
 	// Suppress their replay below so a fast job cannot duplicate log lines. On
 	// an EventSource reconnect Last-Event-ID is present and only missed events
 	// are sent.
-	initialSnapshot := lastEventID == ""
-	if initialSnapshot {
-		writeSSE(w, "snapshot", view)
-		flusher.Flush()
+	snapshotSent := lastEventID == ""
+	snapshotThrough := view.Sequence
+	if snapshotSent {
+		writeSSEWithID(w, "snapshot", view.Sequence, view)
 	}
+	// Reconnects may have no pending events. Send the response headers now,
+	// rather than leaving clients waiting for the 15-second keep-alive.
+	flusher.Flush()
 
 	keepAlive := time.NewTicker(15 * time.Second)
 	defer keepAlive.Stop()
@@ -287,10 +303,25 @@ func (s *Server) jobEvents(w http.ResponseWriter, r *http.Request) {
 			if !open {
 				return
 			}
-			if initialSnapshot && event.Sequence <= view.Sequence {
+			if snapshotSent && event.Sequence <= snapshotThrough {
 				continue
 			}
 			writeSSEWithID(w, "migration", event.Sequence, event.Event)
+			if event.Event.Type == "gap" {
+				// A retained-history gap (or a cursor ahead of restored history)
+				// cannot be replayed. Resynchronize with an owned snapshot and
+				// suppress buffered events already represented by that snapshot.
+				if ownerID, protected := s.owner(r); protected {
+					view, ok = s.manager.GetFor(ownerID, r.PathValue("id"))
+				} else {
+					view, ok = s.manager.Get(r.PathValue("id"))
+				}
+				if !ok {
+					return
+				}
+				writeSSEWithID(w, "snapshot", view.Sequence, view)
+				snapshotSent, snapshotThrough = true, view.Sequence
+			}
 			flusher.Flush()
 			if event.Event.Type == "finished" {
 				return
@@ -335,11 +366,6 @@ func (s *Server) allowEndpoint(w http.ResponseWriter, r *http.Request, endpoint 
 func writeSSEWithID(w http.ResponseWriter, eventName string, id uint64, value any) {
 	data, _ := json.Marshal(value)
 	fmt.Fprintf(w, "id: %d\nevent: %s\ndata: %s\n\n", id, eventName, data)
-}
-
-func writeSSE(w http.ResponseWriter, eventName string, value any) {
-	data, _ := json.Marshal(value)
-	fmt.Fprintf(w, "event: %s\ndata: %s\n\n", eventName, data)
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, target any) error {

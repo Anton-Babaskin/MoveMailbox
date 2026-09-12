@@ -148,6 +148,12 @@ def run(binary, image, directory, rotation=False):
             time.sleep(0.1)
         raise AssertionError("timed out waiting for demo state")
 
+    def assert_readiness(ready):
+        state, headers = request("api", "/api/ready", expected=200 if ready else 503)
+        assert state == {"status": "ready" if ready else "not_ready", "ready": ready}
+        assert headers.get("Cache-Control") == "no-store", "readiness can be cached"
+        assert not headers.get("Set-Cookie"), "readiness allocated a guest session"
+
     try:
         if image:
             subnet_octet = 16 + (int.from_bytes(hashlib.sha256(prefix.encode()).digest()[:2], "big") % 200)
@@ -156,6 +162,7 @@ def run(binary, image, directory, rotation=False):
         until(lambda: request("worker", "/healthz")[0]["available"])
         start("api")
         until(lambda: request("api", "/api/health")[0]["available"])
+        assert_readiness(True)
         session, headers = request("api", "/api/session")
         # Test-only HTTP transport: manually send the Secure cookie on loopback.
         # Production browsers require HTTPS; this test does not weaken cookie flags.
@@ -185,9 +192,12 @@ def run(binary, image, directory, rotation=False):
         until(lambda: request("api", retry_path, cookie=cookie)[0]["transferred"] > 0)
         kill("worker")
         # Keep API up during the outage: a dropped HTTP connection must not cancel work.
+        assert_readiness(False)
+        assert not request("api", "/api/health")[0]["available"], "liveness lost worker state"
         time.sleep(0.4)
         start("worker")
         until(lambda: request("worker", "/healthz")[0]["available"])
+        assert_readiness(True)
         result = until(lambda: completed(retry_path))
         assert result["transferred"] == 954, "unexpected recovered demo count"
         mirror_payload = payload | {"options": {"strictMirror": True, "strictMirrorConfirmed": True}}
@@ -251,10 +261,12 @@ def run(binary, image, directory, rotation=False):
             start("worker")
             until(lambda: request("worker", "/healthz")[0]["available"])
             assert not request("api", "/api/health")[0]["available"], "stale internal token still works"
+            assert_readiness(False)
             kill("api")
             api_env["MOVEMAILBOX_WORKER_TOKEN"] = new_keys["MOVEMAILBOX_WORKER_TOKEN"]
             start("api")
             until(lambda: request("api", "/api/health")[0]["available"])
+            assert_readiness(True)
             rotated, _ = request("api", "/api/jobs", payload, cookie, csrf, 202)
             assert until(lambda: completed("/api/jobs/" + rotated["id"]))["transferred"] == 954
             assert completed(job_path)["status"] == "completed"
@@ -278,7 +290,7 @@ def run(binary, image, directory, rotation=False):
             if path.is_file():
                 raw = path.read_bytes()
                 assert not any(secret.encode() in raw for secret in passwords), f"password found in {path.name}"
-        print("PASS: demo preflight modes and conflict rejection, connection/folders, API kill/reconnect, worker kill/retry, 954 messages, strict mirror not replayed after kill, owner isolation, cancel, no plaintext in DB/WAL/logs")
+        print("PASS: readiness 200/503/200 with live API during worker outage; demo preflight modes and conflict rejection, connection/folders, API kill/reconnect, worker kill/retry, 954 messages, strict mirror not replayed after kill, owner isolation, cancel, no plaintext in DB/WAL/logs")
     finally:
         for name in ("api", "worker"):
             kill(name)

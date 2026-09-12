@@ -408,6 +408,15 @@ func (m *Manager) StorageStatus() (kind string, healthy bool) {
 	return m.store.Kind(), m.storeErr == nil
 }
 
+// Ready reports persistent-state and lifecycle readiness, not queue capacity.
+// Callers must also check the configured engine/remote worker. This is a point-
+// in-time diagnostic, not a reservation for a subsequent Start call.
+func (m *Manager) Ready() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return !m.shuttingDown && !m.storeClosed && m.storeErr == nil
+}
+
 // ExecutionMode distinguishes the local in-process engine from the encrypted
 // isolated-worker path used by public deployments.
 func (m *Manager) ExecutionMode() string {

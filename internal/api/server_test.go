@@ -381,6 +381,9 @@ func TestInitialSSESnapshotDoesNotReplayIncludedEvents(t *testing.T) {
 	if strings.Count(body, "event: snapshot") != 1 {
 		t.Fatalf("expected one snapshot, body: %s", body)
 	}
+	if !strings.HasPrefix(body, "id: ") {
+		t.Fatalf("snapshot must establish a reconnect cursor: %s", body)
+	}
 	if strings.Contains(body, "event: migration") {
 		t.Fatalf("snapshot events were replayed and would duplicate UI logs: %s", body)
 	}

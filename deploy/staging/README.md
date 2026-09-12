@@ -75,6 +75,31 @@ no active jobs, following the backup runbook. Restart `movemailbox-staging`, the
 rerun acceptance. This is not proof of a whole-VM reboot or interrupted-job
 recovery. Schedule a VM reboot with console access before public launch.
 
+## Opt-in real-mail pilot
+
+With authorized disposable Mail-in-a-Box accounts and an idle stage, the Docker
+administrator can run `scripts/smoke-private-staging-mail.py --allow-test-mail`.
+It also needs `smoke-live-quota.py` alongside it for the verified-TLS inspection
+and snapshot helpers. Supply one JSON line on stdin with `source` and
+`destination` objects, each containing `host`, `username`, `password`. Obtain
+these through hidden input or a secret mechanism and pipe directly over SSH;
+never use a credential file or inline shell argument. Port 993/TLS are fixed.
+
+The test creates two synthetic messages in unique folders, including a 6 MiB
+attachment, and tests preflight modes, selected folders, destination subfolders,
+both directions, zero-copy repeats, guest isolation and credential cleanup.
+INBOXes and source fixtures are compared read-only. Generated folders are
+retained, not deleted. It assumes the Mail-in-a-Box `.` hierarchy delimiter.
+
+Adding `--allow-worker-interrupt` also cancels a test job and sends SIGKILL to
+the exact staging worker. Run during an exclusive operator test window: before
+each fault the harness requires that its own job is the only active worker job.
+That snapshot is a guard, not a lock against concurrent external admissions.
+Only jobs created by this run are candidates for cancellation on failure.
+The worker is restarted with existing keys/volumes; no settings are weakened.
+If a deadline or cleanup fails, inspect printed test job IDs and service health.
+This does not validate browser HTTPS or a full VM reboot.
+
 ## Updates, interruption and rollback
 
 This is a bootstrap installer, not a transactional upgrade manager. A failure

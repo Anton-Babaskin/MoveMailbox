@@ -1,6 +1,132 @@
 # Engineering handoff — 2026-09-12
 
-## Active task: public static website
+## Integration of technical PRs #13 and #15
+
+The owner authorized merging both technical PRs after green CI. PR #13 now
+incorporates PR #15's reviewed backend branch so the handoff conflict is resolved
+without losing either work record. Merge #15 first, then #13 after its own exact
+head checks pass. Inspect GitHub state before doing anything: if both are merged,
+fast-forward local main and start the next technical branch from it. Never merge
+Claude's website PR #14 as part of this authorization.
+
+Claude owns website/frontend/design/content/SEO; this agent owns the utility,
+backend, workers, tests and test VM. The next technical stages are deployment of
+the tested image to the closed VM with rollback and disposable-mail acceptance,
+then real encrypted off-site restore using an owner-designated destination.
+The records below preserve earlier evidence, not current checkout instructions.
+
+## Completed real-mail acceptance record (PR #13)
+
+- Historical `test/private-staging-mail` pilot was based on main `3889632`. PR #11 is already
+  merged. This new technical branch is independent of the public website PR #12
+  (`web/github-pages-seo`); inspect both PR states after fetching all refs.
+- Owner explicitly resumed the previously cancelled mailbox tests. A real
+  Mail-in-a-Box pilot passed on the deployed API/worker image `staging-be9af16`.
+  No Go/application code or deployment configuration changed.
+- Added `scripts/smoke-private-staging-mail.py`: bounded stdin credentials,
+  fixed loopback guest API, selected synthetic folders, 6 MiB attachment,
+  preflight modes, bidirectional copies and repeats, guest isolation,
+  cancellation and opt-in worker SIGKILL with exclusive-active-job guard.
+- All 13 real jobs reached expected terminal states. Copy verification compares
+  complete-message SHA-256, flags and INTERNALDATE. Repeats copied zero messages;
+  original INBOXes and source fixture stayed unchanged. Crash recovery used two
+  attempts for the same job. SQLite integrity and terminal envelope cleanup
+  passed; raw mailbox passwords absent from inspected DB/WAL/SHM and service logs.
+- Six new offline guard tests passed. WSL suite: 41 passed, one age integration
+  test skipped because age/age-keygen are unavailable in that WSL environment.
+  Consult the current PR's CI for pinned age integration and Go/Docker checks;
+  a previous branch's green CI is not proof for this branch.
+- Post-pilot harness review also added a restart attempt when the Docker kill
+  command errors/times out; two offline tests cover both success and failure
+  paths. This cleanup change was not a second live-mail run.
+- Test scripts were staged temporarily on the VM; credentials were supplied
+  through SSH stdin after hidden local input. No credential file was created.
+  Synthetic folders remain for inspection; both deployed services are healthy.
+  Details, job IDs and limitations: [pilot record](PILOT.md).
+- Next two technical steps: (1) encrypted off-host backup and independent restore
+  using an owner-designated destination; (2) VM reboot acceptance and readiness
+  monitoring/retention checks. Separate future scope: paid identity/entitlements.
+- Website DNS/HTTPS and all 30 sitemap pages were verified on September 12;
+  source and deployment checker are in PR #12. Search-engine ownership records
+  and sitemap submission are still pending with the owner. Do not lose the
+  website branch when continuing technical work on another computer.
+
+## Backend hardening record (PR #15, 2026-09-12)
+
+This section supersedes the historical branch/PR and cancelled-test directions
+below. Website/frontend/design/content/SEO now belong to Claude, per the owner.
+This agent owns the migration utility, API/backend, worker, technical tests and
+test VM. No frontend files were changed in this task; see `AGENTS.md`.
+
+- Active branch: `feature/backend-mvp-hardening`, based on current main
+  `8744a68` after PR #12 was merged. Technical changes are in
+  [PR #15](https://github.com/Anton-Babaskin/MoveMailbox/pull/15); do not merge
+  Claude's separate website branch into it. Inspect current PR state and CI
+  for the exact head before continuing on another computer.
+- Previous real-mail pilot is independently recorded in
+  [PR #13](https://github.com/Anton-Babaskin/MoveMailbox/pull/13), branch
+  `test/private-staging-mail`, head `ab29f5f`. Its 13 completed real-mail jobs
+  and CI evidence are not another live-mail run in this task. That PR remains
+  separately reviewable; preserve its test harness/evidence when merging.
+- Stage 1: API and worker service reject invalid typed environment settings
+  before listeners/storage/log creation. Explicit numeric limits/durations
+  must be positive; empty values retain defaults. Subprocess tests exercise
+  both real entry points and check that errors omit supplied values.
+- Stage 2: `/api/ready` returns 200/503 from configured engine availability,
+  observed history-store health and manager lifecycle. `/api/health` remains
+  compatible. Probes create no guest session; Host/security guards remain.
+  Readiness is not a capacity reservation or a disk-space forecast.
+- Stage 3: initial SSE snapshots establish a reconnect cursor; reconnect headers
+  flush without waiting for another event. Retention/future-cursor gaps receive
+  an owned snapshot, with already represented events suppressed. Unauthorized
+  guests still receive 404. See [API integration contract](BACKEND-OPERATIONS.md)
+  for Claude; this does not implement or validate browser integration.
+- Verification of implementation commit `5cb88f8`: `go test -race ./...`,
+  `go vet ./...`, clean gofmt output, and 20 repeated SSE/readiness/durable-save
+  test runs passed in the pinned Go 1.27 builder on the test VM, network disabled
+  and resources bounded. Windows Go was not used.
+- Extended process-level demo smoke passed inside a separate isolated container:
+  readiness 200/503/200 across worker loss/recovery, API liveness retained,
+  API restart/reconnect, worker retry, 954 simulated messages, strict-mirror
+  non-replay, ownership, cancellation and no plaintext in inspected DB/WAL/logs.
+  This is synthetic, not a new real-IMAP acceptance test. Token-rotation readiness
+  assertions were added to the existing Docker CI drill; check CI before claiming
+  that Docker variant passed for the current head.
+- WSL Python suite: 36 tests, 35 passed and one age-dependent test skipped
+  (age absent locally). Documentation link/artwork checker passed. CI installs
+  age and runs the full suite, vulnerability scan, five cross-builds and Docker
+  recovery/rotation/backup/ENOSPC drills; its final result is not presumed here.
+- Running staging API/worker, deployed image, firewall and secrets were not
+  modified or restarted. No website deployment, mailbox mutation, merge or
+  release. Unrelated local archives/logs remain outside Git; credentials and
+  runtimes are not synchronized between computers.
+
+### Next two technical steps
+
+Owner subsequently authorized merging PRs #13 and #15 after checking them; do
+not merge Claude's PR #14. Recheck actual GitHub state on resume and use updated
+main once both technical PRs are merged.
+
+CI on `edb9707` exposed a pre-existing worker shutdown race before Migrate:
+ordinary leased work was permanently failed if service cancellation arrived
+after envelope opening but before execution. The fix releases that lease and
+requeues unstarted ordinary work without consuming an attempt; strict mirror,
+deadline failure and explicit cancellation remain fail-closed. Added four
+deterministic policy cases (50 repetitions passed), then 200 repetitions of the
+actual service-restart test passed, plus the full race suite and vet in the
+isolated builder. The earlier red Docker run must not be called green; inspect
+the CI result for the new head that includes this correction.
+
+1. After reviewing/merging the technical PRs and checking their exact green CI,
+   deploy an immutable tested image to the closed test VM with a rollback image
+   retained. Validate readiness and reconnect behavior against that deployed
+   API/worker and repeat the authorized disposable-mail acceptance harness.
+2. Perform an actual encrypted off-site backup/restore into isolated empty
+   storage, including missing/corrupt objects and recovery-time evidence. This
+   requires the owner's selected off-site destination and scoped credentials;
+   a local archive drill is not off-site validation.
+
+## Previous task: public static website (PR #12 merged)
 
 ### Блог, бекенд сайта и публикация — 2026-09-12 (website/SEO scope)
 

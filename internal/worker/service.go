@@ -318,7 +318,7 @@ func (service *Service) runJob(jobID string) {
 	migrationContext, cancelExpiry := context.WithDeadline(migrationContext, envelope.ExpiresAt)
 	defer cancelExpiry()
 	if migrationContext.Err() != nil {
-		service.finishFailure(jobID, "migration expired or cancelled before execution")
+		service.cancelBeforeExecution(jobID, workerID, request.Options.StrictMirror)
 		return
 	}
 	leaseErrors := make(chan error, 1)
@@ -382,6 +382,21 @@ func (service *Service) runJob(jobID string) {
 		log.Printf("worker job %s completion failed: %v", jobID, err)
 		service.finishFailure(jobID, "migration finished but final state could not be persisted; already copied mail is retained; manual review required")
 	}
+}
+
+// A service shutdown can race with credential opening, before Migrate begins.
+// Preserve ordinary work exactly as on the post-Migrate shutdown path, while
+// keeping strict mirror, explicit cancellation and expiry fail-closed.
+func (service *Service) cancelBeforeExecution(jobID, workerID string, strictMirror bool) {
+	if service.ctx.Err() != nil && !strictMirror {
+		if err := service.envelopes.ReleaseLease(context.Background(), jobID, workerID); err != nil {
+			service.finishFailure(jobID, "credential lease could not be released")
+			return
+		}
+		service.requeueIfPresent(jobID, time.Now(), true)
+		return
+	}
+	service.finishFailure(jobID, "migration expired or cancelled before execution")
 }
 
 func (service *Service) retryOrFail(jobID string, failure error, undoAttempt bool) {
