@@ -1,5 +1,23 @@
 # Real-mailbox MVP acceptance test
 
+### September 12: full VM reboot acceptance
+
+The dedicated closed staging VM completed a full reboot. The boot ID changed,
+and systemd activation timestamps proved the egress policy became active before
+Docker and Docker before the staging service. Docker retains an explicit
+`Requires`/`After` dependency on the egress unit. Both containers returned
+healthy on the same pinned image digest, and `/api/ready` returned HTTP 200 with
+`Cache-Control: no-store`.
+
+The complete private-stage verifier then passed container restrictions,
+loopback-only API/private worker exposure, guest/CSRF/Host/SSRF controls, actual
+blocked egress probes and certificate-verified TLS to both authorized IMAP
+servers. It used no mailbox credentials and created no jobs or messages. The
+post-reboot stores still contained 24 completed and 2 cancelled jobs, with zero
+active jobs and zero credential envelopes. This proves boot ordering and closed
+stage recovery; it is not public HTTPS, off-site restore or another real-mail
+migration run.
+
 ### September 12: merged-main deployment and second real-mail acceptance
 
 Main `bc80040` was deployed as `staging-bc80040`, digest

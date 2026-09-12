@@ -102,11 +102,27 @@ This does not validate browser HTTPS or a full VM reboot.
 
 ## Updates, interruption and rollback
 
-This is a bootstrap installer, not a transactional upgrade manager. A failure
-may leave already-created files; inspect them before resuming. Never delete
-secrets to bypass an image/config mismatch. Preserve the old image ID, drain
-queues, take verified metadata and separate key backups, review configuration
-changes, then explicitly deploy the new reviewed revision.
+The bootstrap installer is not an update manager. Build the reviewed revision
+locally and keep both its immutable image ID and the current rollback image.
+Then run the staging-only transactional updater with the full reviewed commit:
+
+```sh
+sudo python3 /opt/movemailbox/scripts/staging_update.py \
+  --image movemailbox:REVIEWED_VERSION --source-commit FULL_40_CHARACTER_SHA
+```
+
+The updater stops both writers, snapshots both databases through SQLite's
+Backup API (so committed WAL pages are included), rejects active jobs or
+credential envelopes, validates checksums/integrity/paired terminal state,
+atomically changes the image pin and waits for both health checks plus API
+readiness. On a failed update it preserves a snapshot of the failed state and
+restores the old image and verified database pair. It never removes images,
+volumes or backups. Review the root-only backup under
+`/var/backups/movemailbox` and copy it off-host using the backup runbook.
+
+Never delete secrets to bypass an image/config mismatch. Schema/config changes
+still require operator review; the command intentionally targets only the fixed
+single-VM staging installation.
 
 To stop the stage without deleting data, use `systemctl stop movemailbox-staging`.
 Keep its egress policy in place while containers exist or can restart. Do not
