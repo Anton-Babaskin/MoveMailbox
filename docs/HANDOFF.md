@@ -21,7 +21,7 @@
   `CNAME` и `.nojekyll`.
 - Регрессия слияния исправлена: пять ссылок в `components/sections/`
   (`brief`, `faq-short`, `workspace`) были захардкожены без слэша и без языка
-  (`href="/guides"`), теперь идут через `href(lang, path)`. В экспорте не
+  (в href стояла строка `/guides`), теперь идут через `href(lang, path)`. В экспорте не
   осталось ни одной внутренней ссылки без слэша.
 - Сохранены решения репозитория поверх архива: Next 15.5.24 (в архиве 15.5.4),
   overrides postcss/sharp, скрипты `check`/`check:live`, workflow Pages с
