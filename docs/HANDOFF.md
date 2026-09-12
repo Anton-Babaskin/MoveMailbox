@@ -1,6 +1,57 @@
 # Engineering handoff — 2026-09-12
 
-## Active technical task: backend hardening (2026-09-12)
+## Integration of technical PRs #13 and #15
+
+The owner authorized merging both technical PRs after green CI. PR #13 now
+incorporates PR #15's reviewed backend branch so the handoff conflict is resolved
+without losing either work record. Merge #15 first, then #13 after its own exact
+head checks pass. Inspect GitHub state before doing anything: if both are merged,
+fast-forward local main and start the next technical branch from it. Never merge
+Claude's website PR #14 as part of this authorization.
+
+Claude owns website/frontend/design/content/SEO; this agent owns the utility,
+backend, workers, tests and test VM. The next technical stages are deployment of
+the tested image to the closed VM with rollback and disposable-mail acceptance,
+then real encrypted off-site restore using an owner-designated destination.
+The records below preserve earlier evidence, not current checkout instructions.
+
+## Completed real-mail acceptance record (PR #13)
+
+- Historical `test/private-staging-mail` pilot was based on main `3889632`. PR #11 is already
+  merged. This new technical branch is independent of the public website PR #12
+  (`web/github-pages-seo`); inspect both PR states after fetching all refs.
+- Owner explicitly resumed the previously cancelled mailbox tests. A real
+  Mail-in-a-Box pilot passed on the deployed API/worker image `staging-be9af16`.
+  No Go/application code or deployment configuration changed.
+- Added `scripts/smoke-private-staging-mail.py`: bounded stdin credentials,
+  fixed loopback guest API, selected synthetic folders, 6 MiB attachment,
+  preflight modes, bidirectional copies and repeats, guest isolation,
+  cancellation and opt-in worker SIGKILL with exclusive-active-job guard.
+- All 13 real jobs reached expected terminal states. Copy verification compares
+  complete-message SHA-256, flags and INTERNALDATE. Repeats copied zero messages;
+  original INBOXes and source fixture stayed unchanged. Crash recovery used two
+  attempts for the same job. SQLite integrity and terminal envelope cleanup
+  passed; raw mailbox passwords absent from inspected DB/WAL/SHM and service logs.
+- Six new offline guard tests passed. WSL suite: 41 passed, one age integration
+  test skipped because age/age-keygen are unavailable in that WSL environment.
+  Consult the current PR's CI for pinned age integration and Go/Docker checks;
+  a previous branch's green CI is not proof for this branch.
+- Post-pilot harness review also added a restart attempt when the Docker kill
+  command errors/times out; two offline tests cover both success and failure
+  paths. This cleanup change was not a second live-mail run.
+- Test scripts were staged temporarily on the VM; credentials were supplied
+  through SSH stdin after hidden local input. No credential file was created.
+  Synthetic folders remain for inspection; both deployed services are healthy.
+  Details, job IDs and limitations: [pilot record](PILOT.md).
+- Next two technical steps: (1) encrypted off-host backup and independent restore
+  using an owner-designated destination; (2) VM reboot acceptance and readiness
+  monitoring/retention checks. Separate future scope: paid identity/entitlements.
+- Website DNS/HTTPS and all 30 sitemap pages were verified on September 12;
+  source and deployment checker are in PR #12. Search-engine ownership records
+  and sitemap submission are still pending with the owner. Do not lose the
+  website branch when continuing technical work on another computer.
+
+## Backend hardening record (PR #15, 2026-09-12)
 
 This section supersedes the historical branch/PR and cancelled-test directions
 below. Website/frontend/design/content/SEO now belong to Claude, per the owner.
