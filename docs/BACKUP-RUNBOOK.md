@@ -26,12 +26,16 @@ someone who later obtains the worker private key.
    credential-envelope table is empty. If not empty, stop and investigate.
 3. Stop API and worker gracefully. Verify both containers are stopped and no
    process has the database files open.
-4. Copy the API and worker SQLite databases from their volumes into a new
-   mode-`0600` staging directory. Include `-wal`/`-shm` only if the backup tool
-   requires them; a clean shutdown should checkpoint WAL first.
+4. Create API and worker copies in a new mode-`0600` staging directory with the
+   SQLite Backup API (or a storage snapshot with separately documented SQLite
+   and WAL consistency guarantees). Never copy only the main `.db` files: a
+   clean container shutdown does not prove all committed WAL pages were
+   checkpointed. If a tool copies a database/WAL/SHM set, keep that set together
+   and open the copied set before validation or packaging.
 5. Run `PRAGMA integrity_check` on each copy. Abort if the result is not exactly
    `ok`. Generate a manifest containing image version, schema versions, UTC
-   timestamp, file sizes and SHA-256 hashes.
+   timestamp, file sizes and SHA-256 hashes. Validate paired terminal states too:
+   integrity may pass for a stale main file whose newer state remains in WAL.
 6. Create an encrypted archive with an externally managed key (for example,
    age recipient or a cloud KMS envelope key). Never put the decryption key on
    the VPS. Upload the archive and manifest to an off-site bucket with private

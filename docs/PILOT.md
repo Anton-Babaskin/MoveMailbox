@@ -1,5 +1,28 @@
 # Real-mailbox MVP acceptance test
 
+### September 12: merged-main deployment and second real-mail acceptance
+
+Main `bc80040` was deployed as `staging-bc80040`, digest
+`sha256:07761ebafcdb3fccce8ba420f1be2e47aa5508a5fae2730ed65360ae5e0f1e7f`,
+with the old digest retained for rollback. The build passed Go and real imapsync
+TLS/STARTTLS certificate tests; isolated worker restart/retry/key/token rotation
+and secret-leak checks also passed.
+
+A drained stopped snapshot made through SQLite Backup API passed hashes,
+integrity, terminal-state and cross-store validation. A preceding main-file-only
+copy was rejected because committed worker state remained in WAL; it was never
+accepted as rollback evidence.
+
+Post-deploy private-stage checks and verified TLS to both authorized servers
+passed. A new 13-job pilot passed preflight/no-write modes, folders-only,
+destination subfolder, both directions, exact 6 MiB attachment hash/flags/date,
+zero-copy repeats, cancellation recovery and worker-SIGKILL recovery. Sources
+and INBOXes stayed unchanged; guest isolation and database integrity passed;
+there were no active jobs/envelopes or plaintext test passwords in inspected
+DB/WAL/SHM/logs. Fixture `MoveMailbox-Stage-73f998de0f3e` remains for inspection.
+No strict mirror, deletion, other-provider, public-browser, reboot or off-site
+restore claim is made by this result.
+
 ### September 12: real-mail acceptance on the deployed closed VM
 
 `scripts/smoke-private-staging-mail.py --allow-test-mail --allow-worker-interrupt`
