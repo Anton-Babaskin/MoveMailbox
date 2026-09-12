@@ -50,6 +50,7 @@ export function SiteShell({
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
       <head>
         <script src="/theme.js" />
+        <script src="/lang.js" />
       </head>
       <body className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
         <IconSprite />

@@ -56,7 +56,7 @@ export function SiteHeader({
   const t = siteHeader[lang];
 
   /** Текущий язык берём из пути: он не расходится с тем, что видит пользователь. */
-  const here = splitLocale(pathname);
+  const here = notFound ? { lang, path: '/' } : splitLocale(pathname);
   /** Куда ведёт переключатель языка: тот же адрес, а на 404 — главная. */
   const switchPath = notFound ? '/' : here.path;
 
@@ -90,7 +90,7 @@ export function SiteHeader({
   }
 
   const isActive = (path: string) =>
-    path === '/' ? here.path === '/' : here.path.startsWith(path);
+    notFound ? false : path === '/' ? here.path === '/' : here.path.startsWith(path);
 
   return (
     <header className={`top${stuck ? ' stuck' : ''}`} id="top">
@@ -124,6 +124,8 @@ export function SiteHeader({
               <Link
                 key={l}
                 href={href(l, switchPath)}
+                prefetch={false}
+                data-lang={l}
                 aria-current={l === here.lang ? 'page' : undefined}
               >
                 {LANG_LABEL[l]}
@@ -178,7 +180,13 @@ export function SiteHeader({
           <Link href={href(lang, '/docs/errors')}>{t.errors}</Link>
           <div className="mob-lang">
             {LANGS.map((l) => (
-              <Link key={l} href={href(l, switchPath)}>
+              <Link
+                key={l}
+                href={href(l, switchPath)}
+                prefetch={false}
+                data-lang={l}
+                aria-current={l === here.lang ? 'page' : undefined}
+              >
                 {LANG_LABEL[l]}
               </Link>
             ))}

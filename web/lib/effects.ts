@@ -39,16 +39,57 @@ export function initEffects() {
   })();
 
   /* ---- reveal on scroll ---- */
+  /* Раскрытие разное по типу блока: карточки выезжают снизу пачкой,
+     колонки — навстречу друг другу, крупные полотна проявляются шторкой,
+     числа и медальоны подрастают. Один эффект на весь сайт читается дёшево,
+     четыре разных — как будто страницу собирали руками.
+     Всё выключается одним системным «уменьшить движение». */
   if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion:reduce)').matches){
     var io=new IntersectionObserver(function(es){ es.forEach(function(e){
-      if(e.isIntersecting){ e.target.classList.remove('pre'); io.unobserve(e.target); } });},
-      {rootMargin:'0px 0px -8% 0px',threshold:.06});
-    $$('.card,.rt,.pl,.post,.slist article,.pv,.biz,.frame,.tx-cols,.calc,.err,.who,.next-grid a,.proof').forEach(function(el,i){
-      var top=el.getBoundingClientRect().top;
-      if(top>innerHeight*0.9){ el.classList.add('rv','pre');
-        el.style.transitionDelay=((i%4)*55)+'ms'; io.observe(el); }
+      if(e.isIntersecting){ e.target.classList.add('rv-in'); io.unobserve(e.target); } });},
+      {rootMargin:'0px 0px -10% 0px',threshold:.08});
+
+    var plan=[
+      /* тип, селектор, шаг задержки внутри группы */
+      ['up',    '.card,.post,.pl,.who,.rt,.err,.next-grid a,.proof,.stn,.mode-card,'
+              +'.faq details,.error-causes li,.error-fixes li,.route-links a,.guide,.plan', 70],
+      ['left',  '.brief-col:first-child .brief-list li,.tx-cols>*:first-child', 60],
+      ['right', '.brief-col:last-child .brief-facts li,.tx-cols>*:last-child', 60],
+      ['mask',  '.frame,.calc,.biz,.pv,.slist article,.error-sample,.post-body', 0],
+      ['pop',   '.trust span,.badge,.tag', 45]
+    ];
+
+    plan.forEach(function(rule){
+      var type=rule[0], step=rule[2], n=0;
+      $$(rule[1]).forEach(function(el){
+        if(el.dataset.rv) return;                       /* один эффект на элемент */
+        if(el.getBoundingClientRect().top<innerHeight*0.88) return;  /* уже на экране */
+        el.dataset.rv=type;
+        if(step) el.style.setProperty('--rv-delay',(n%5)*step+'ms');
+        n++;
+        io.observe(el);
+      });
     });
   }
+
+  /* ---- линия шагов прочерчивается по мере прокрутки ---- */
+  (function(){
+    var list=$('.brief-list');
+    if(!list || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    var items=$$('.brief-list li');
+    function tick(){
+      var r=list.getBoundingClientRect();
+      var anchor=innerHeight*0.62;                       /* «перо» чуть ниже центра экрана */
+      var p=Math.max(0,Math.min(1,(anchor-r.top)/(r.height||1)));
+      list.style.setProperty('--rail',String(p));
+      var filled=r.top+34+(r.height-68)*p;
+      items.forEach(function(li){
+        var m=li.getBoundingClientRect();
+        li.classList.toggle('on', m.top+34<=filled);
+      });
+    }
+    addEventListener('scroll',tick,{passive:true}); addEventListener('resize',tick); tick();
+  })();
 
   /* ---- card glow ---- */
   $$('.card').forEach(function(c){ c.addEventListener('pointermove',function(e){
