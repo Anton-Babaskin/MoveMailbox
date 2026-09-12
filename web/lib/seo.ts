@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 
-export type Language = 'ru' | 'en' | 'uk';
+import type { Lang } from '@/i18n/config';
+
+/** Исторический псевдоним: в новом коде используйте Lang. */
+export type Language = Lang;
 
 export const SITE = 'https://movemailbox.com';
 export const SITE_NAME = 'MoveMailbox';
@@ -34,7 +37,7 @@ export function buildMetadata({
   index?: boolean;
 }): Metadata {
   const prefix = langPrefix(language);
-  const canonical = (`${prefix}${path}` || '/').replace(/\/?$/, '/');
+  const canonical = `${prefix}${path}` || '/';
   const locale =
     language === 'ru' ? 'ru_RU' : language === 'uk' ? 'uk_UA' : 'en_US';
 
@@ -43,6 +46,12 @@ export function buildMetadata({
     description,
     alternates: {
       canonical,
+      languages: {
+        ru: path || '/',
+        en: `/en${path}` || '/en',
+        uk: `/uk${path}` || '/uk',
+        'x-default': path || '/',
+      },
     },
     robots: index
       ? { index: true, follow: true }
@@ -82,7 +91,7 @@ export function breadcrumbLd(
       '@type': 'ListItem',
       position: i + 1,
       name: item.name,
-      item: `${SITE}${item.path}`.replace(/\/?$/, '/'),
+      item: `${SITE}${item.path}`,
     })),
   };
 }

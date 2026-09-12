@@ -1,0 +1,81 @@
+/** Копия секции «Блог». Один файл на секцию — три языка рядом. */
+export const blog = {
+  ru: {
+    eyebrow: 'Блог',
+    h2a: 'Разборы миграций, ',
+    h2b: 'граблей и провайдеров.',
+    lede: 'Пишем о том, что реально ломается при переносе почты: новые ограничения провайдеров, аутентификация, доставляемость после переезда, свой почтовый сервер.',
+    read: 'Читать',
+    p1: {
+      tag: 'Аутентификация',
+      time: '8 мин',
+      h3: 'Microsoft закрыл basic auth: что делать с миграцией на 365',
+      text: 'Почему пара «логин + пароль» больше не проходит, как выглядит XOAUTH2 на практике и какие права должен согласовать администратор тенанта.',
+    },
+    p2: {
+      tag: 'Gmail',
+      time: '6 мин',
+      h3: 'Почему после переноса из Gmail писем стало вдвое больше',
+      textA: 'Ярлыки против папок, ловушка ',
+      textB: ' и как посчитать реальный объём ящика до того, как выбирать тариф.',
+    },
+    p3: {
+      tag: 'Хостинг',
+      time: '11 мин',
+      h3: 'Переезд домена без потери почты: порядок действий по шагам',
+      text: 'Что делать до смены MX, как догнать письма вторым проходом и почему TTL стоит опустить за сутки до переключения.',
+    },
+  },
+  en: {
+    eyebrow: 'Blog',
+    h2a: 'Migration write-ups, ',
+    h2b: 'pitfalls and providers.',
+    lede: 'We write about what actually breaks when mail moves: new provider limits, authentication, deliverability after the move, running your own mail server.',
+    read: 'Read',
+    p1: {
+      tag: 'Authentication',
+      time: '8 min',
+      h3: 'Microsoft turned off basic auth: what that means for a 365 migration',
+      text: 'Why a login-and-password pair no longer gets through, what XOAUTH2 looks like in practice, and which permissions the tenant admin has to sign off on.',
+    },
+    p2: {
+      tag: 'Gmail',
+      time: '6 min',
+      h3: 'Why you end up with twice as many messages after moving off Gmail',
+      textA: 'Labels versus folders, the ',
+      textB: ' trap, and how to measure the real size of a mailbox before you pick a plan.',
+    },
+    p3: {
+      tag: 'Hosting',
+      time: '11 min',
+      h3: 'Moving a domain without losing mail: the order of operations',
+      text: 'What to do before the MX change, how to catch up with a second pass, and why the TTL should come down a day before the cutover.',
+    },
+  },
+  uk: {
+    eyebrow: 'Блог',
+    h2a: 'Розбори міграцій, ',
+    h2b: 'граблів і провайдерів.',
+    lede: 'Пишемо про те, що справді ламається під час перенесення пошти: нові обмеження провайдерів, автентифікація, доставність після переїзду, власний поштовий сервер.',
+    read: 'Читати',
+    p1: {
+      tag: 'Автентифікація',
+      time: '8 хв',
+      h3: 'Microsoft вимкнув basic auth: що робити з міграцією на 365',
+      text: 'Чому пара «логін + пароль» більше не проходить, який вигляд має XOAUTH2 на практиці та які права має погодити адміністратор тенанта.',
+    },
+    p2: {
+      tag: 'Gmail',
+      time: '6 хв',
+      h3: 'Чому після перенесення з Gmail листів стало вдвічі більше',
+      textA: 'Мітки проти папок, пастка ',
+      textB: ' та як порахувати реальний обсяг скриньки до того, як обирати тариф.',
+    },
+    p3: {
+      tag: 'Хостинг',
+      time: '11 хв',
+      h3: 'Переїзд домену без втрати пошти: порядок дій покроково',
+      text: 'Що зробити до зміни MX, як наздогнати листи другим проходом і чому TTL варто знизити за добу до перемикання.',
+    },
+  },
+} as const;

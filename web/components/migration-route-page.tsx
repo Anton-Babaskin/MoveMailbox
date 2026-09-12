@@ -3,56 +3,62 @@ import { JsonLd } from '@/components/json-ld';
 import { FinalCta } from '@/components/sections/final-cta';
 import { findRoute, migrationRoutes } from '@/data/migration-routes';
 import { provider } from '@/data/providers';
-import { breadcrumbLd, faqLd, howToLd, SITE_NAME } from '@/lib/seo';
+import { breadcrumbLd, buildMetadata, faqLd, howToLd } from '@/lib/seo';
+import { href, type Lang } from '@/i18n/config';
+import { routePage } from '@/content/route-page';
 
 /** Настройки подключения показываем сразу: это первое, что ищут на такой странице. */
-function ConnCard({ side, who }: { side: string; who: ReturnType<typeof provider> }) {
+function ConnCard({
+  side,
+  who,
+  t,
+}: {
+  side: string;
+  who: ReturnType<typeof provider>;
+  t: (typeof routePage)[Lang];
+}) {
   return (
     <article>
       <span className="route-settings-side">{side}</span>
       <dl>
         <div>
-          <dt>Сервер IMAP</dt>
+          <dt>{t.server}</dt>
           <dd>{who.host}</dd>
         </div>
         <div>
-          <dt>Порт</dt>
+          <dt>{t.port}</dt>
           <dd>{who.port} · SSL/TLS</dd>
         </div>
         <div>
-          <dt>Логин</dt>
-          <dd>{who.login === 'email' ? 'полный адрес' : 'часть до @'}</dd>
+          <dt>{t.login}</dt>
+          <dd>{who.login === 'email' ? t.loginEmail : t.loginLocal}</dd>
         </div>
         <div>
-          <dt>Пароль</dt>
-          <dd>{who.appPassword ? 'пароль приложения' : 'пароль от ящика'}</dd>
+          <dt>{t.password}</dt>
+          <dd>{who.appPassword ? t.passwordApp : t.passwordPlain}</dd>
         </div>
       </dl>
     </article>
   );
 }
 
-export function migrationRouteMetadata(slug: string): Metadata {
+export function migrationRouteMetadata(lang: Lang, slug: string): Metadata {
   const route = findRoute(slug);
   if (!route) return {};
-  return {
-    title: route.ru.title,
-    description: route.ru.description,
-    alternates: { canonical: `/migrate/${slug}/` },
-    openGraph: {
-      type: 'article',
-      title: route.ru.title,
-      description: route.ru.description,
-      url: `/migrate/${slug}/`,
-      siteName: SITE_NAME,
-    },
-  };
+  const copy = route[lang];
+  return buildMetadata({
+    language: lang,
+    path: `/migrate/${slug}`,
+    title: copy.title,
+    description: copy.description,
+  });
 }
 
-export function MigrationRoutePage({ slug }: { slug: string }) {
+export function MigrationRoutePage({ lang, slug }: { lang: Lang; slug: string }) {
   const route = findRoute(slug);
   if (!route) return null;
-  const copy = route.ru;
+  const copy = route[lang];
+  const t = routePage[lang];
   const from = provider(route.source);
   const to = provider(route.destination);
 
@@ -61,29 +67,29 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
       <JsonLd
         data={[
           breadcrumbLd([
-            { name: 'Главная', path: '/' },
-            { name: 'Маршруты', path: '/routes/' },
-            { name: copy.h1, path: `/migrate/${slug}/` },
+            { name: t.home, path: href(lang, '/') },
+            { name: t.routes, path: href(lang, '/routes') },
+            { name: copy.h1, path: href(lang, `/migrate/${slug}`) },
           ]),
           howToLd({
             name: copy.h1,
             description: copy.description,
             steps: [
               {
-                name: `Подготовить ${from.name}`,
-                text: `Включите IMAP и создайте пароль${from.appPassword ? ' приложения' : ''} в ${from.name}.`,
+                name: t.steps.prepSource(from.name),
+                text: t.steps.prepSourceText(from.name, from.appPassword),
               },
               {
-                name: `Подготовить ${to.name}`,
-                text: `Создайте ящик в ${to.name} и убедитесь, что места хватает под весь объём.`,
+                name: t.steps.prepDest(to.name),
+                text: t.steps.prepDestText(to.name),
               },
               {
-                name: 'Указать серверы',
-                text: `Источник — ${from.host}:993, назначение — ${to.host}:993, оба по SSL/TLS.`,
+                name: t.steps.servers,
+                text: t.steps.serversText(from.host, to.host),
               },
               {
-                name: 'Запустить и сверить',
-                text: 'Замерьте объём, запустите перенос и сверьте счётчики писем по папкам.',
+                name: t.steps.run,
+                text: t.steps.runText,
               },
             ],
           }),
@@ -103,13 +109,13 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
         </div>
 
         <div className="route-settings-grid">
-          <ConnCard side="ОТКУДА" who={from} />
-          <ConnCard side="КУДА" who={to} />
+          <ConnCard side={t.from} who={from} t={t} />
+          <ConnCard side={t.to} who={to} t={t} />
         </div>
 
         <p style={{ marginTop: '24px' }}>
-          <a className="brief-link" href="/#workspace">
-            Перенести {from.name} → {to.name}
+          <a className="brief-link" href={`${href(lang, '/')}#workspace`}>
+            {t.cta(from.name, to.name)}
             <svg>
               <use href="#ar" />
             </svg>
@@ -120,7 +126,7 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
       <section className="shell route-pitfalls">
         <div className="head-wide">
           <h2>
-            Что ломает перенос <span className="ital">именно на этой паре</span>
+            {t.pitfallsA} <span className="ital">{t.pitfallsB}</span>
           </h2>
         </div>
         <ul>
@@ -137,8 +143,8 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
-          <p className="eyebrow">FAQ</p>
-          <h2>Частые вопросы</h2>
+          <p className="eyebrow">{t.faqEyebrow}</p>
+          <h2>{t.faqTitle}</h2>
         </div>
         <div className="faq">
           <div>
@@ -172,15 +178,19 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
-          <p className="eyebrow">Смежные маршруты</p>
-          <h2>Другие направления</h2>
+          <p className="eyebrow">{t.relatedEyebrow}</p>
+          <h2>{t.relatedTitle}</h2>
         </div>
         <div className="route-links">
           {migrationRoutes
             .filter((r) => r.slug !== slug)
             .slice(0, 8)
             .map((r) => (
-              <a key={r.slug} className="brief-link" href={`/migrate/${r.slug}`}>
+              <a
+                key={r.slug}
+                className="brief-link"
+                href={href(lang, `/migrate/${r.slug}`)}
+              >
                 {provider(r.source).short} → {provider(r.destination).short}
                 <svg>
                   <use href="#ar" />
@@ -190,7 +200,7 @@ export function MigrationRoutePage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <FinalCta />
+      <FinalCta lang={lang} />
     </main>
   );
 }

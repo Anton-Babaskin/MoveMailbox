@@ -2,43 +2,41 @@ import type { Metadata } from 'next';
 import { JsonLd } from '@/components/json-ld';
 import { FinalCta } from '@/components/sections/final-cta';
 import { findError, imapErrors } from '@/data/imap-errors';
-import { breadcrumbLd, faqLd, SITE_NAME, techArticleLd } from '@/lib/seo';
+import { breadcrumbLd, buildMetadata, faqLd, techArticleLd } from '@/lib/seo';
+import { href, type Lang } from '@/i18n/config';
+import { errorPage } from '@/content/error-page';
 
-export function imapErrorMetadata(slug: string): Metadata {
+export function imapErrorMetadata(lang: Lang, slug: string): Metadata {
   const err = findError(slug);
   if (!err) return {};
-  return {
-    title: err.ru.title,
-    description: err.ru.description,
-    alternates: { canonical: `/docs/errors/${slug}/` },
-    openGraph: {
-      type: 'article',
-      title: err.ru.title,
-      description: err.ru.description,
-      url: `/docs/errors/${slug}/`,
-      siteName: SITE_NAME,
-    },
-  };
+  const copy = err[lang];
+  return buildMetadata({
+    language: lang,
+    path: `/docs/errors/${slug}`,
+    title: copy.title,
+    description: copy.description,
+  });
 }
 
-export function ImapErrorPage({ slug }: { slug: string }) {
+export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
   const err = findError(slug);
   if (!err) return null;
-  const copy = err.ru;
+  const copy = err[lang];
+  const t = errorPage[lang];
 
   return (
     <main>
       <JsonLd
         data={[
           breadcrumbLd([
-            { name: 'Главная', path: '/' },
-            { name: 'Ошибки', path: '/docs/errors/' },
-            { name: copy.h1, path: `/docs/errors/${slug}/` },
+            { name: t.home, path: href(lang, '/') },
+            { name: t.errors, path: href(lang, '/docs/errors') },
+            { name: copy.h1, path: href(lang, `/docs/errors/${slug}`) },
           ]),
           techArticleLd({
             headline: copy.h1,
             description: copy.description,
-            path: `/docs/errors/${slug}/`,
+            path: href(lang, `/docs/errors/${slug}`),
           }),
           faqLd(copy.faq),
         ]}
@@ -46,7 +44,7 @@ export function ImapErrorPage({ slug }: { slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
-          <p className="eyebrow">Диагностика IMAP</p>
+          <p className="eyebrow">{t.eyebrow}</p>
           <h1>{copy.h1}</h1>
         </div>
         <div className="error-sample">
@@ -54,7 +52,7 @@ export function ImapErrorPage({ slug }: { slug: string }) {
             <svg>
               <use href="#tx" />
             </svg>
-            Как выглядит в журнале
+            {t.sample}
           </span>
           <pre>
             <code>{copy.sample}</code>
@@ -68,7 +66,7 @@ export function ImapErrorPage({ slug }: { slug: string }) {
       <section className="shell">
         <div className="head-wide">
           <h2>
-            Причины, <span className="ital">по убыванию вероятности</span>
+            {t.causesA} <span className="ital">{t.causesB}</span>
           </h2>
         </div>
         <ul className="error-causes">
@@ -85,7 +83,7 @@ export function ImapErrorPage({ slug }: { slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
-          <h2>Что сделать</h2>
+          <h2>{t.fixes}</h2>
         </div>
         <ol className="error-fixes">
           {copy.fixes.map((fix) => (
@@ -98,8 +96,8 @@ export function ImapErrorPage({ slug }: { slug: string }) {
           ))}
         </ol>
         <p style={{ marginTop: '24px' }}>
-          <a className="brief-link" href="/#workspace">
-            Проверить подключение в MoveMailbox
+          <a className="brief-link" href={`${href(lang, '/')}#workspace`}>
+            {t.cta}
             <svg>
               <use href="#ar" />
             </svg>
@@ -110,8 +108,8 @@ export function ImapErrorPage({ slug }: { slug: string }) {
       {copy.faq.length > 0 && (
         <section className="shell">
           <div className="head-wide">
-            <p className="eyebrow">FAQ</p>
-            <h2>Частые вопросы</h2>
+            <p className="eyebrow">{t.faqEyebrow}</p>
+            <h2>{t.faqTitle}</h2>
           </div>
           <div className="faq">
             <div>
@@ -146,13 +144,13 @@ export function ImapErrorPage({ slug }: { slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
-          <h2>Другие ошибки</h2>
+          <h2>{t.others}</h2>
         </div>
         <div className="error-index compact">
           {imapErrors
             .filter((e) => e.slug !== slug)
             .map((e) => (
-              <a key={e.slug} href={`/docs/errors/${e.slug}`}>
+              <a key={e.slug} href={href(lang, `/docs/errors/${e.slug}`)}>
                 <code>{e.code}</code>
                 <svg>
                   <use href="#ar" />
@@ -162,7 +160,7 @@ export function ImapErrorPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <FinalCta />
+      <FinalCta lang={lang} />
     </main>
   );
 }

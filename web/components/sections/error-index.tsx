@@ -1,20 +1,23 @@
 import { imapErrors } from '@/data/imap-errors';
+import { errorIndex } from '@/content/sections/error-index';
+import { href, type Lang } from '@/i18n/config';
 
-export function ErrorIndex() {
+export function ErrorIndex({ lang }: { lang: Lang }) {
+  const t = errorIndex[lang];
   return (
     <section className="shell" id="all-errors">
       <div className="head-wide">
-        <p className="eyebrow">Разбор по ошибкам</p>
+        <p className="eyebrow">{t.eyebrow}</p>
         <h2>
-          Ответ сервера <span className="ital">и что с ним делать</span>
+          {t.h2a}<span className="ital">{t.h2b}</span>
         </h2>
       </div>
       <div className="error-index">
         {imapErrors.map((e) => (
-          <a key={e.slug} href={`/docs/errors/${e.slug}`}>
+          <a key={e.slug} href={href(lang, `/docs/errors/${e.slug}`)}>
             <code>{e.code}</code>
-            <strong>{e.ru.h1}</strong>
-            <span>{e.ru.description}</span>
+            <strong>{e[lang].h1}</strong>
+            <span>{e[lang].description}</span>
             <svg>
               <use href="#ar" />
             </svg>

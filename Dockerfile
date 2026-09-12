@@ -1,5 +1,15 @@
 ARG GO_IMAGE=golang:1.27.0-bookworm@sha256:ded31c68586d2e49e760acc2e65a884b23d032e9bbbed0ae0c55abd3fcaf4452
 ARG IMAPSYNC_IMAGE=gilleslamiral/imapsync:2.319@sha256:161336e1a6db587bc42ea1126cfc9b6afa67ea92b408ea4c4454f7f771561aa4
+ARG NODE_IMAGE=node:24-bookworm-slim
+
+# Сборка сайта. Отдельная стадия: в финальный образ Node не попадает,
+# в нём остаётся только бинарь с уже вшитой статикой.
+FROM ${NODE_IMAGE} AS web
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY web/ ./
+RUN npm run build
 
 FROM ${GO_IMAGE} AS builder
 
@@ -9,6 +19,10 @@ COPY go.* ./
 RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
+
+# Статика обязана лежать на месте ДО go test: go:embed all:out проверяется
+# на этапе компиляции, и без каталога не соберётся даже тест.
+COPY --from=web /src/web/out ./internal/web/out
 
 ARG VERSION=dev
 ARG TARGETOS=linux

@@ -1,28 +1,26 @@
-export function FaqFull() {
+import { faqFull, type FaqItem } from '@/content/sections/faq-full';
+import type { Lang } from '@/i18n/config';
+
+/** Один вопрос: разметка одинакова у всех, отличается только раскрытие первого. */
+function Item({ item, open }: { item: FaqItem; open?: boolean }) {
+  return (
+    <details open={open}><summary>{item.q}<span className="pm"></span></summary>
+      <p>{item.a}</p></details>
+  );
+}
+
+export function FaqFull({ lang }: { lang: Lang }) {
+  const t = faqFull[lang];
   return (
     <>
       <section className="shell">
-        <div className="head-wide"><p className="eyebrow">FAQ</p><h2>Перед первым переносом</h2></div>
+        <div className="head-wide"><p className="eyebrow">{t.eyebrow}</p><h2>{t.h2}</h2></div>
         <div className="faq">
           <div>
-            <details open><summary>Что происходит с моим паролем?<span className="pm"></span></summary>
-              <p>Соединение защищено HTTPS. Перед постановкой задания в очередь учётные данные шифруются для воркера: открытый пароль не сохраняется, временно хранится зашифрованный пакет. Расшифровка происходит в памяти воркера, дальше данные передаются процессу imapsync через окружение. В журналах пароль не появляется, для повторного запуска вводится заново. Если такой модели недостаточно — есть self-hosted, где пароль передаётся вашим почтовым серверам без инфраструктуры MoveMailbox.</p></details>
-            <details><summary>Что означает бесплатные 5 ГБ?<span className="pm"></span></summary>
-              <p>Бесплатно переносится один целый ящик, оценённый в 5 ГБ или меньше. Мы не будем копировать первые 5 ГБ большого ящика и внезапно останавливаться.</p></details>
-            <details><summary>Можно закрыть браузер?<span className="pm"></span></summary>
-              <p>В hosted-версии задача будет выполняться на нашем worker и продолжится после закрытия вкладки. Локальный Windows-клиент должен оставаться запущенным.</p></details>
-            <details><summary>Что делать, если перенос оборвался?<span className="pm"></span></summary>
-              <p>Запустить снова. imapsync сверяет, что уже лежит в назначении, и копирует только недостающее — повтор дешёвый и не создаёт дублей.</p></details>
+            {t.colA.map((item, i) => <Item key={item.q} item={item} open={i === 0} />)}
           </div>
           <div>
-            <details><summary>Почему Windows без облачного лимита?<span className="pm"></span></summary>
-              <p>Работу и трафик обеспечивает компьютер пользователя, поэтому коммерческий лимит MoveMailbox Cloud не применяется. Ограничения провайдера остаются.</p></details>
-            <details><summary>Удаляется ли старая почта?<span className="pm"></span></summary>
-              <p>Нет. Базовый сценарий — одностороннее копирование. Старый ящик стоит удалять только после ручной сверки и резервного периода.</p></details>
-            <details><summary>Какие серверы поддерживаются?<span className="pm"></span></summary>
-              <p>Совместимые IMAP-серверы. Gmail, Microsoft и некоторые корпоративные системы могут требовать пароль приложения, включение IMAP или OAuth.</p></details>
-            <details><summary>Сохранятся ли даты, флаги и вложения?<span className="pm"></span></summary>
-              <p>Да. Переносится исходный RFC-822 объект целиком: заголовки, дата, вложения, флаги прочитано/отвечено, структура вложенных папок. Не переносятся серверные фильтры, автоответы и контакты — это не IMAP.</p></details>
+            {t.colB.map((item) => <Item key={item.q} item={item} />)}
           </div>
         </div>
       </section>

@@ -1,0 +1,51 @@
+/** Копия секции «Настольный клиент». Один файл на секцию — три языка рядом. */
+export const desktopApp = {
+  ru: {
+    eyebrow: 'Бесплатный локальный режим',
+    h2a: 'Большой ящик? ',
+    h2b: 'Перенесите его у себя.',
+    lede: 'Настольный клиент бесплатен и не зависит от облачного лимита 5 ГБ. Копирование идёт напрямую между вашими серверами, минуя нашу инфраструктуру.',
+    ticks: [
+      'Без оплаты за объём или количество писем',
+      'Почтовый трафик идёт через ваш компьютер',
+      'Пробный прогон без копирования писем',
+      'Живой прогресс, отмена и журнал',
+    ],
+    keepStrong: 'Локальный режим — окно должно оставаться открытым.',
+    keepRest: ' Копирование идёт с вашего компьютера, поэтому закрытие клиента или уход машины в спящий режим прервёт перенос. Прерванный перенос не теряется: повторный запуск докопирует недостающее.',
+    download: 'Скачать для Windows',
+    whatsInside: 'Что входит в клиент',
+  },
+  en: {
+    eyebrow: 'Free local mode',
+    h2a: 'Large mailbox? ',
+    h2b: 'Move it on your own machine.',
+    lede: 'The desktop client is free and is not bound by the 5 GB cloud limit. It copies straight between your servers, bypassing our infrastructure.',
+    ticks: [
+      'No charge for size or message count',
+      'Mail traffic goes through your own computer',
+      'Dry run that copies nothing',
+      'Live progress, cancel and a log',
+    ],
+    keepStrong: 'Local mode — the window has to stay open.',
+    keepRest: ' Copying runs from your computer, so closing the client or letting the machine go to sleep will interrupt the transfer. An interrupted transfer is not lost: run it again and it copies whatever is still missing.',
+    download: 'Download for Windows',
+    whatsInside: 'What the client includes',
+  },
+  uk: {
+    eyebrow: 'Безкоштовний локальний режим',
+    h2a: 'Велика скринька? ',
+    h2b: 'Перенесіть її у себе.',
+    lede: 'Настільний клієнт безкоштовний і не залежить від хмарного ліміту 5 ГБ. Копіювання йде напряму між вашими серверами, оминаючи нашу інфраструктуру.',
+    ticks: [
+      'Без оплати за обсяг чи кількість листів',
+      'Поштовий трафік іде через ваш комп’ютер',
+      'Пробний прогін без копіювання листів',
+      'Живий прогрес, скасування та журнал',
+    ],
+    keepStrong: 'Локальний режим — вікно має залишатися відкритим.',
+    keepRest: ' Копіювання йде з вашого комп’ютера, тому закриття клієнта або перехід машини в режим сну перерве перенесення. Перерване перенесення не губиться: повторний запуск докопіює те, чого бракує.',
+    download: 'Завантажити для Windows',
+    whatsInside: 'Що входить у клієнт',
+  },
+} as const;

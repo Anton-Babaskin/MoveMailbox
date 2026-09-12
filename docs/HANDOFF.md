@@ -2,6 +2,57 @@
 
 ## Active task: public static website
 
+### Website i18n release — 2026-09-12 (website/SEO scope only)
+
+- Branch `claude/website-seo-scqzs2`, ответвлена от `main` `8744a68`. PR #12
+  уже смержен, `web/github-pages-seo` полностью содержится в main, расхождений
+  с origin нет. Работа ограничена сайтом и SEO: код продукта (Go-бекенд,
+  `internal/api`, `internal/migrator`, worker) не изменялся.
+- Каталог `web/` заменён целиком версией из архива владельца (не пофайловое
+  слияние: структура изменилась — появились `content/`, `i18n/`, два корневых
+  layout `app/(ru)` и `app/(intl)/[lang]`). Добавлены `internal/web/`
+  (`go:embed` статики), `docs/seo/`, `Makefile`, `INTEGRATION.md`.
+- Три языка: русский в корне, `/en`, `/uk`. 93 URL в sitemap, у каждой страницы
+  взаимные hreflang и x-default на русскую версию. Адреса русских страниц не
+  изменились, накопленный индекс не затронут. Новое: `/en/*`, `/uk/*`, `/blog/`.
+- Сохранены решения прошлой ветки: хвостовые слэши, один `<h1>` на страницу,
+  экранирование `<` в JSON-LD, честные формулировки предпросмотра, ссылки на
+  `v0.4.0-preview`/`SECURITY.md`/`#readme`, отсутствие логотипов провайдеров,
+  `CNAME` и `.nojekyll`.
+- Регрессия слияния исправлена: пять ссылок в `components/sections/`
+  (`brief`, `faq-short`, `workspace`) были захардкожены без слэша и без языка
+  (`href="/guides"`), теперь идут через `href(lang, path)`. В экспорте не
+  осталось ни одной внутренней ссылки без слэша.
+- Сохранены решения репозитория поверх архива: Next 15.5.24 (в архиве 15.5.4),
+  overrides postcss/sharp, скрипты `check`/`check:live`, workflow Pages с
+  пинованными по SHA actions, Node 24.18.0, `npm ci --ignore-scripts` и
+  `npm audit`. Из архивного workflow взят только флаг `NEXT_PUBLIC_STATIC_SITE=1`.
+- `scripts/check-live.mjs` приведён к новой версии: блог больше не черновик
+  (он индексируется), черновики проверяются во всех трёх языках, предпросмотр
+  проверяется по `disabled` на полях пароля, а не по `fieldset disabled`.
+- Проверено: `npm ci`, сборка со статическим флагом (104 страницы),
+  `node scripts/check-export.mjs` — 93 URL, все существуют; `npm audit` — 0
+  уязвимостей; по одному `<h1>` на всех 24 проверенных страницах; `<html lang>`
+  и взаимные hreflang для ru/en/uk; headless Chromium по 9 страницам — ноль
+  ошибок и предупреждений в консоли; интерактив жив (swap переносит значение,
+  «Порт: вручную» показывает поле, поля пароля и кнопки запуска отключены).
+  `go build ./...`, `go vet ./...`, `go test ./...` — зелёные.
+- Docker: в существующий Dockerfile добавлены только стадия `web` и
+  `COPY --from=web`, остальной файл не тронут; в `.dockerignore` дописаны
+  четыре строки. Образ локально не собирался — Docker в этой среде нет.
+- Не сделано намеренно (это бекенд продукта, за ним CODEX): правки
+  `internal/api/server.go` из `INTEGRATION.md` — монтирование `web.Handler()`
+  вместо `internal/webui` и `script-src 'self' 'unsafe-inline'` для inline-
+  скриптов гидратации Next. Пока они не сделаны, сайт из бинаря не отдаётся;
+  на GitHub Pages это не влияет.
+- Открытый вопрос по контенту: три карточки на `/blog/` ведут на `href="#"`
+  (так было и до слияния), при этом страница теперь индексируется. Нужно либо
+  опубликовать посты, либо убрать мёртвые ссылки.
+- Дальше: 1) ревью и мерж PR ветки `claude/website-seo-scqzs2` в `main`, после
+  чего workflow Pages опубликует сайт (Settings → Pages источник должен быть
+  **GitHub Actions**); 2) после публикации прогнать `npm run check:live` по
+  живому домену и передать CODEX две правки `internal/api/server.go`.
+
 ### Public deployment verification — 2026-09-12
 
 - Fetched all branches/tags; no new remote work or divergence. PR #12 is still

@@ -1,26 +1,30 @@
-export function Brief() {
+import { brief } from '@/content/sections/brief';
+import { href, type Lang } from '@/i18n/config';
+
+export function Brief({ lang }: { lang: Lang }) {
+  const t = brief[lang];
   return (
     <>
       <section className="shell alt">
         <div className="brief">
           <div className="brief-col">
-            <p className="eyebrow">Как проходит перенос</p>
+            <p className="eyebrow">{t.stepsEyebrow}</p>
             <ol className="brief-list">
-              <li><span>1</span><div><b>Подключение</b>TLS и авторизация проверяются отдельно, поэтому ошибка называет причину, а не «не удалось подключиться».</div></li>
-              <li><span>2</span><div><b>Замер</b>Дерево папок, число писем и объём — до того, как что-то начнёт копироваться.</div></li>
-              <li><span>3</span><div><b>Копирование</b>Папка за папкой, с журналом. Повторный запуск докидывает недостающее и не создаёт дублей.</div></li>
-              <li><span>4</span><div><b>Сверка</b>Отчёт со счётчиками с обеих сторон и списком пропущенных писем с причиной.</div></li>
+              <li><span>1</span><div><b>{t.step1Title}</b>{t.step1Text}</div></li>
+              <li><span>2</span><div><b>{t.step2Title}</b>{t.step2Text}</div></li>
+              <li><span>3</span><div><b>{t.step3Title}</b>{t.step3Text}</div></li>
+              <li><span>4</span><div><b>{t.step4Title}</b>{t.step4Text}</div></li>
             </ol>
           </div>
           <div className="brief-col">
-            <p className="eyebrow">Что происходит с данными</p>
+            <p className="eyebrow">{t.factsEyebrow}</p>
             <ul className="brief-facts">
-              <li><svg><use href="#ck" /></svg><div><b>Источник не изменяется</b>Базовый режим только копирует. Удаление в назначении — отдельная опция за подтверждением.</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>Открытый пароль не сохраняется</b>HTTPS до сайта, дальше учётные данные шифруются для воркера и хранятся зашифрованным пакетом; расшифровка — в памяти на время задания.</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>Письма не остаются у нас</b>Сообщения идут потоком со старого сервера на новый, копии не создаётся.</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>Можно не отдавать пароль вовсе</b>Настольный клиент и Docker работают без нашей инфраструктуры.</div></li>
+              <li><svg><use href="#ck" /></svg><div><b>{t.fact1Title}</b>{t.fact1Text}</div></li>
+              <li><svg><use href="#ck" /></svg><div><b>{t.fact2Title}</b>{t.fact2Text}</div></li>
+              <li><svg><use href="#ck" /></svg><div><b>{t.fact3Title}</b>{t.fact3Text}</div></li>
+              <li><svg><use href="#ck" /></svg><div><b>{t.fact4Title}</b>{t.fact4Text}</div></li>
             </ul>
-            <a className="brief-link" href="/security/">Полная модель безопасности<svg><use href="#ar" /></svg></a>
+            <a className="brief-link" href={href(lang, '/security')}>{t.securityLink}<svg><use href="#ar" /></svg></a>
           </div>
         </div>
       </section>

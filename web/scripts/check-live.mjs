@@ -69,16 +69,25 @@ for (const url of urls) {
   }
 }
 
-for (const path of ['privacy', 'terms', 'blog']) {
+// Черновики: у них noindex во всех трёх языках и их нет в sitemap.
+// Блог с версии i18n — обычная индексируемая страница, здесь его больше нет.
+for (const path of ['privacy', 'terms', 'en/privacy', 'en/terms', 'uk/privacy', 'uk/terms']) {
   const url = `${origin}/${path}/`;
   assert(!urls.includes(url), 'Draft in sitemap: ' + url);
   const html = await (await request(url)).text();
   assert(/noindex/i.test(metadata(html, 'robots') ?? ''), 'Draft missing noindex: ' + url);
   pages.set(url, html);
 }
+// Без бекенда форма не должна принимать пароли. С версии i18n предпросмотр
+// не гасит fieldset целиком — интерфейс живой, — поэтому проверяем сами поля:
+// каждый input[type=password] обязан прийти с сервера с disabled.
 const home = pages.get(origin + '/');
-assert(/<fieldset[^>]*disabled/.test(home), 'Preview credentials are not disabled');
-assert(home.includes('Онлайн-перенос готовится к запуску'), 'Missing preview notice');
+const credentials = [...home.matchAll(/<input[^>]*type="password"[^>]*>/g)].map(m => m[0]);
+assert(credentials.length > 0, 'No credential inputs found on the home page');
+for (const field of credentials) {
+  assert(/\sdisabled(=|\s|\/?>)/.test(field), 'Preview credentials are not disabled: ' + field);
+}
+assert(home.includes('Онлайн-перенос без регистрации готовится к запуску'), 'Missing preview notice');
 await request(origin + '/__movemailbox_missing_page_check__/', 404);
 for (const url of links) {
   if (pages.has(url)) continue;

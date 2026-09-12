@@ -1,37 +1,41 @@
-export function UseCases({ pageTitle = false }: { pageTitle?: boolean } = {}) {
+import { useCases } from '@/content/sections/use-cases';
+import type { Lang } from '@/i18n/config';
+
+export function UseCases({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boolean }) {
+  const t = useCases[lang];
   const Heading = pageTitle ? 'h1' : 'h2';
   return (
     <>
       <section className="shell">
         <div className="head-wide">
-          <p className="eyebrow">Кому это нужно</p>
-          <Heading style={{ fontSize: "clamp(1.75rem,3.4vw,2.75rem)" }}>Три ситуации, <span className="ital">в которых почта переезжает.</span></Heading>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <Heading style={{ fontSize: 'clamp(1.75rem,3.4vw,2.75rem)' }}>{t.h2a}<span className="ital">{t.h2b}</span></Heading>
         </div>
         <div className="who-grid">
           <article className="who">
             <span className="who-n">01</span>
-            <h3>Личный ящик</h3>
-            <p>Уходите от провайдера, меняете работу или закрываете старый адрес. Один ящик, письма и папки целиком.</p>
-            <span className="who-tag">до 5 ГБ бесплатно · без регистрации</span>
+            <h3>{t.w1.h3}</h3>
+            <p>{t.w1.text}</p>
+            <span className="who-tag">{t.w1.tag}</span>
           </article>
           <article className="who">
             <span className="who-n">02</span>
-            <h3>Переезд хостинга</h3>
-            <p>Домен уезжает к новому провайдеру, и почта должна приехать целой. Подключение по IP, второй проход после смены MX.</p>
-            <span className="who-tag">без лимита в self-hosted</span>
+            <h3>{t.w2.h3}</h3>
+            <p>{t.w2.text}</p>
+            <span className="who-tag">{t.w2.tag}</span>
           </article>
           <article className="who">
             <span className="who-n">03</span>
-            <h3>IT-команда</h3>
-            <p>Сорок ящиков за уикенд и один отчёт, который можно показать руководству. Пакетный режим и сводка по каждому пользователю.</p>
-            <span className="who-tag">CSV · сводный отчёт</span>
+            <h3>{t.w3.h3}</h3>
+            <p>{t.w3.text}</p>
+            <span className="who-tag">{t.w3.tag}</span>
           </article>
         </div>
         <div className="proof">
-          <div><strong>Код на GitHub</strong><span>Ядро и клиенты на GitHub</span></div>
-          <div><strong>imapsync</strong><span>Проверенный движок, лицензия NLPL</span></div>
-          <div><strong>0 удалений</strong><span>Базовый режим только копирует</span></div>
-          <div><strong>Self-hosted</strong><span>Можно поднять у себя, без нас</span></div>
+          <div><strong>{t.proof1title}</strong><span>{t.proof1}</span></div>
+          <div><strong>imapsync</strong><span>{t.proof2}</span></div>
+          <div><strong>{t.proof3title}</strong><span>{t.proof3}</span></div>
+          <div><strong>Self-hosted</strong><span>{t.proof4}</span></div>
         </div>
       </section>
     </>

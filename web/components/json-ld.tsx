@@ -13,6 +13,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Array<Record<
           key={i}
           type="application/ld+json"
           // Содержимое собирается на сервере из наших же данных.
+          // `<` экранируем: иначе строка из данных может закрыть тег script.
           dangerouslySetInnerHTML={{ __html: JSON.stringify(item).replace(/</g, '\\u003c') }}
         />
       ))}

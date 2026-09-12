@@ -8,9 +8,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "export": "next build && node scripts/embed.mjs",
+    "lint": "next lint",
+    "build:static": "NEXT_PUBLIC_STATIC_SITE=1 next build",
     "check": "node scripts/check-export.mjs",
-    "check:live": "node scripts/check-live.mjs",
-    "lint": "next lint"
+    "check:live": "node scripts/check-live.mjs"
   },
   "dependencies": {
     "next": "15.5.24",

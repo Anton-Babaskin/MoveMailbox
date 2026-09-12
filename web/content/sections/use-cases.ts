@@ -1,0 +1,81 @@
+/** Копия секции «Кому это нужно». Один файл на секцию — три языка рядом. */
+export const useCases = {
+  ru: {
+    eyebrow: 'Кому это нужно',
+    h2a: 'Три ситуации, ',
+    h2b: 'в которых почта переезжает.',
+    w1: {
+      h3: 'Личный ящик',
+      text: 'Уходите от провайдера, меняете работу или закрываете старый адрес. Один ящик, письма и папки целиком.',
+      tag: 'до 5 ГБ бесплатно · без регистрации',
+    },
+    w2: {
+      h3: 'Переезд хостинга',
+      text: 'Домен уезжает к новому провайдеру, и почта должна приехать целой. Подключение по IP, второй проход после смены MX.',
+      tag: 'без лимита в self-hosted',
+    },
+    w3: {
+      h3: 'IT-команда',
+      text: 'Сорок ящиков за уикенд и один отчёт, который можно показать руководству. Пакетный режим и сводка по каждому пользователю.',
+      tag: 'CSV · сводный отчёт',
+    },
+    proof1title: 'Код на GitHub',
+    proof1: 'Ядро и клиенты на GitHub',
+    proof2: 'Проверенный движок, лицензия NLPL',
+    proof3title: '0 удалений',
+    proof3: 'Базовый режим только копирует',
+    proof4: 'Можно поднять у себя, без нас',
+  },
+  en: {
+    eyebrow: 'Who this is for',
+    h2a: 'Three situations ',
+    h2b: 'where mail has to move.',
+    w1: {
+      h3: 'A personal mailbox',
+      text: 'You are leaving a provider, changing jobs or closing an old address. One mailbox, messages and folders in full.',
+      tag: 'up to 5 GB free · no sign-up',
+    },
+    w2: {
+      h3: 'A hosting move',
+      text: 'The domain moves to a new provider and the mail has to arrive intact. Connect by IP, second pass after the MX change.',
+      tag: 'no limit when self-hosted',
+    },
+    w3: {
+      h3: 'An IT team',
+      text: 'Forty mailboxes over a weekend and one report you can put in front of management. Batch mode and a per-user summary.',
+      tag: 'CSV · summary report',
+    },
+    proof1title: 'Code on GitHub',
+    proof1: 'Core and clients on GitHub',
+    proof2: 'Proven engine, NLPL licence',
+    proof3title: '0 deletions',
+    proof3: 'Basic mode only copies',
+    proof4: 'Run it on your own side, without us',
+  },
+  uk: {
+    eyebrow: 'Кому це потрібно',
+    h2a: 'Три ситуації, ',
+    h2b: 'у яких пошта переїжджає.',
+    w1: {
+      h3: 'Особиста скринька',
+      text: 'Ідете від провайдера, змінюєте роботу або закриваєте стару адресу. Одна поштова скринька, листи та папки повністю.',
+      tag: 'до 5 ГБ безкоштовно · без реєстрації',
+    },
+    w2: {
+      h3: 'Переїзд хостингу',
+      text: 'Домен переїжджає до нового провайдера, і пошта має приїхати цілою. Підключення за IP, другий прохід після зміни MX.',
+      tag: 'без ліміту в self-hosted',
+    },
+    w3: {
+      h3: 'IT-команда',
+      text: 'Сорок скриньок за вихідні й один звіт, який можна показати керівництву. Пакетний режим і зведення щодо кожного користувача.',
+      tag: 'CSV · зведений звіт',
+    },
+    proof1title: 'Код на GitHub',
+    proof1: 'Ядро та клієнти на GitHub',
+    proof2: 'Перевірений рушій, ліцензія NLPL',
+    proof3title: '0 видалень',
+    proof3: 'Базовий режим лише копіює',
+    proof4: 'Можна підняти в себе, без нас',
+  },
+} as const;
