@@ -1,10 +1,75 @@
-# Engineering handoff — 2026-09-11
+# Engineering handoff — 2026-09-12
 
-## Active task: closed VM stage
+## Active task: public static website
 
-- Continue branch `ops/private-vm-staging`, based on main `be9af16`. Earlier
-  PR #10 is already merged; this new deployment task is separate and must not
-  be merged without approval. Inspect the branch PR and exact-SHA CI on GitHub.
+### Public deployment verification — 2026-09-12
+
+- Fetched all branches/tags; no new remote work or divergence. PR #12 is still
+  open. CI for `064eecc` completed successfully, including Docker; it is not
+  evidence for subsequent commits. Continue `web/github-pages-seo` until merged.
+- DNS now resolves normally. GitHub Pages reports HTTPS enforced and an approved
+  certificate for apex and www. Live checks confirmed HTTP/www redirects to
+  HTTPS apex with deep paths preserved.
+- Added `web/scripts/check-live.mjs` and `npm run check:live`: read-only public
+  verification of 30 sitemap pages, unique metadata, canonical URLs, JSON-LD,
+  74 internal URLs, draft noindex, real 404 and disabled preview credentials.
+  The live check and existing local export check (1090 references) passed.
+  No application/backend code changed; cancelled mailbox tests remain cancelled.
+- Next: inspect CI on the current PR head and merge PR #12 when authorized;
+  then remove the temporary site-branch deployment allowance. Obtain the owner's
+  search-engine verification record and submit the sitemap after verification.
+  The public checks do not establish indexing or rankings.
+
+### Synchronization snapshot — 2026-09-11
+
+- The requested live-mail test continuation was cancelled; no mailbox login,
+  migration or deletion was started in this session.
+- Mailbox credentials are not stored in GitHub, the VM configuration or the
+  handoff. Generated service secrets do exist in protected VM configuration;
+  they are intentionally excluded from Git. A later mailbox pilot needs
+  explicitly authorized runtime inputs.
+- `web/github-pages-seo` is synchronized with `origin/web/github-pages-seo`;
+  PR #12 remains open with its required checks green. No release or merge was
+  performed in this sync step.
+
+- Branch `web/github-pages-seo`, synchronized with main `3889632`. User requested public
+  website publishing on GitHub Pages with movemailbox.com; deployment from this
+  branch is authorized, but no backend PR merge or release is implied.
+- Imported the owner's Next.js website into `web/`; preserved the framework,
+  stylesheet and design. Did not import replacement Dockerfile, Go handlers or
+  permissive CSP instructions. Backend and Proxmox were not modified.
+- Public Pages is a documentation/product preview, not an online migration
+  backend. Server-rendered disabled fieldset prevents credential entry; its API
+  adapter is retained but not imported/initialized. No payment collection.
+- Static export: 30 sitemap URLs, trailing-slash directory routes, matching
+  canonical links, unique titles/descriptions and h1 headings, valid JSON-LD.
+  Removed nonexistent-language hreflang, fake health status and open-source
+  license claim; corrected missing assets and preview download links.
+- Blog/legal drafts have noindex and are excluded from sitemap. Placeholder
+  legal claims replaced with honest current static-site notices. Owner must
+  supply full online-service terms before backend/payment launch.
+- Local production build and TypeScript validation passed; export checker
+  passed 30 indexable pages and 1090 local link/asset references. npm audit found
+  zero vulnerabilities after Next 15.5.24 and scoped PostCSS/sharp overrides.
+  Public DNS/HTTPS was subsequently validated on September 12 as recorded above.
+- Pages custom domain configured; deployment workflow only publishes on explicit
+  main/site-branch pushes, never PR events. Inspect the site PR and Pages run for
+  exact commit/deployment result. Initial site branch allowed in github-pages
+  environment; remove that allowance and workflow branch after merging.
+- Backend PR #11 was merged into main as `3889632` during this task; its CI passed. VM is closed; user
+  explicitly rejected changes to existing Proxmox services/443, which is occupied.
+  Read `ops/private-vm-staging` handoff for VM evidence. Do not add port forwards.
+- DNS setup from [website instructions](../web/README.md) and HTTPS validation
+  are complete. Owner supplies the Search Console verification record before
+  ownership verification/sitemap submission; backend integration is separate.
+- User's unrelated ZIP exports, log and nested `website/` remain untouched and
+  uncommitted. Credentials and local machine paths are not synchronized.
+
+Historical records below describe earlier tasks.
+## Previous task: closed VM stage (PR #11 merged)
+
+- Historical branch `ops/private-vm-staging`, based on main `be9af16`, is merged
+  through PR #11. Continue on the active website branch above.
 - Deployed a closed Ubuntu 24.04 VM stage: Docker/Compose, separate API/worker,
   root-only generated credentials, loopback-only API, host UFW allowing SSH,
   project-scoped nftables egress policy and systemd startup ordering.
