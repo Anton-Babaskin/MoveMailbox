@@ -1,10 +1,42 @@
-# Engineering handoff — 2026-09-11
+# Engineering handoff — 2026-09-12
 
-## Active task: closed VM stage
+## Active task: real-mail acceptance on the closed VM
 
-- Continue branch `ops/private-vm-staging`, based on main `be9af16`. Earlier
-  PR #10 is already merged; this new deployment task is separate and must not
-  be merged without approval. Inspect the branch PR and exact-SHA CI on GitHub.
+- Continue `test/private-staging-mail`, based on main `3889632`. PR #11 is already
+  merged. This new technical branch is independent of the public website PR #12
+  (`web/github-pages-seo`); inspect both PR states after fetching all refs.
+- Owner explicitly resumed the previously cancelled mailbox tests. A real
+  Mail-in-a-Box pilot passed on the deployed API/worker image `staging-be9af16`.
+  No Go/application code or deployment configuration changed.
+- Added `scripts/smoke-private-staging-mail.py`: bounded stdin credentials,
+  fixed loopback guest API, selected synthetic folders, 6 MiB attachment,
+  preflight modes, bidirectional copies and repeats, guest isolation,
+  cancellation and opt-in worker SIGKILL with exclusive-active-job guard.
+- All 13 real jobs reached expected terminal states. Copy verification compares
+  complete-message SHA-256, flags and INTERNALDATE. Repeats copied zero messages;
+  original INBOXes and source fixture stayed unchanged. Crash recovery used two
+  attempts for the same job. SQLite integrity and terminal envelope cleanup
+  passed; raw mailbox passwords absent from inspected DB/WAL/SHM and service logs.
+- Four new offline guard tests passed. WSL suite: 39 passed, one age integration
+  test skipped because age/age-keygen are unavailable in that WSL environment.
+  Consult the current PR's CI for pinned age integration and Go/Docker checks;
+  a previous branch's green CI is not proof for this branch.
+- Test scripts were staged temporarily on the VM; credentials were supplied
+  through SSH stdin after hidden local input. No credential file was created.
+  Synthetic folders remain for inspection; both deployed services are healthy.
+  Details, job IDs and limitations: [pilot record](PILOT.md).
+- Next two technical steps: (1) encrypted off-host backup and independent restore
+  using an owner-designated destination; (2) VM reboot acceptance and readiness
+  monitoring/retention checks. Separate future scope: paid identity/entitlements.
+- Website DNS/HTTPS and all 30 sitemap pages were verified on September 12;
+  source and deployment checker are in PR #12. Search-engine ownership records
+  and sitemap submission are still pending with the owner. Do not lose the
+  website branch when continuing technical work on another computer.
+
+## Previous task: closed VM stage (PR #11 merged)
+
+- Historical branch `ops/private-vm-staging`, based on main `be9af16`, was merged
+  through PR #11 as `3889632`. Continue the active branch above.
 - Deployed a closed Ubuntu 24.04 VM stage: Docker/Compose, separate API/worker,
   root-only generated credentials, loopback-only API, host UFW allowing SSH,
   project-scoped nftables egress policy and systemd startup ordering.
