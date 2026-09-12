@@ -52,6 +52,20 @@ test VM. No frontend files were changed in this task; see `AGENTS.md`.
 
 ### Next two technical steps
 
+Owner subsequently authorized merging PRs #13 and #15 after checking them; do
+not merge Claude's PR #14. Recheck actual GitHub state on resume and use updated
+main once both technical PRs are merged.
+
+CI on `edb9707` exposed a pre-existing worker shutdown race before Migrate:
+ordinary leased work was permanently failed if service cancellation arrived
+after envelope opening but before execution. The fix releases that lease and
+requeues unstarted ordinary work without consuming an attempt; strict mirror,
+deadline failure and explicit cancellation remain fail-closed. Added four
+deterministic policy cases (50 repetitions passed), then 200 repetitions of the
+actual service-restart test passed, plus the full race suite and vet in the
+isolated builder. The earlier red Docker run must not be called green; inspect
+the CI result for the new head that includes this correction.
+
 1. After reviewing/merging the technical PRs and checking their exact green CI,
    deploy an immutable tested image to the closed test VM with a rollback image
    retained. Validate readiness and reconnect behavior against that deployed
