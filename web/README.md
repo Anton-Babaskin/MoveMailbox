@@ -22,6 +22,16 @@ and self-hosted; the published site needs no Node server. The export checker
 verifies canonical URLs, unique titles/descriptions, sitemap routes, JSON-LD,
 local assets/links, noindex drafts and disabled credentials in initial HTML.
 
+After publication, run `npm run check:live` from this directory. It makes only
+public GET/HEAD requests using ordinary DNS and verified TLS. It checks HTTP/www
+redirects (including deep paths), robots/sitemap, each indexable page's metadata,
+internal links/assets, draft noindex, a real 404 and disabled preview fields.
+It accepts the expected trailing-slash redirects, but rejects other unexpected
+redirects. Requests time out after 20 seconds; any failure returns nonzero.
+Run it after deployment, not as a PR build gate against the previous live site.
+It does not submit forms or contact mailboxes. Passing is technical deployment
+evidence, not proof of search-engine indexing or Rich Results eligibility.
+
 ## Publishing
 
 The Website Pages workflow builds and checks the site, then deploys the artifact.
@@ -50,6 +60,10 @@ Do not add a wildcard. Export/screenshot old records before replacing them.
 GitHub must finish DNS validation and issue its certificate before Enforce HTTPS
 can be enabled. Check both apex and www redirects, certificate and deep routes.
 Do not use IP/Host-header tests as proof that the public DNS/HTTPS path works.
+
+Verified September 12, 2026: GitHub reports an approved certificate for apex and
+www and HTTPS enforcement enabled. The live checker passed all 30 sitemap pages
+and 74 internal URLs, including redirects preserving `/security/`.
 
 Official instructions: [custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 For takeover protection, verify the domain in the owner's GitHub Pages account

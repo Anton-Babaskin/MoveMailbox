@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "check": "node scripts/check-export.mjs",
+    "check:live": "node scripts/check-live.mjs",
     "lint": "next lint"
   },
   "dependencies": {
