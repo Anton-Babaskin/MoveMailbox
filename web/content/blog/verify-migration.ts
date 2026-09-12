@@ -41,7 +41,7 @@ export const verifyMigration: BlogPost = {
         ],
         bullets: [
           'Папка есть, писем в ней нет — папку создали, но копирование до неё не дошло: перезапустите проход.',
-          'В одной папке писем меньше ровно на несколько штук — почти всегда лимит на размер письма на приёмнике.',
+          'В одной папке писем меньше ровно на несколько штук — почти всегда лимит на размер письма на приёмнике: Microsoft 365 не переносит письма больше 35 МБ, iCloud не принимает больше 20 МБ.',
           'Писем больше, чем на источнике — это дубли из «Всей почты» Gmail, а не ошибка сверки.',
           'Все письма на месте, но помечены непрочитанными — статусы не перенеслись; это нормально для части провайдеров.',
         ],
@@ -111,7 +111,7 @@ export const verifyMigration: BlogPost = {
         paragraphs: ['Four discrepancies come up most often, each with a clear cause.'],
         bullets: [
           'The folder exists but is empty — it was created and copying never reached it; run the pass again.',
-          'One folder is short by a few messages — almost always a message-size limit on the destination.',
+          'One folder is short by a few messages — almost always a message-size limit on the destination: Microsoft 365 does not migrate messages over 35 MB, and iCloud caps them at 20 MB.',
           'More messages than on the source — those are Gmail All Mail duplicates, not a counting error.',
           'Everything is there but marked unread — flags did not travel, which is normal with some providers.',
         ],
@@ -181,7 +181,7 @@ export const verifyMigration: BlogPost = {
         paragraphs: ['Чотири розбіжності трапляються найчастіше, і в кожної зрозуміла причина.'],
         bullets: [
           'Папка є, листів у ній немає — копіювання до неї не дійшло: перезапустіть прохід.',
-          'В одній папці листів менше рівно на кілька штук — майже завжди ліміт на розмір листа на приймачі.',
+          'В одній папці листів менше рівно на кілька штук — майже завжди ліміт на розмір листа на приймачі: Microsoft 365 не переносить листи понад 35 МБ, iCloud не приймає понад 20 МБ.',
           'Листів більше, ніж на джерелі — це дублі з «Усієї пошти» Gmail, а не помилка звірки.',
           'Усі листи на місці, але позначені непрочитаними — статуси не перенеслися.',
         ],

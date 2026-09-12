@@ -38,7 +38,17 @@ function splitLocale(pathname: string): { lang: Lang; path: string } {
   return { lang: DEFAULT_LANG, path: pathname };
 }
 
-export function SiteHeader({ lang }: { lang: Lang }) {
+export function SiteHeader({
+  lang,
+  notFound = false,
+}: {
+  lang: Lang;
+  /**
+   * Страница 404. Переводить нечего: у битого адреса нет версии в другом
+   * языке, и переключатель вёл бы на такую же 404. Ведём на главную.
+   */
+  notFound?: boolean;
+}) {
   const pathname = usePathname() || '/';
   const [stuck, setStuck] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -47,6 +57,8 @@ export function SiteHeader({ lang }: { lang: Lang }) {
 
   /** Текущий язык берём из пути: он не расходится с тем, что видит пользователь. */
   const here = splitLocale(pathname);
+  /** Куда ведёт переключатель языка: тот же адрес, а на 404 — главная. */
+  const switchPath = notFound ? '/' : here.path;
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 12);
@@ -111,7 +123,7 @@ export function SiteHeader({ lang }: { lang: Lang }) {
             {LANGS.map((l) => (
               <Link
                 key={l}
-                href={href(l, here.path)}
+                href={href(l, switchPath)}
                 aria-current={l === here.lang ? 'page' : undefined}
               >
                 {LANG_LABEL[l]}
@@ -166,7 +178,7 @@ export function SiteHeader({ lang }: { lang: Lang }) {
           <Link href={href(lang, '/docs/errors')}>{t.errors}</Link>
           <div className="mob-lang">
             {LANGS.map((l) => (
-              <Link key={l} href={href(l, here.path)}>
+              <Link key={l} href={href(l, switchPath)}>
                 {LANG_LABEL[l]}
               </Link>
             ))}

@@ -39,9 +39,12 @@ const serif = Instrument_Serif({
 export function SiteShell({
   lang,
   children,
+  notFound = false,
 }: {
   lang: Lang;
   children: React.ReactNode;
+  /** Прокидывается в шапку: см. SiteHeader. */
+  notFound?: boolean;
 }) {
   return (
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
@@ -52,7 +55,7 @@ export function SiteShell({
         <IconSprite />
         <div className="aura" aria-hidden="true" />
         <PageEffects />
-        <SiteHeader lang={lang} />
+        <SiteHeader lang={lang} notFound={notFound} />
         {children}
         <SiteFooter lang={lang} />
       </body>

@@ -33,4 +33,28 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log(`sitemap: ${locs.length} URL, все существуют`);
+/**
+ * Незаполненные плейсхолдеры на индексируемой странице.
+ *
+ * Правовые страницы содержат {{...}} и держатся под noindex, пока владелец
+ * не подставит реквизиты. Опасность не в них самих, а в шаге, когда noindex
+ * снимут: {{ОПЕРАТОР}} в опубликованной политике хуже, чем её отсутствие.
+ * Проверка привязана к sitemap: страница попала в карту — значит, заявлена
+ * готовой, и скобок в ней быть не должно.
+ */
+const withPlaceholders = [];
+for (const url of locs) {
+  const path = new URL(url).pathname.replace(/^\/|\/$/g, '');
+  const file = path ? join(out, path, 'index.html') : join(out, 'index.html');
+  const html = await readFile(file, 'utf8');
+  const found = html.match(/\{\{[^}]{1,80}\}\}/g);
+  if (found) withPlaceholders.push(`${url} → ${[...new Set(found)].join(', ')}`);
+}
+
+if (withPlaceholders.length) {
+  console.error(`в sitemap ${withPlaceholders.length} URL с незаполненными плейсхолдерами:`);
+  for (const m of withPlaceholders) console.error('  ' + m);
+  process.exit(1);
+}
+
+console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров`);

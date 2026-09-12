@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <SiteShell lang={DEFAULT_LANG}>
+    <SiteShell lang={DEFAULT_LANG} notFound>
       <NotFoundPage />
     </SiteShell>
   );
