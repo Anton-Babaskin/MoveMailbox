@@ -9,7 +9,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
       <div className="shell fgrid">
         <Link className="logo" href={href(lang, '/')} style={{ fontSize: '.98rem' }}>
           <span className="mark" style={{ width: 28, height: 28, borderRadius: 8 }}>
-            <svg style={{ width: 20, height: 20 }}>
+            <svg aria-hidden="true" style={{ width: 20, height: 20 }}>
               <use href="#ml" />
             </svg>
           </span>

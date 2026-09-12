@@ -63,7 +63,7 @@ export function buildMetadata({
       siteName: SITE_NAME,
       title,
       description,
-      images: [{ url: image, width: 1735, height: 909, alt: title }],
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',

@@ -379,7 +379,7 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .tagr{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   padding:5px 10px;border-radius:6px;border:1px solid var(--line);color:var(--ink-3)}
 .tagr.hot{background:var(--acc-soft);color:var(--acc);border-color:transparent}
-.card h3.big{font-size:1.5rem;letter-spacing:-.03em}
+.card h3.big,.card h2.big{font-size:1.5rem;letter-spacing:-.03em}
 .card p.t{color:var(--ink-2);font-size:.94rem;margin-top:9px}
 .ticks{display:flex;flex-direction:column;gap:10px;margin-top:18px;font-size:.9rem;color:var(--ink-2)}
 .ticks li{display:flex;gap:10px}
@@ -625,7 +625,7 @@ section.alt .node{background:var(--surf)}
 .stn .tm{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
   color:var(--ink-3);transition:color .4s}
 .stn.on .tm{color:var(--amb)}
-.stn h3{font-size:1.2rem}
+.stn h3,.stn .stn-title{font-size:1.2rem}
 .stn p{font-size:.885rem;color:var(--ink-2)}
 .stn code{font-family:var(--mono);font-size:.83em}
 @media (max-width:900px){
@@ -734,7 +734,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .who:hover{transform:translateY(-4px);box-shadow:var(--sh-hi);
   border-color:color-mix(in srgb,var(--acc) 34%,var(--line))}
 .who-n{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--amb)}
-.who h3{font-size:1.28rem}
+.who h3,.who .who-title{font-size:1.28rem}
 .who p{font-size:.92rem;color:var(--ink-2)}
 .who-tag{margin-top:auto;padding-top:14px;font-family:var(--mono);font-size:11px;color:var(--acc)}
 .proof{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:22px;
@@ -856,7 +856,7 @@ html{scrollbar-color:color-mix(in srgb,var(--acc) 55%,var(--line)) transparent;s
 .post .meta{display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3)}
 .post .meta .tg{color:var(--acc);background:var(--acc-soft);padding:3px 8px;border-radius:5px}
-.post h3{font-size:1.04rem;line-height:1.32}
+.post h3,.post .post-title{font-size:1.04rem;line-height:1.32}
 .post p{font-size:.87rem;color:var(--ink-2)}
 .post .rd{margin-top:auto;padding-top:12px;font-size:.85rem;font-weight:700;color:var(--acc);display:inline-flex;gap:7px;align-items:center}
 .post .rd svg{width:14px;height:14px;transition:transform .25s}

@@ -43,9 +43,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
               <details className="adv">
-                <summary><svg className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg className="chev"><use href="#cv" /></svg></summary>
+                <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
                   <label>{t.securityLabel}<select data-sec><option value="tls">SSL / TLS</option><option value="starttls">STARTTLS</option></select></label>
                   <label>{t.portLabel}<select data-port><option value="auto">{t.portAuto}</option><option value="manual">{t.portManual}</option></select><input data-port-num type="number" min="1" max="65535" placeholder="993" inputMode="numeric" hidden /></label>
@@ -56,9 +56,9 @@ export function Workspace({ lang }: { lang: Lang }) {
             <div className="mid">
               <canvas id="flow" aria-hidden="true"></canvas>
               <div className="mid-in">
-                <button className="knob" type="button" id="swap" title={t.swap} aria-label={t.swap}><svg><use href="#sw" /></svg></button>
+                <button className="knob" type="button" id="swap" title={t.swap} aria-label={t.swap}><svg aria-hidden="true"><use href="#sw" /></svg></button>
                 <button className="btn btn-g mid-check" type="button" id="checkBoth" disabled={STATIC_SITE}>
-                  <svg style={{ width: '15px', height: '15px' }}><use href="#ck" /></svg>{t.checkBoth}
+                  <svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#ck" /></svg>{t.checkBoth}
                 </button>
                 <div className="mid-links">
                   <a href={href(lang, '/guides')}>{t.linkProviders}</a>
@@ -79,9 +79,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
               <details className="adv">
-                <summary><svg className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg className="chev"><use href="#cv" /></svg></summary>
+                <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
                   <label>{t.securityLabel}<select data-sec><option value="tls">SSL / TLS</option><option value="starttls">STARTTLS</option></select></label>
                   <label>{t.portLabel}<select data-port><option value="auto">{t.portAuto}</option><option value="manual">{t.portManual}</option></select><input data-port-num type="number" min="1" max="65535" placeholder="993" inputMode="numeric" hidden /></label>
@@ -102,41 +102,41 @@ export function Workspace({ lang }: { lang: Lang }) {
 
           <div className="launch">
             <div className="assure">
-              <span><svg><use href="#ky" /></svg>{t.assureSource}</span>
-              <span><svg><use href="#sv" /></svg>{t.assureSize}</span>
+              <span><svg aria-hidden="true"><use href="#ky" /></svg>{t.assureSource}</span>
+              <span><svg aria-hidden="true"><use href="#sv" /></svg>{t.assureSize}</span>
             </div>
             <div className="acts">
-              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
-              <button className="btn btn-g" id="stop" disabled><svg style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
+              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg aria-hidden="true" style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
+              <button className="btn btn-g" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
             </div>
             <p id="modeHint" style={{ display: 'none', width: '100%', margin: '0', fontFamily: 'var(--mono)', fontSize: '11.5px', color: 'var(--amb)' }}></p>
           </div>
 
           <div className="opts">
             <details className="drop">
-              <summary><span className="sn">03</span><b>{t.foldersTitle}</b><span className="sum" id="fsum">{t.foldersSum}</span><svg className="chev"><use href="#cv" /></svg></summary>
+              <summary><span className="sn">03</span><b>{t.foldersTitle}</b><span className="sum" id="fsum">{t.foldersSum}</span><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
               <div className="drop-in" id="flist">
-              <div className="frow"><span className="bx"><svg><use href="#ck" /></svg></span><span className="nm">INBOX</span><span className="c" data-c="18442">18 442</span><span className="s">{t.sizeInbox}</span></div>
-              <div className="frow"><span className="bx"><svg><use href="#ck" /></svg></span><span className="nm">INBOX.Sent</span><span className="c" data-c="9117">9 117</span><span className="s">{t.sizeSent}</span></div>
-              <div className="frow"><span className="bx"><svg><use href="#ck" /></svg></span><span className="nm">INBOX.Archive.2019-2024</span><span className="c" data-c="11863">11 863</span><span className="s">{t.sizeArchive}</span></div>
-              <div className="frow"><span className="bx"><svg><use href="#ck" /></svg></span><span className="nm">INBOX.Clients.Invoices</span><span className="c" data-c="1604">1 604</span><span className="s">{t.sizeInvoices}</span></div>
-              <div className="frow"><span className="bx off"><svg><use href="#ck" /></svg></span><span className="nm">INBOX.Junk</span><span className="c" data-c="7330">7 330</span><span className="s">{t.sizeJunk}</span></div>
+              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX</span><span className="c" data-c="18442">18 442</span><span className="s">{t.sizeInbox}</span></div>
+              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Sent</span><span className="c" data-c="9117">9 117</span><span className="s">{t.sizeSent}</span></div>
+              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Archive.2019-2024</span><span className="c" data-c="11863">11 863</span><span className="s">{t.sizeArchive}</span></div>
+              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Clients.Invoices</span><span className="c" data-c="1604">1 604</span><span className="s">{t.sizeInvoices}</span></div>
+              <div className="frow"><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Junk</span><span className="c" data-c="7330">7 330</span><span className="s">{t.sizeJunk}</span></div>
               </div>
             </details>
             <details className="drop">
-              <summary><span className="sn">04</span><b>{t.advTitle}</b><span className="sum">{t.advSum}</span><svg className="chev"><use href="#cv" /></svg></summary>
+              <summary><span className="sn">04</span><b>{t.advTitle}</b><span className="sum">{t.advSum}</span><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
               <div className="adv-modes">
-                <label className="mode-ck"><input type="checkbox" data-mode="verbose" /><span className="bx off"><svg><use href="#ck" /></svg></span>
+                <label className="mode-ck"><input type="checkbox" data-mode="verbose" /><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span>
                   <span><b>{t.modeVerboseTitle}</b>{t.modeVerboseTextA}<code>--dry</code>{t.modeVerboseTextB}</span></label>
-                <label className="mode-ck"><input type="checkbox" data-mode="creds" /><span className="bx off"><svg><use href="#ck" /></svg></span>
+                <label className="mode-ck"><input type="checkbox" data-mode="creds" /><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span>
                   <span><b>{t.modeCredsTitle}</b>{t.modeCredsText}</span></label>
-                <label className="mode-ck"><input type="checkbox" data-mode="sizes" /><span className="bx off"><svg><use href="#ck" /></svg></span>
+                <label className="mode-ck"><input type="checkbox" data-mode="sizes" /><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span>
                   <span><b>{t.modeSizesTitle}</b>{t.modeSizesText}</span></label>
-                <label className="mode-ck"><input type="checkbox" data-mode="folders" /><span className="bx off"><svg><use href="#ck" /></svg></span>
+                <label className="mode-ck"><input type="checkbox" data-mode="folders" /><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span>
                   <span><b>{t.modeFoldersTitle}</b>{t.modeFoldersTextA}<code>--justfolders</code>{t.modeFoldersTextB}</span></label>
               </div>
               <div className="strict">
-                <svg><use href="#al" /></svg>
+                <svg aria-hidden="true"><use href="#al" /></svg>
                 <div><strong>{t.strictTitle}</strong>
                   <p>{t.strictText}</p></div>
                 <button type="button" id="strict">{t.strictBtn}</button>
@@ -146,7 +146,7 @@ export function Workspace({ lang }: { lang: Lang }) {
 
           <div style={{ padding: '2px 24px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div className="keep" id="keepNote">
-              <svg><use href="#sh" /></svg>
+              <svg aria-hidden="true"><use href="#sh" /></svg>
               <p><b>{t.keepBold}</b> {t.keepText} <a href={href(lang, '/download')}>{t.keepLink}</a></p>
             </div>
             <p className="note" style={{ padding: '0' }}>{t.freeNote}</p>
@@ -154,7 +154,7 @@ export function Workspace({ lang }: { lang: Lang }) {
 
           <div className="mon">
             <div className="mon-h">
-              <svg><use href="#tx" /></svg>
+              <svg aria-hidden="true"><use href="#tx" /></svg>
               <span><strong>{t.logTitle}</strong><small>{t.logSub}</small></span>
               <span className="stt" id="stt"><i></i>{t.statusWaiting}</span>
             </div>

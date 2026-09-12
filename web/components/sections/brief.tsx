@@ -19,12 +19,12 @@ export function Brief({ lang }: { lang: Lang }) {
           <div className="brief-col">
             <p className="eyebrow">{t.factsEyebrow}</p>
             <ul className="brief-facts">
-              <li><svg><use href="#ck" /></svg><div><b>{t.fact1Title}</b>{t.fact1Text}</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>{t.fact2Title}</b>{t.fact2Text}</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>{t.fact3Title}</b>{t.fact3Text}</div></li>
-              <li><svg><use href="#ck" /></svg><div><b>{t.fact4Title}</b>{t.fact4Text}</div></li>
+              <li><svg aria-hidden="true"><use href="#ck" /></svg><div><b>{t.fact1Title}</b>{t.fact1Text}</div></li>
+              <li><svg aria-hidden="true"><use href="#ck" /></svg><div><b>{t.fact2Title}</b>{t.fact2Text}</div></li>
+              <li><svg aria-hidden="true"><use href="#ck" /></svg><div><b>{t.fact3Title}</b>{t.fact3Text}</div></li>
+              <li><svg aria-hidden="true"><use href="#ck" /></svg><div><b>{t.fact4Title}</b>{t.fact4Text}</div></li>
             </ul>
-            <a className="brief-link" href={href(lang, '/security')}>{t.securityLink}<svg><use href="#ar" /></svg></a>
+            <a className="brief-link" href={href(lang, '/security')}>{t.securityLink}<svg aria-hidden="true"><use href="#ar" /></svg></a>
           </div>
         </div>
       </section>

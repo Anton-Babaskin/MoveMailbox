@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
 import { imapErrorSlugs } from '@/data/imap-errors';
-import { blogSlugs } from '@/data/blog-posts';
+import { blogPosts } from '@/data/blog-posts';
 import { LANGS, href } from '@/i18n/config';
 import { SITE } from '@/lib/seo';
 
@@ -12,7 +12,24 @@ type ChangeFrequency = NonNullable<
   MetadataRoute.Sitemap[number]['changeFrequency']
 >;
 
-type Entry = { path: string; changeFrequency: ChangeFrequency; priority: number };
+type Entry = {
+  path: string;
+  changeFrequency: ChangeFrequency;
+  priority: number;
+  /** Дата последнего изменения содержимого страницы, ISO. */
+  lastModified: string;
+};
+
+/**
+ * Дата последней правки текстов сайта.
+ *
+ * Раньше в lastmod уходила дата сборки, то есть после каждого деплоя все
+ * страницы объявляли себя изменёнными — включая те, которых правка не
+ * касалась. Поисковик такой lastmod быстро перестаёт учитывать вовсе.
+ * Поэтому дата статическая: её двигают тем же коммитом, что меняет тексты
+ * соответствующих страниц. У записей блога своя дата — из самой записи.
+ */
+const CONTENT_UPDATED = '2026-09-12';
 
 /**
  * В карте только те URL, которые реально отдаются 200.
@@ -28,18 +45,20 @@ const pages: Entry[] = [
   { path: '/download', changeFrequency: 'weekly', priority: 0.78 },
   { path: '/security', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.6 },
-];
+].map((page) => ({ ...page, lastModified: CONTENT_UPDATED }) as Entry);
 
 const routePages: Entry[] = migrationRoutes.map((route) => ({
   path: `/migrate/${route.slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
   priority: route.tier === 1 ? 0.86 : 0.74,
+  lastModified: CONTENT_UPDATED,
 }));
 
 const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
   path: `/docs/errors/${slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
   priority: 0.75,
+  lastModified: CONTENT_UPDATED,
 }));
 
 /**
@@ -47,10 +66,11 @@ const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
  * конкурируют за один запрос, и поисковик сам решает, какую показать.
  * Обычно не ту.
  */
-const blogPages: Entry[] = blogSlugs.map((slug) => ({
-  path: `/blog/${slug}`,
+const blogPages: Entry[] = blogPosts.map((post) => ({
+  path: `/blog/${post.slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
   priority: 0.68,
+  lastModified: post.date,
 }));
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -64,7 +84,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     return LANGS.map((lang) => ({
       url: `${SITE}${href(lang, page.path)}`,
-      lastModified: new Date(),
+      lastModified: page.lastModified,
       changeFrequency: page.changeFrequency,
       priority:
         lang === 'ru' ? page.priority : Math.max(0.1, page.priority - 0.05),

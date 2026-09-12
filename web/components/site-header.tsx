@@ -85,7 +85,7 @@ export function SiteHeader({ lang }: { lang: Lang }) {
       <div className="shell tbar">
         <Link className="logo" href={href(lang, '/')}>
           <span className="mark">
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ml" />
             </svg>
           </span>
@@ -125,14 +125,14 @@ export function SiteHeader({ lang }: { lang: Lang }) {
             onClick={toggleTheme}
             aria-label={dark ? t.themeLight : t.themeDark}
           >
-            <svg>
+            <svg aria-hidden="true">
               <use href={dark ? '#sn' : '#mn'} />
             </svg>
           </button>
 
           <Link className="btn btn-p btn-s hdr-cta" href={href(lang, '/download')}>
             {t.cta}
-            <svg style={{ width: 15, height: 15 }}>
+            <svg aria-hidden="true" style={{ width: 15, height: 15 }}>
               <use href="#dl" />
             </svg>
           </Link>
@@ -144,7 +144,7 @@ export function SiteHeader({ lang }: { lang: Lang }) {
             aria-expanded={menu}
             onClick={() => setMenu((v) => !v)}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <path d="M4 7h16M4 12h16M4 17h16" />
             </svg>
           </button>

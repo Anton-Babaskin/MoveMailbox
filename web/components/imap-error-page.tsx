@@ -49,7 +49,7 @@ export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
         </div>
         <div className="error-sample">
           <span>
-            <svg>
+            <svg aria-hidden="true">
               <use href="#tx" />
             </svg>
             {t.sample}
@@ -72,7 +72,7 @@ export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
         <ul className="error-causes">
           {copy.causes.map((cause) => (
             <li key={cause}>
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#al" />
               </svg>
               <span>{cause}</span>
@@ -88,7 +88,7 @@ export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
         <ol className="error-fixes">
           {copy.fixes.map((fix) => (
             <li key={fix}>
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#ck" />
               </svg>
               <span>{fix}</span>
@@ -98,7 +98,7 @@ export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
         <p style={{ marginTop: '24px' }}>
           <a className="brief-link" href={`${href(lang, '/')}#workspace`}>
             {t.cta}
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ar" />
             </svg>
           </a>
@@ -152,7 +152,7 @@ export function ImapErrorPage({ lang, slug }: { lang: Lang; slug: string }) {
             .map((e) => (
               <a key={e.slug} href={href(lang, `/docs/errors/${e.slug}`)}>
                 <code>{e.code}</code>
-                <svg>
+                <svg aria-hidden="true">
                   <use href="#ar" />
                 </svg>
               </a>

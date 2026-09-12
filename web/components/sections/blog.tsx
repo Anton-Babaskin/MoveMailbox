@@ -31,7 +31,7 @@ export function Blog({ lang, pageTitle = false }: { lang: Lang; pageTitle?: bool
                 href={href(lang, `/blog/${post.slug}`)}
               >
                 <div className="cover">
-                  <svg className="gl">
+                  <svg aria-hidden="true" className="gl">
                     <use href={`#${post.icon}`} />
                   </svg>
                 </div>
@@ -42,11 +42,11 @@ export function Blog({ lang, pageTitle = false }: { lang: Lang; pageTitle?: bool
                       {readingMinutes(copy)} {labels.minutes}
                     </span>
                   </div>
-                  <h3>{copy.h1}</h3>
+                  <h2 className="post-title">{copy.h1}</h2>
                   <p>{copy.card}</p>
                   <span className="rd">
                     {t.read}
-                    <svg>
+                    <svg aria-hidden="true">
                       <use href="#ar" />
                     </svg>
                   </span>

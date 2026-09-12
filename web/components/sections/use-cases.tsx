@@ -4,6 +4,9 @@ import type { Lang } from '@/i18n/config';
 export function UseCases({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boolean }) {
   const t = useCases[lang];
   const Heading = pageTitle ? 'h1' : 'h2';
+  // Карточки идут уровнем ниже заголовка секции: когда секция даёт странице
+  // h1, они поднимаются до h2, иначе в структуре остаётся пропущенный уровень.
+  const Card = pageTitle ? 'h2' : 'h3';
   return (
     <>
       <section className="shell">
@@ -14,19 +17,19 @@ export function UseCases({ lang, pageTitle = false }: { lang: Lang; pageTitle?: 
         <div className="who-grid">
           <article className="who">
             <span className="who-n">01</span>
-            <h3>{t.w1.h3}</h3>
+            <Card className="who-title">{t.w1.h3}</Card>
             <p>{t.w1.text}</p>
             <span className="who-tag">{t.w1.tag}</span>
           </article>
           <article className="who">
             <span className="who-n">02</span>
-            <h3>{t.w2.h3}</h3>
+            <Card className="who-title">{t.w2.h3}</Card>
             <p>{t.w2.text}</p>
             <span className="who-tag">{t.w2.tag}</span>
           </article>
           <article className="who">
             <span className="who-n">03</span>
-            <h3>{t.w3.h3}</h3>
+            <Card className="who-title">{t.w3.h3}</Card>
             <p>{t.w3.text}</p>
             <span className="who-tag">{t.w3.tag}</span>
           </article>

@@ -12,7 +12,7 @@ export function Security({ lang, pageTitle = false }: { lang: Lang; pageTitle?: 
             <p className="eyebrow">{t.eyebrow}</p>
             <Heading style={{ fontSize: 'clamp(1.75rem,3.4vw,2.75rem)', color: 'var(--term-hi)' }}>{t.h2a}<span className="ital">{t.h2b}</span></Heading>
             <p className="lede" style={{ marginTop: '18px' }}>{t.lede}</p>
-            <a className="go" href="https://github.com/Anton-Babaskin/MoveMailbox/blob/main/SECURITY.md" target="_blank" rel="noreferrer">{t.go}<svg><use href="#ar" /></svg></a>
+            <a className="go" href="https://github.com/Anton-Babaskin/MoveMailbox/blob/main/SECURITY.md" target="_blank" rel="noreferrer">{t.go}<svg aria-hidden="true"><use href="#ar" /></svg></a>
           </div>
 
           <div className="board">
@@ -34,7 +34,7 @@ export function Security({ lang, pageTitle = false }: { lang: Lang; pageTitle?: 
             </ul>
             <footer>
               <span>{t.footNote}</span>
-              <a href="https://github.com/Anton-Babaskin/MoveMailbox" target="_blank" rel="noreferrer">{t.footLink}<svg><use href="#ar" /></svg></a>
+              <a href="https://github.com/Anton-Babaskin/MoveMailbox" target="_blank" rel="noreferrer">{t.footLink}<svg aria-hidden="true"><use href="#ar" /></svg></a>
             </footer>
           </div>
         </div>

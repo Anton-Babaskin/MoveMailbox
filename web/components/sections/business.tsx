@@ -7,12 +7,12 @@ export function Business({ lang }: { lang: Lang }) {
     <>
       <section className="shell">
         <div className="biz">
-          <span className="ico"><svg style={{ width: '24px', height: '24px' }}><use href="#bs" /></svg></span>
+          <span className="ico"><svg aria-hidden="true" style={{ width: '24px', height: '24px' }}><use href="#bs" /></svg></span>
           <div>
             <h2>{t.h2a}<span className="ital">{t.h2b}</span></h2>
             <p>{t.text}</p>
           </div>
-          <a className="btn btn-p" href="https://github.com/Anton-Babaskin/MoveMailbox/issues" target="_blank" rel="noreferrer">{t.cta}<svg style={{ width: '15px', height: '15px' }}><use href="#ar" /></svg></a>
+          <a className="btn btn-p" href="https://github.com/Anton-Babaskin/MoveMailbox/issues" target="_blank" rel="noreferrer">{t.cta}<svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#ar" /></svg></a>
         </div>
       </section>
     </>

@@ -4,6 +4,10 @@ import type { Lang } from '@/i18n/config';
 export function HowItWorks({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boolean }) {
   const t = howItWorks[lang];
   const Heading = pageTitle ? 'h1' : 'h2';
+  // Шаги идут уровнем ниже заголовка секции: на главной он h2 и шаги h3,
+  // на /routes секция даёт h1 странице — тогда шаги поднимаются до h2,
+  // иначе в структуре остаётся пропущенный уровень.
+  const Step = pageTitle ? 'h2' : 'h3';
   return (
     <>
       <section className="shell">
@@ -16,22 +20,22 @@ export function HowItWorks({ lang, pageTitle = false }: { lang: Lang; pageTitle?
           <div className="flow-grid">
             <article className="stn">
               <span className="node"><b>01</b></span>
-              <div className="body"><span className="tm">{t.s1.tm}</span><h3>{t.s1.h3}</h3>
+              <div className="body"><span className="tm">{t.s1.tm}</span><Step className="stn-title">{t.s1.h3}</Step>
                 <p>{t.s1.p1}<code>993</code>{t.s1.p2}<code>143</code>{t.s1.p3}</p></div>
             </article>
             <article className="stn">
               <span className="node"><b>02</b></span>
-              <div className="body"><span className="tm">{t.s2.tm}</span><h3>{t.s2.h3}</h3>
+              <div className="body"><span className="tm">{t.s2.tm}</span><Step className="stn-title">{t.s2.h3}</Step>
                 <p>{t.s2.p}</p></div>
             </article>
             <article className="stn">
               <span className="node"><b>03</b></span>
-              <div className="body"><span className="tm">{t.s3.tm}</span><h3>{t.s3.h3}</h3>
+              <div className="body"><span className="tm">{t.s3.tm}</span><Step className="stn-title">{t.s3.h3}</Step>
                 <p>{t.s3.p}</p></div>
             </article>
             <article className="stn">
               <span className="node"><b>04</b></span>
-              <div className="body"><span className="tm">{t.s4.tm}</span><h3>{t.s4.h3}</h3>
+              <div className="body"><span className="tm">{t.s4.tm}</span><Step className="stn-title">{t.s4.h3}</Step>
                 <p>{t.s4.p}</p></div>
             </article>
           </div>
