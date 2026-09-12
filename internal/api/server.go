@@ -1,26 +1,22 @@
 package api
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"mime"
 	"net"
 	"net/http"
 	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Anton-Babaskin/MoveMailbox/internal/jobs"
 	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
-	"github.com/Anton-Babaskin/MoveMailbox/internal/webui"
+	"github.com/Anton-Babaskin/MoveMailbox/internal/web"
 )
 
 type Server struct {
@@ -71,11 +67,13 @@ func New(engine migrator.Engine, manager *jobs.Manager, config Config) http.Hand
 	mux.HandleFunc("GET /api/jobs/{id}/events", server.jobEvents)
 	mux.HandleFunc("POST /api/jobs/{id}/cancel", server.cancelJob)
 
-	assets, err := fs.Sub(webui.Assets, "dist")
+	// Сайт монтируется на "/", API — на "/api/...": ServeMux выбирает самый
+	// длинный совпавший паттерн, поэтому API перехватывается раньше сайта.
+	site, err := web.Handler()
 	if err != nil {
 		panic(err)
 	}
-	mux.Handle("/", staticHandler(assets))
+	mux.Handle("/", site)
 	var handler http.Handler = mux
 	if config.PublicMode {
 		handler = newGuestGateway(config).wrap(handler)
@@ -413,61 +411,6 @@ func canonicalAuthority(value string) string {
 		return net.JoinHostPort(host, port)
 	}
 	return strings.TrimSuffix(value, ".")
-}
-
-type cachedAsset struct {
-	contentType string
-	data        []byte
-	etag        string
-}
-
-func staticHandler(assets fs.FS) http.Handler {
-	cache := make(map[string]cachedAsset)
-	if err := fs.WalkDir(assets, ".", func(name string, entry fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if entry.IsDir() {
-			return nil
-		}
-		data, err := fs.ReadFile(assets, name)
-		if err != nil {
-			return err
-		}
-		digest := sha256.Sum256(data)
-		contentType := mime.TypeByExtension(path.Ext(name))
-		cache[name] = cachedAsset{contentType: contentType, data: data, etag: fmt.Sprintf("\"%x\"", digest)}
-		return nil
-	}); err != nil {
-		panic(err)
-	}
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet && r.Method != http.MethodHead {
-			w.Header().Set("Allow", "GET, HEAD")
-			writeErrorCode(w, http.StatusMethodNotAllowed, "request.method.denied", "метод не поддерживается")
-			return
-		}
-		name := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
-		if name == "" || name == "." {
-			name = "index.html"
-		}
-		asset, ok := cache[name]
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
-		if asset.contentType != "" {
-			w.Header().Set("Content-Type", asset.contentType)
-		}
-		w.Header().Set("ETag", asset.etag)
-		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
-		if r.Header.Get("If-None-Match") == asset.etag {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-		http.ServeContent(w, r, name, time.Time{}, bytes.NewReader(asset.data))
-	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

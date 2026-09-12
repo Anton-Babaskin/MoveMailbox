@@ -227,25 +227,41 @@ func TestEndpointEncryptionPolicyKeepsLocalCompatibility(t *testing.T) {
 	}
 }
 
-func TestStaticAssetsUseETag(t *testing.T) {
+// Сайт отдаёт internal/web, и его кэширование проверено там же: здесь важно
+// только то, что монтирование на "/" не перехватывает API. Раньше на этом
+// месте стоял TestStaticAssetsUseETag поверх снятого с роутера internal/webui.
+func TestSiteMountDoesNotShadowAPI(t *testing.T) {
 	handler := newTestHandler(migrator.DemoEngine{})
-	firstRequest := httptest.NewRequest(http.MethodGet, "/app.js", nil)
-	firstResponse := httptest.NewRecorder()
-	handler.ServeHTTP(firstResponse, firstRequest)
-	if firstResponse.Code != http.StatusOK {
-		t.Fatalf("first status = %d, want %d", firstResponse.Code, http.StatusOK)
-	}
-	etag := firstResponse.Header().Get("ETag")
-	if etag == "" {
-		t.Fatal("expected ETag")
-	}
 
-	secondRequest := httptest.NewRequest(http.MethodGet, "/app.js", nil)
-	secondRequest.Header.Set("If-None-Match", etag)
-	secondResponse := httptest.NewRecorder()
-	handler.ServeHTTP(secondResponse, secondRequest)
-	if secondResponse.Code != http.StatusNotModified {
-		t.Fatalf("second status = %d, want %d", secondResponse.Code, http.StatusNotModified)
+	request := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("/api/health: код %d, ожидался %d", response.Code, http.StatusOK)
+	}
+	if got := response.Header().Get("Content-Type"); !strings.HasPrefix(got, "application/json") {
+		t.Fatalf("/api/health: Content-Type %q, ожидался JSON", got)
+	}
+}
+
+// Инлайн-скрипты Next разрешаются точечными sha256, а не 'unsafe-inline':
+// вторая директива разрешила бы и скрипт, внедрённый через XSS.
+func TestContentSecurityPolicyForbidsUnsafeInlineScripts(t *testing.T) {
+	handler := newTestHandler(migrator.DemoEngine{})
+
+	request := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	policy := response.Header().Get("Content-Security-Policy")
+	if !strings.Contains(policy, "script-src 'self'") {
+		t.Fatalf("в политике нет script-src: %q", policy)
+	}
+	for _, directive := range strings.Split(policy, "; ") {
+		if strings.HasPrefix(directive, "script-src ") && strings.Contains(directive, "'unsafe-inline'") {
+			t.Fatalf("script-src разрешает любой инлайн-скрипт: %q", policy)
+		}
 	}
 }
 
