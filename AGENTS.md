@@ -8,6 +8,11 @@
 - Prioritize the utility/backend MVP, reliable migrations and security. Free
   hosted transfers are guest-first; accounts belong to paid services. Keep the
   public website's promises consistent with implemented backend behavior.
+- Ownership (owner instruction, 2026-09-12): Claude maintains the website,
+  frontend, design, content and SEO. This agent maintains the migration utility,
+  backend/API, workers, technical tests and test VM. Do not change website or
+  frontend files as part of backend tasks; document API integration changes for
+  Claude instead. Shared documentation changes must preserve the other work.
 - Read `docs/HANDOFF.md`, `docs/ROADMAP.md` and relevant test/runbook documentation
   before continuing work. Reply to the owner in Russian.
 

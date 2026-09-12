@@ -216,6 +216,9 @@ func TestManagerRejectsNewJobWhenDurableSaveFails(t *testing.T) {
 	if kind, healthy := manager.StorageStatus(); kind != "failing-test" || healthy {
 		t.Fatalf("StorageStatus() = %q, %v", kind, healthy)
 	}
+	if manager.Ready() {
+		t.Fatal("manager with a failed durable save must not report ready")
+	}
 }
 
 type saveFailingStore struct{ memoryStore }
