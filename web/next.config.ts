@@ -15,6 +15,16 @@ const nextConfig: NextConfig = {
    */
   trailingSlash: true,
   reactStrictMode: true,
+  /**
+   * Страница 404 отдаёт весь документ целиком.
+   *
+   * Корневого layout у проекта нет — их два, по одному на языковое дерево, —
+   * поэтому обычный not-found.tsx получал от Next собственную обёртку, и в
+   * 404.html оказывалось два тега <html>. Браузер второй выбрасывает, React
+   * при гидратации видит не своё дерево и ругается. global-not-found.tsx
+   * рендерит документ сам и этой двойной обёртки не создаёт.
+   */
+  experimental: { globalNotFound: true },
   images: { unoptimized: true },
 };
 

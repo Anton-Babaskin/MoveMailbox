@@ -27,11 +27,18 @@ export const howLongMigrationTakes: BlogPost = {
         ],
       },
       {
-        h2: 'Порядок цифр по провайдерам',
+        h2: 'Что провайдеры пишут в документации',
         paragraphs: [
-          'Точных гарантий не даёт никто, но порядок величин по нашим наблюдениям такой: Gmail отдаёт примерно два с половиной гигабайта в сутки на аккаунт, Exchange и Microsoft 365 — около половины гигабайта в час, iCloud заметно режет число одновременных сессий и на больших ящиках становится узким местом.',
-          'Эти числа стоит воспринимать как ориентир для планирования, а не как обещание: провайдеры меняют лимиты без объявления, а на корпоративных тарифах политика может отличаться от бытовой.',
+          'Публичных цифр мало, но у Google они есть, и они жёстче, чем кажется. Gmail ограничивает синхронизацию по IMAP двумя порогами в сутки на аккаунт: 2500 МБ на скачивание и всего 500 МБ на загрузку. При достижении порога доступ приостанавливается — обычно на час, в худшем случае до суток.',
+          'Из этого следует неочевидное: перенос ИЗ Gmail идёт примерно впятеро быстрее, чем В Gmail. Ящик на десять гигабайт уедет из Gmail за четверо суток, а приедет в Gmail за три недели — и с этим ничего нельзя сделать, кроме как заложить срок заранее.',
+          'Microsoft свои пороги для Exchange Online не публикует, поэтому обещать цифру было бы враньём. Зато документированы два ограничения переноса: письма больше 35 МБ не переносятся, и папки со слэшем в названии — тоже. Apple лимитов на IMAP-сессии не публикует; документирован только предельный размер письма в 20 МБ.',
           'Практический вывод: ящик на пять гигабайт обычно переезжает за ночь, ящик на пятьдесят — за несколько суток, и это нормально. Плохой сценарий не «долго», а «оборвалось и непонятно, что переехало».',
+        ],
+        bullets: [
+          'Gmail: 2500 МБ в сутки на скачивание, 500 МБ в сутки на загрузку (Google Workspace Admin Help).',
+          'Microsoft 365: письма больше 35 МБ и папки со слэшем в имени при IMAP-переносе пропускаются (Microsoft Learn).',
+          'iCloud: предельный размер письма 20 МБ (Apple Support).',
+          'Всё остальное, что вам расскажут о скорости провайдеров, — наблюдения, а не обязательства.',
         ],
       },
       {
@@ -101,11 +108,18 @@ export const howLongMigrationTakes: BlogPost = {
         ],
       },
       {
-        h2: 'Orders of magnitude by provider',
+        h2: 'What the providers actually document',
         paragraphs: [
-          'Nobody guarantees exact figures, but the orders of magnitude we see are these: Gmail gives out roughly two and a half gigabytes a day per account, Exchange and Microsoft 365 about half a gigabyte an hour, and iCloud restricts simultaneous sessions enough to become the bottleneck on large mailboxes.',
-          'Treat those numbers as a planning aid, not a promise. Providers change limits without announcements, and business plans often behave differently from consumer ones.',
+          'Published figures are rare, but Google has them, and they are stricter than people expect. Gmail caps IMAP sync with two daily thresholds per account: 2500 MB of download and only 500 MB of upload. Hit one and access is suspended — usually for an hour, at worst for a day.',
+          'That leads somewhere non-obvious: moving out of Gmail runs about five times faster than moving into it. A ten-gigabyte mailbox leaves Gmail in four days and arrives in Gmail in three weeks, and nothing can change that except planning for it.',
+          'Microsoft does not publish its Exchange Online thresholds, so quoting a number would be inventing one. Two migration limits are documented though: messages over 35 MB are not migrated, and neither are folders with a forward slash in the name. Apple publishes no IMAP session limits either; the documented figure is a 20 MB message size cap.',
           'The practical takeaway: a five-gigabyte mailbox usually moves overnight, a fifty-gigabyte one takes a few days, and that is normal. The bad outcome is not slow — it is stopping halfway with no idea what made it across.',
+        ],
+        bullets: [
+          'Gmail: 2500 MB per day down, 500 MB per day up (Google Workspace Admin Help).',
+          'Microsoft 365: messages over 35 MB and folders with a slash in the name are skipped by IMAP migration (Microsoft Learn).',
+          'iCloud: 20 MB maximum message size (Apple Support).',
+          'Everything else you hear about provider speed is observation, not commitment.',
         ],
       },
       {
@@ -175,11 +189,18 @@ export const howLongMigrationTakes: BlogPost = {
         ],
       },
       {
-        h2: 'Порядок цифр за провайдерами',
+        h2: 'Що провайдери пишуть у документації',
         paragraphs: [
-          'Точних гарантій не дає ніхто, але порядок величин за нашими спостереженнями такий: Gmail віддає приблизно два з половиною гігабайти на добу на акаунт, Exchange і Microsoft 365 — близько половини гігабайта на годину, а iCloud помітно ріже кількість одночасних сесій і на великих скриньках стає вузьким місцем.',
-          'Ці числа варто сприймати як орієнтир для планування, а не як обіцянку: провайдери змінюють ліміти без оголошень, а на корпоративних тарифах політика може відрізнятися від побутової.',
+          'Публічних цифр мало, але в Google вони є, і вони жорсткіші, ніж здається. Gmail обмежує синхронізацію по IMAP двома порогами на добу на акаунт: 2500 МБ на завантаження до себе і лише 500 МБ на вивантаження в скриньку. Після досягнення порогу доступ призупиняється — зазвичай на годину, у гіршому разі до доби.',
+          'Із цього випливає неочевидне: перенесення З Gmail іде приблизно вп’ятеро швидше, ніж У Gmail. Скринька на десять гігабайтів поїде з Gmail за четверо діб, а приїде в Gmail за три тижні — і з цим нічого не вдієш, окрім як закласти строк заздалегідь.',
+          'Microsoft своїх порогів для Exchange Online не публікує, тож обіцяти цифру було б неправдою. Зате задокументовані два обмеження перенесення: листи понад 35 МБ не переносяться, і папки зі скісною рискою в назві — теж. Apple лімітів на IMAP-сесії не публікує; задокументований лише граничний розмір листа у 20 МБ.',
           'Практичний висновок: скринька на п’ять гігабайтів зазвичай переїжджає за ніч, на п’ятдесят — за кілька діб, і це нормально. Поганий сценарій не «довго», а «обірвалося й незрозуміло, що переїхало».',
+        ],
+        bullets: [
+          'Gmail: 2500 МБ на добу на завантаження, 500 МБ на добу на вивантаження (Google Workspace Admin Help).',
+          'Microsoft 365: листи понад 35 МБ і папки зі скісною рискою в імені під час IMAP-перенесення пропускаються (Microsoft Learn).',
+          'iCloud: граничний розмір листа 20 МБ (Apple Support).',
+          'Усе інше, що вам розкажуть про швидкість провайдерів, — спостереження, а не зобов’язання.',
         ],
       },
       {

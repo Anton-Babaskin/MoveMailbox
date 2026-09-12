@@ -34,6 +34,7 @@ export const folderSeparators: BlogPost = {
           'Вместо дерева — плоский список, а разделитель виден прямо в имени: «Клиенты.2025».',
           'Все папки оказались внутри INBOX: у Courier пользовательские папки живут именно там, и при переносе на Dovecot это надо снимать.',
           'Папка с точкой в названии — например «ООО Ромашка. Договоры» — разъехалась на две вложенные.',
+          'Папка со слэшем в имени вообще не приехала: при переносе в Microsoft 365 такие папки документированно пропускаются — их нужно переименовать до старта.',
         ],
       },
       {
@@ -109,6 +110,7 @@ export const folderSeparators: BlogPost = {
           'A flat list instead of a tree, with the separator visible in the name: Clients.2025.',
           'Every folder ended up inside INBOX: on Courier that is where user folders live, and moving to Dovecot has to strip that prefix.',
           'A folder whose name contains a dot — Acme Ltd. Contracts — split into two nested folders.',
+          'A folder with a slash in its name did not arrive at all: migrating into Microsoft 365 skips those by documented design, so rename them before you start.',
         ],
       },
       {
@@ -182,6 +184,7 @@ export const folderSeparators: BlogPost = {
           'Замість дерева — плоский список, а роздільник видно просто в імені: «Клієнти.2025».',
           'Усі папки опинилися всередині INBOX: у Courier користувацькі папки живуть саме там.',
           'Папка з крапкою в назві — наприклад «ТОВ Ромашка. Договори» — роз’їхалася на дві вкладені.',
+          'Папка зі скісною рискою в імені взагалі не приїхала: під час перенесення в Microsoft 365 такі папки задокументовано пропускаються — їх треба перейменувати до старту.',
         ],
       },
       {

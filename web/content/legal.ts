@@ -68,7 +68,8 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Аналитика и сторонние сервисы',
           p: [
-            '{{УКАЖИТЕ: используемая аналитика, платёжный провайдер, хостинг — и страну размещения серверов. Если аналитики нет, так и напишите.}}',
+            'Аналитики, счётчиков и рекламных пикселей на сайте нет: страницы не делают ни одного запроса к сторонним доменам, шрифты и иконки отдаются с нашего же адреса. Проверить это можно в любой вкладке «Сеть» в браузере.',
+            'Сайт размещён на GitHub Pages; провайдер хостинга обрабатывает технические журналы обращений на своей стороне и в соответствии со своей политикой. Платёжный провайдер не подключён: онлайн-перенос ещё не запущен и оплата не принимается.',
           ],
         },
         {
@@ -121,7 +122,8 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Analytics and third-party services',
           p: [
-            '{{SPECIFY: the analytics in use, the payment provider, the hosting — and the country the servers are located in. If there is no analytics, say so.}}',
+            'There is no analytics, no counters and no advertising pixels on this site: the pages make no requests to third-party domains at all, and fonts and icons are served from our own address. You can verify that in any browser Network tab.',
+            'The site is hosted on GitHub Pages; the hosting provider processes technical access logs on its side under its own policy. No payment provider is connected: the online migration has not launched and no payments are accepted.'
           ],
         },
         {
@@ -174,7 +176,8 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Аналітика та сторонні сервіси',
           p: [
-            '{{УКАЖІТЬ: використовувана аналітика, платіжний провайдер, хостинг — і країну розміщення серверів. Якщо аналітики немає, так і напишіть.}}',
+            'Аналітики, лічильників і рекламних пікселів на сайті немає: сторінки не роблять жодного запиту до сторонніх доменів, шрифти та іконки віддаються з нашої ж адреси. Перевірити це можна в будь-якій вкладці «Мережа» у браузері.',
+            'Сайт розміщено на GitHub Pages; провайдер хостингу обробляє технічні журнали звернень на своєму боці та згідно зі своєю політикою. Платіжний провайдер не підключений: онлайн-перенесення ще не запущене і оплата не приймається.',
           ],
         },
         {
@@ -218,7 +221,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           p: [
             'Бесплатно переносится один целый ящик объёмом до 5 ГБ включительно. Объём измеряется до запуска, поэтому вы знаете стоимость заранее. Мы не копируем первые 5 ГБ большого ящика и не останавливаемся на полпути.',
             'Актуальные тарифы указаны на странице «Тарифы» и могут меняться; к уже оплаченному заданию применяется тариф на момент оплаты.',
-            '{{УКАЖИТЕ: условия возврата средств и способ оплаты}}',
+            'Сейчас оплата не принимается: онлайн-перенос готовится к запуску, а локальный клиент бесплатен. Способ оплаты и условия возврата появятся в этом разделе до того, как заработает первый платный тариф, — пользоваться платной услугой, не зная условий возврата, вам не придётся.',
           ],
         },
         {
@@ -273,7 +276,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           p: [
             'One whole mailbox of up to 5 GB inclusive is transferred free of charge. The size is measured before the run, so you know the price in advance. We do not copy the first 5 GB of a large mailbox and we do not stop halfway.',
             'Current prices are listed on the “Pricing” page and may change; a job that has already been paid for is charged at the price in effect at the moment of payment.',
-            '{{SPECIFY: refund terms and payment method}}',
+            'No payments are accepted at the moment: the online migration is still being prepared and the local client is free. The payment method and the refund terms will appear in this section before the first paid plan goes live — you will never have to buy before knowing how refunds work.',
           ],
         },
         {
@@ -328,7 +331,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           p: [
             'Безкоштовно переноситься одна ціла скринька обсягом до 5 ГБ включно. Обсяг вимірюється до запуску, тому ви знаєте вартість заздалегідь. Ми не копіюємо перші 5 ГБ великої скриньки і не зупиняємося на півдорозі.',
             'Актуальні тарифи вказані на сторінці «Тарифи» і можуть змінюватися; до вже оплаченого завдання застосовується тариф на момент оплати.',
-            '{{УКАЖІТЬ: умови повернення коштів і спосіб оплати}}',
+            'Наразі оплата не приймається: онлайн-перенесення готується до запуску, а локальний клієнт безкоштовний. Спосіб оплати та умови повернення з’являться в цьому розділі до того, як запрацює перший платний тариф.',
           ],
         },
         {

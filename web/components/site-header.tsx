@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteHeader } from '@/content/site-header';
+import { remember } from '@/components/lang-suggest';
 import {
   DEFAULT_LANG,
   LANGS,
@@ -38,7 +39,17 @@ function splitLocale(pathname: string): { lang: Lang; path: string } {
   return { lang: DEFAULT_LANG, path: pathname };
 }
 
-export function SiteHeader({ lang }: { lang: Lang }) {
+export function SiteHeader({
+  lang,
+  notFound = false,
+}: {
+  lang: Lang;
+  /**
+   * Страница 404. Переводить нечего: у битого адреса нет версии в другом
+   * языке, и переключатель вёл бы на такую же 404. Ведём на главную.
+   */
+  notFound?: boolean;
+}) {
   const pathname = usePathname() || '/';
   const [stuck, setStuck] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -46,7 +57,9 @@ export function SiteHeader({ lang }: { lang: Lang }) {
   const t = siteHeader[lang];
 
   /** Текущий язык берём из пути: он не расходится с тем, что видит пользователь. */
-  const here = splitLocale(pathname);
+  const here = notFound ? { lang, path: '/' } : splitLocale(pathname);
+  /** Куда ведёт переключатель языка: тот же адрес, а на 404 — главная. */
+  const switchPath = notFound ? '/' : here.path;
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 12);
@@ -78,7 +91,7 @@ export function SiteHeader({ lang }: { lang: Lang }) {
   }
 
   const isActive = (path: string) =>
-    path === '/' ? here.path === '/' : here.path.startsWith(path);
+    notFound ? false : path === '/' ? here.path === '/' : here.path.startsWith(path);
 
   return (
     <header className={`top${stuck ? ' stuck' : ''}`} id="top">
@@ -111,7 +124,9 @@ export function SiteHeader({ lang }: { lang: Lang }) {
             {LANGS.map((l) => (
               <Link
                 key={l}
-                href={href(l, here.path)}
+                href={href(l, switchPath)}
+                prefetch={false}
+                onClick={() => remember(l)}
                 aria-current={l === here.lang ? 'page' : undefined}
               >
                 {LANG_LABEL[l]}
@@ -166,7 +181,13 @@ export function SiteHeader({ lang }: { lang: Lang }) {
           <Link href={href(lang, '/docs/errors')}>{t.errors}</Link>
           <div className="mob-lang">
             {LANGS.map((l) => (
-              <Link key={l} href={href(l, here.path)}>
+              <Link
+                key={l}
+                href={href(l, switchPath)}
+                prefetch={false}
+                onClick={() => remember(l)}
+                aria-current={l === here.lang ? 'page' : undefined}
+              >
                 {LANG_LABEL[l]}
               </Link>
             ))}

@@ -3,6 +3,7 @@ import { IconSprite } from '@/components/icon-sprite';
 import { PageEffects } from '@/components/page-effects';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { LangSuggest } from '@/components/lang-suggest';
 import { HTML_LANG, type Lang } from '@/i18n/config';
 import '@/app/globals.css';
 
@@ -39,9 +40,12 @@ const serif = Instrument_Serif({
 export function SiteShell({
   lang,
   children,
+  notFound = false,
 }: {
   lang: Lang;
   children: React.ReactNode;
+  /** Прокидывается в шапку: см. SiteHeader. */
+  notFound?: boolean;
 }) {
   return (
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
@@ -52,9 +56,10 @@ export function SiteShell({
         <IconSprite />
         <div className="aura" aria-hidden="true" />
         <PageEffects />
-        <SiteHeader lang={lang} />
+        <SiteHeader lang={lang} notFound={notFound} />
         {children}
         <SiteFooter lang={lang} />
+        <LangSuggest lang={lang} />
       </body>
     </html>
   );
