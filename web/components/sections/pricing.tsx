@@ -1,33 +1,37 @@
-export function Pricing() {
+import { pricing } from '@/content/sections/pricing';
+import type { Lang } from '@/i18n/config';
+
+export function Pricing({ lang }: { lang: Lang }) {
+  const t = pricing[lang];
   return (
     <>
       <section className="shell" id="pricing">
-        <p className="keep">Планируемые тарифы. Продажи и онлайн-перенос ещё не открыты; цены могут измениться до запуска.</p>
+        <p className="keep">{t.plannedNotice}</p>
         <div className="head-wide">
-          <p className="eyebrow">Простая цена за один полный ящик</p>
-          <h2>Сначала узнаём объём. <span className="ital">Потом запускаем.</span></h2>
-          <p className="lede" style={{ marginTop: '16px' }}>Один платёж за ящик, не подписка. Объём измеряется до запуска и бесплатно: если ящик укладывается в 5 ГБ, он переезжает целиком и даром.</p>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <h2>{t.h2a}<span className="ital">{t.h2b}</span></h2>
+          <p className="lede" style={{ marginTop: '16px' }}>{t.lede}</p>
         </div>
         <div className="pgrid">
           <article className="pl">
-            <div className="pl-t"><strong>Free</strong><span>Для знакомства</span></div>
-            <div className="amt">$0</div><span className="lim">до 5 ГБ</span><small className="nt">Один полный ящик</small>
-            <ul><li><svg><use href="#ck" /></svg>Проверка двух подключений</li><li><svg><use href="#ck" /></svg>Стандартная очередь</li><li><svg><use href="#ck" /></svg>Отчёт о переносе</li></ul>
+            <div className="pl-t"><strong>{t.free.name}</strong><span>{t.free.tag}</span></div>
+            <div className="amt">{t.free.amount}</div><span className="lim">{t.free.lim}</span><small className="nt">{t.free.nt}</small>
+            <ul><li><svg><use href="#ck" /></svg>{t.free.ticks[0]}</li><li><svg><use href="#ck" /></svg>{t.free.ticks[1]}</li><li><svg><use href="#ck" /></svg>{t.free.ticks[2]}</li></ul>
           </article>
           <article className="pl on">
-            <div className="pl-t"><strong>Standard</strong><span>Популярный</span></div>
-            <div className="amt">$5.90 <em>/ ящик</em></div><span className="lim">до 25 ГБ</span><small className="nt">Разовый платёж</small>
-            <ul><li><svg><use href="#ck" /></svg>Приоритет над Free</li><li><svg><use href="#ck" /></svg>Повторный запуск</li><li><svg><use href="#ck" /></svg>Email-уведомление</li></ul>
+            <div className="pl-t"><strong>{t.standard.name}</strong><span>{t.standard.tag}</span></div>
+            <div className="amt">{t.standard.amount}<em>{t.standard.per}</em></div><span className="lim">{t.standard.lim}</span><small className="nt">{t.standard.nt}</small>
+            <ul><li><svg><use href="#ck" /></svg>{t.standard.ticks[0]}</li><li><svg><use href="#ck" /></svg>{t.standard.ticks[1]}</li><li><svg><use href="#ck" /></svg>{t.standard.ticks[2]}</li></ul>
           </article>
           <article className="pl">
-            <div className="pl-t"><strong>Large</strong><span>Большой ящик</span></div>
-            <div className="amt">$11.90 <em>/ ящик</em></div><span className="lim">до 100 ГБ</span><small className="nt">Разовый платёж</small>
-            <ul><li><svg><use href="#ck" /></svg>Большие ящики</li><li><svg><use href="#ck" /></svg>Увеличенное время worker</li><li><svg><use href="#ck" /></svg>Расширенный отчёт</li></ul>
+            <div className="pl-t"><strong>{t.large.name}</strong><span>{t.large.tag}</span></div>
+            <div className="amt">{t.large.amount}<em>{t.large.per}</em></div><span className="lim">{t.large.lim}</span><small className="nt">{t.large.nt}</small>
+            <ul><li><svg><use href="#ck" /></svg>{t.large.ticks[0]}</li><li><svg><use href="#ck" /></svg>{t.large.ticks[1]}</li><li><svg><use href="#ck" /></svg>{t.large.ticks[2]}</li></ul>
           </article>
           <article className="pl">
-            <div className="pl-t"><strong>Business</strong><span>B2B</span></div>
-            <div className="amt">По запросу</div><span className="lim">пакет ящиков</span><small className="nt">Для IT-команд</small>
-            <ul><li><svg><use href="#ck" /></svg>CSV-пакеты</li><li><svg><use href="#ck" /></svg>Общий отчёт</li><li><svg><use href="#ck" /></svg>Приоритетная очередь</li></ul>
+            <div className="pl-t"><strong>{t.business.name}</strong><span>{t.business.tag}</span></div>
+            <div className="amt">{t.business.amount}</div><span className="lim">{t.business.lim}</span><small className="nt">{t.business.nt}</small>
+            <ul><li><svg><use href="#ck" /></svg>{t.business.ticks[0]}</li><li><svg><use href="#ck" /></svg>{t.business.ticks[1]}</li><li><svg><use href="#ck" /></svg>{t.business.ticks[2]}</li></ul>
           </article>
         </div>
       </section>

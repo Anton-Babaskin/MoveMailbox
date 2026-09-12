@@ -1,30 +1,24 @@
 import { FinalCta } from '@/components/sections/final-cta';
+import { legal, legalUpdatedLabel, type LegalDocId } from '@/content/legal';
+import type { Lang } from '@/i18n/config';
 
-type Section = { h: string; p: string[] };
-
-/** Общая раскладка для /privacy и /terms — одна колонка, узкая мера строки. */
-export function LegalDoc({
-  eyebrow,
-  title,
-  updated,
-  sections,
-}: {
-  eyebrow: string;
-  title: string;
-  updated: string;
-  sections: Section[];
-}) {
+/**
+ * Общая раскладка для /privacy и /terms — одна колонка, узкая мера строки.
+ * Текст компонент достаёт сам: страница указывает только язык и документ.
+ */
+export function LegalDoc({ lang, doc }: { lang: Lang; doc: LegalDocId }) {
+  const t = legal[doc][lang];
   return (
     <main>
       <section className="shell legal">
         <div className="head-wide">
-          <p className="eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <h1>{t.title}</h1>
           <p className="lede" style={{ marginTop: '16px' }}>
-            Редакция от {updated}.
+            {legalUpdatedLabel[lang](t.updated)}
           </p>
         </div>
-        {sections.map((s) => (
+        {t.sections.map((s) => (
           <section key={s.h}>
             <h2>{s.h}</h2>
             {s.p.map((text) => (
@@ -33,7 +27,7 @@ export function LegalDoc({
           </section>
         ))}
       </section>
-      <FinalCta />
+      <FinalCta lang={lang} />
     </main>
   );
 }

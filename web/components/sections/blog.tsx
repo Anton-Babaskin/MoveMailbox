@@ -1,40 +1,59 @@
-export function Blog() {
+import { blog } from '@/content/sections/blog';
+import { blogPosts, readingMinutes } from '@/data/blog-posts';
+import { blogPost } from '@/content/blog-post';
+import { href, type Lang } from '@/i18n/config';
+
+export function Blog({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boolean }) {
+  const t = blog[lang];
+  const labels = blogPost[lang];
+  const Heading = pageTitle ? 'h1' : 'h2';
+
   return (
     <>
       <section className="shell" id="blog">
         <div className="head-wide">
-          <p className="eyebrow">Блог</p>
-          <h2>Разборы миграций, <span className="ital">граблей и провайдеров.</span></h2>
-          <p className="lede" style={{ marginTop: '16px' }}>Пишем о том, что реально ломается при переносе почты: новые ограничения провайдеров, аутентификация, доставляемость после переезда, свой почтовый сервер.</p>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <Heading style={{ fontSize: 'clamp(1.75rem,3.4vw,2.75rem)' }}>
+            {t.h2a}
+            <span className="ital">{t.h2b}</span>
+          </Heading>
+          <p className="lede" style={{ marginTop: '16px' }}>
+            {t.lede}
+          </p>
         </div>
         <div className="bgrid">
-          <a className="post" href="#">
-            <div className="cover"><svg className="gl"><use href="#ky" /></svg></div>
-            <div className="body">
-              <div className="meta"><span className="tg">Аутентификация</span><span>8 мин</span></div>
-              <h3>Microsoft закрыл basic auth: что делать с миграцией на 365</h3>
-              <p>Почему пара «логин + пароль» больше не проходит, как выглядит XOAUTH2 на практике и какие права должен согласовать администратор тенанта.</p>
-              <span className="rd">Читать<svg><use href="#ar" /></svg></span>
-            </div>
-          </a>
-          <a className="post" href="#">
-            <div className="cover"><svg className="gl"><use href="#ml" /></svg></div>
-            <div className="body">
-              <div className="meta"><span className="tg">Gmail</span><span>6 мин</span></div>
-              <h3>Почему после переноса из Gmail писем стало вдвое больше</h3>
-              <p>Ярлыки против папок, ловушка <code>[Gmail]/All Mail</code> и как посчитать реальный объём ящика до того, как выбирать тариф.</p>
-              <span className="rd">Читать<svg><use href="#ar" /></svg></span>
-            </div>
-          </a>
-          <a className="post" href="#">
-            <div className="cover"><svg className="gl"><use href="#sv" /></svg></div>
-            <div className="body">
-              <div className="meta"><span className="tg">Хостинг</span><span>11 мин</span></div>
-              <h3>Переезд домена без потери почты: порядок действий по шагам</h3>
-              <p>Что делать до смены MX, как догнать письма вторым проходом и почему TTL стоит опустить за сутки до переключения.</p>
-              <span className="rd">Читать<svg><use href="#ar" /></svg></span>
-            </div>
-          </a>
+          {blogPosts.map((post) => {
+            const copy = post[lang];
+            return (
+              <a
+                key={post.slug}
+                className="post"
+                href={href(lang, `/blog/${post.slug}`)}
+              >
+                <div className="cover">
+                  <svg className="gl">
+                    <use href={`#${post.icon}`} />
+                  </svg>
+                </div>
+                <div className="body">
+                  <div className="meta">
+                    <span className="tg">{copy.tag}</span>
+                    <span>
+                      {readingMinutes(copy)} {labels.minutes}
+                    </span>
+                  </div>
+                  <h3>{copy.h1}</h3>
+                  <p>{copy.card}</p>
+                  <span className="rd">
+                    {t.read}
+                    <svg>
+                      <use href="#ar" />
+                    </svg>
+                  </span>
+                </div>
+              </a>
+            );
+          })}
         </div>
       </section>
     </>

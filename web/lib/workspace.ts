@@ -2,6 +2,20 @@
 /* eslint-disable */
 // Перенесено из проверенного макета без изменений логики.
 
+import { workspaceRuntime } from '@/content/sections/workspace-runtime';
+import type { Lang } from '@/i18n/config';
+
+/**
+ * В исходном макете это была глобальная переменная одного большого
+ * скрипта. При разделении на модули объявление потерялось, и обращение
+ * к ней роняло весь клиентский код страницы: React ловил исключение из
+ * useEffect и подменял разметку страницей ошибки — «пропадали эффекты».
+ *
+ * Функция, а не значение: модуль импортируется и на сервере при
+ * пререндере, где document ещё не существует.
+ */
+const root = () => document.documentElement;
+
 const $ = (s: string, r: ParentNode = document) => r.querySelector(s) as HTMLElement | null;
 const $$ = (s: string, r: ParentNode = document) =>
   Array.prototype.slice.call(r.querySelectorAll(s)) as HTMLElement[];
@@ -9,7 +23,18 @@ const $$ = (s: string, r: ParentNode = document) =>
 /** Логика рабочей области: проверка подключения, выбор папок, режимы запуска,
  * строгое зеркало с подтверждением, прогресс переноса и поток частиц.
  * Разметка статична, поэтому обработчики вешаются императивно один раз. */
-export function initWorkspace() {
+/**
+ * @param lang   язык строк интерфейса
+ * @param online false — статическая сборка без бекенда: интерфейс живёт
+ *               полностью (переключатели, схема соединения, дерево папок,
+ *               модалки), но ни один сетевой вызов не выполняется.
+ *               Отключать инициализацию целиком нельзя: тогда страница
+ *               выглядит сломанной, а не «ещё не запущенной».
+ */
+export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
+  /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
+  var T = workspaceRuntime[lang] || workspaceRuntime.ru;
+
   /* ---- lang + password + folders ---- */
   $$('.seg button').forEach(function(b){b.addEventListener('click',function(){
     $$('.seg button').forEach(function(o){o.setAttribute('aria-pressed','false')});
@@ -17,7 +42,7 @@ export function initWorkspace() {
   $$('[data-pw]').forEach(function(b){b.addEventListener('click',function(){
     var i=b.parentElement.querySelector('input');
     i.type = i.type==='password'?'text':'password';
-    b.setAttribute('aria-label', i.type==='password'?'Показать пароль':'Скрыть пароль');});});
+    b.setAttribute('aria-label', i.type==='password'?T.showPassword:T.hidePassword);});});
 
   var sizes=['5.9 ГБ','3.1 ГБ','2.9 ГБ','412 МБ','88 МБ'];
   function recount(){
@@ -25,8 +50,10 @@ export function initWorkspace() {
     rows.forEach(function(r){ if(!r.querySelector('.bx').classList.contains('off')){
       n++; msgs+=parseInt(r.querySelector('.c').dataset.c,10);} });
     var gb=(msgs/41208*12.4).toFixed(1);
-    $('#fsum').textContent=(n===rows.length?'Все папки':'Выбрано '+n+' из '+rows.length)+
-      ' · '+msgs.toLocaleString('ru-RU')+' писем · '+gb+' ГБ';
+    $('#fsum').textContent=(n===rows.length
+        ? T.allFolders
+        : T.selectedOf.replace('{n}', String(n)).replace('{total}', String(rows.length)))+
+      ' · '+msgs.toLocaleString(T.numberLocale)+' '+T.messagesUnit+' · '+gb+' '+T.gbUnit;
     $('#start').disabled = n===0;
   }
   $$('#flist .frow').forEach(function(r){ r.addEventListener('click',function(){
@@ -48,6 +75,8 @@ export function initWorkspace() {
        start(opts, cb)   POST /api/jobs + SSE /api/jobs/{id}/events
        stop()            POST /api/jobs/{id}/cancel
      ================================================================== */
+  var ONLINE = online;
+
   var API = (function(){
     var csrf = '', es = null, jobId = null;
 
@@ -58,7 +87,7 @@ export function initWorkspace() {
         .then(function(d){ csrf = (d && d.csrfToken) || ''; })
         .catch(function(){ csrf = ''; });
     }
-    session();
+    if (ONLINE) session();
 
     function send(method, url, body){
       var h = { 'Accept':'application/json' };
@@ -71,7 +100,8 @@ export function initWorkspace() {
         return r.text().then(function(t){
           var d = {}; try { d = t ? JSON.parse(t) : {}; } catch(e) {}
           if(!r.ok){
-            var err = new Error(d.message || d.error || ('сервер ответил ' + r.status));
+            var err = new Error(d.message || d.error ||
+              T.serverResponded.replace('{status}', String(r.status)));
             err.code = d.code || '';
             throw err;
           }
@@ -126,9 +156,10 @@ export function initWorkspace() {
 
       /* POST /api/connections/test */
       check: function(side){
+        if(!ONLINE) return Promise.resolve({ ok:false, message: T.offlineStatus, details: [] });
         return send('POST', '/api/connections/test', endpoint(side))
           .then(function(d){
-            return { ok:true, message: d.message || 'Подключение успешно',
+            return { ok:true, message: d.message || T.connectionOk,
                      details: d.details || [] };
           })
           .catch(function(e){ return { ok:false, message: e.message }; });
@@ -143,6 +174,7 @@ export function initWorkspace() {
       /* POST /api/jobs, дальше SSE на /api/jobs/{id}/events.
          Переподключение по Last-Event-ID делает сам браузер. */
       start: function(opts, cb){
+        if(!ONLINE){ cb.error(T.offlineStatus); return Promise.resolve(); }
         var req = {
           source: endpoint('source'),
           destination: endpoint('destination'),
@@ -150,7 +182,7 @@ export function initWorkspace() {
         };
         return send('POST', '/api/jobs', req).then(function(job){
           jobId = job.id || job.jobId;
-          if(!jobId) throw new Error('сервер не вернул идентификатор задания');
+          if(!jobId) throw new Error(T.noJobId);
           close();
           es = new EventSource('/api/jobs/' + encodeURIComponent(jobId) + '/events',
                                { withCredentials:true });
@@ -181,7 +213,7 @@ export function initWorkspace() {
     btn.addEventListener('click',function(){
       var pills=$$('.st[data-st]');
       btn.disabled=true;
-      pills.forEach(function(p){ p.className='st checking'; p.innerHTML='<i></i>Проверяем…'; });
+      pills.forEach(function(p){ p.className='st checking'; p.innerHTML='<i></i>'+T.checking; });
       Promise.all(['source','destination'].map(function(side,i){
         return API.check(side).then(function(r){
           var p=pills[i];
@@ -222,10 +254,8 @@ export function initWorkspace() {
     var title=btn.previousElementSibling.querySelector('strong');
     function setState(on){
       btn.dataset.on = on ? '1' : '';
-      btn.textContent = on ? 'Выключить' : 'Включить';
-      title.textContent = on
-        ? 'Строгое зеркало включено — лишние письма в назначении будут удалены'
-        : 'Строгое зеркало — разрушающая опция';
+      btn.textContent = on ? T.strictDisable : T.strictEnable;
+      title.textContent = on ? T.strictTitleOn : T.strictTitleOff;
       btn.closest('.strict').classList.toggle('armed', on);
     }
     function ask(){
@@ -234,14 +264,14 @@ export function initWorkspace() {
       back.innerHTML =
         '<div class="confirm" role="dialog" aria-modal="true" aria-labelledby="cfT">'+
           '<div class="confirm-ico"><svg><use href="#al"/></svg></div>'+
-          '<h3 id="cfT">Это удалит письма в новом ящике</h3>'+
-          '<p>Строгое зеркало приводит назначение к точной копии источника: всё, чего нет в старом ящике, будет <b>безвозвратно удалено</b> в новом. Включайте только если понимаете, зачем это вам.</p>'+
+          '<h3 id="cfT">'+T.confirmTitle+'</h3>'+
+          '<p>'+T.confirmTextA+'<b>'+T.confirmTextStrong+'</b>'+T.confirmTextB+'</p>'+
           '<label class="confirm-check"><input type="checkbox" id="cfAck">'+
             '<span class="bx off"><svg><use href="#ck"/></svg></span>'+
-            '<span>Я понимаю, что письма в ящике назначения будут удалены, и у меня есть резервная копия</span></label>'+
+            '<span>'+T.confirmAck+'</span></label>'+
           '<div class="confirm-acts">'+
-            '<button class="btn btn-g" id="cfNo">Оставить безопасный режим</button>'+
-            '<button class="btn btn-danger" id="cfYes" disabled>Включить зеркало</button>'+
+            '<button class="btn btn-g" id="cfNo">'+T.confirmNo+'</button>'+
+            '<button class="btn btn-danger" id="cfYes" disabled>'+T.confirmYes+'</button>'+
           '</div>'+
         '</div>';
       var prevFocus=document.activeElement;
@@ -291,10 +321,10 @@ export function initWorkspace() {
   })();
 
   /* ---- run modes ---- */
-  var MODES={verbose:['Запустить в режиме проверки','Только подробный вывод — ничего не копируется'],
-    creds:['Проверить доступы','Только проверка TLS и авторизации'],
-    sizes:['Показать размеры папок','Только подсчёт дерева папок и объёма'],
-    folders:['Создать структуру папок','Только создание папок в назначении']};
+  var MODES={verbose:[T.modeVerboseBtn,T.modeVerboseHint],
+    creds:[T.modeCredsBtn,T.modeCredsHint],
+    sizes:[T.modeSizesBtn,T.modeSizesHint],
+    folders:[T.modeFoldersBtn,T.modeFoldersHint]};
   function modeSync(){
     var active=null;
     $$('[data-mode]').forEach(function(i){
@@ -302,7 +332,7 @@ export function initWorkspace() {
       if(i.checked&&!active)active=i.dataset.mode;
     });
     var s=$('#start');
-    s.innerHTML='<svg style="width:16px;height:16px"><use href="#pl"/></svg>'+(active?MODES[active][0]:'Запустить перенос');
+    s.innerHTML='<svg style="width:16px;height:16px"><use href="#pl"/></svg>'+(active?MODES[active][0]:T.startDefault);
     $('#modeHint').textContent = active?MODES[active][1]:'';
     $('#modeHint').style.display = active?'block':'none';
   }
@@ -336,32 +366,32 @@ export function initWorkspace() {
   function reset(){ API.stop(); running=false; }
   bStart.addEventListener('click',function(){
     reset(); lastP=0; idx=0; log.innerHTML=''; bStop.disabled=false; bStart.disabled=true;
-    stt.className='stt run'; stt.innerHTML='<i></i>Выполняется';
+    stt.className='stt run'; stt.innerHTML='<i></i>'+T.statusRunning;
     API.start({}, {
       progress: function(p){
         running=p<100;
         bar.style.width=p+'%'; mp.textContent=p+'%';
         me.textContent=t2(Math.round((100-p)*2.4));
         mv.innerHTML=(180+Math.round(Math.sin(p/7)*40)).toString()+
-          ' <span style="font-size:.7em;color:#5E7284">пис/с</span>';
+          ' <span style="font-size:.7em;color:#5E7284">'+T.speedUnit+'</span>';
         lastP=p;
       },
       log: function(text,kind){ push(text,kind,Math.round(lastP*2.4)); },
       done: function(){
         running=false; bStop.disabled=true; bStart.disabled=false;
-        stt.className='stt done'; stt.innerHTML='<i></i>Завершено'; me.textContent='00:00';
+        stt.className='stt done'; stt.innerHTML='<i></i>'+T.statusDone; me.textContent='00:00';
       },
       error: function(msg){
         running=false; bStop.disabled=true; bStart.disabled=false;
-        stt.className='stt'; stt.innerHTML='<i></i>Ошибка';
-        push(msg||'Перенос прерван из-за ошибки', 2, Math.round(lastP*2.4));
+        stt.className='stt'; stt.innerHTML='<i></i>'+T.statusError;
+        push(msg||T.transferFailed, 2, Math.round(lastP*2.4));
       }
     });
   });
   bStop.addEventListener('click',function(){
     reset(); bStop.disabled=true; bStart.disabled=false;
-    stt.className='stt'; stt.innerHTML='<i></i>Остановлено';
-    push('Остановлено. Повторный запуск продолжит с этого места.',2,Math.round(lastP*2.4));
+    stt.className='stt'; stt.innerHTML='<i></i>'+T.statusStopped;
+    push(T.stoppedLog,2,Math.round(lastP*2.4));
   });
   recount(); modeSync();
 
@@ -372,7 +402,7 @@ export function initWorkspace() {
     cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); vert=r.width>r.height;}
   size(); addEventListener('resize',size); addEventListener('hashchange',function(){setTimeout(size,60)});
   for(var i=0;i<26;i++)parts.push({t:Math.random(),o:Math.random()*.8+.2,sp:.0016+Math.random()*.0028,j:Math.random()});
-  function accent(){return getComputedStyle(root).getPropertyValue('--acc-glow').trim()||'12,138,103';}
+  function accent(){return getComputedStyle(root()).getPropertyValue('--acc-glow').trim()||'12,138,103';}
   (function loop(){
     var r=cv.parentElement.getBoundingClientRect(); cx.clearRect(0,0,r.width,r.height);
     var a=accent(), fast=(typeof running!=='undefined') && running;
@@ -387,4 +417,15 @@ export function initWorkspace() {
     });
     requestAnimationFrame(loop);
   })();
+
+  /* В статической сборке кнопки запуска остаются выключенными: обработчики
+     внутри могли их включить по ходу инициализации. Интерфейс при этом живой —
+     гаснет только то, что ушло бы в сеть. */
+  if (!ONLINE) {
+    ['#start', '#stop', '#checkBoth'].forEach(function (sel) {
+      var el = $(sel) as HTMLButtonElement | null;
+      if (el) el.disabled = true;
+    });
+  }
+
 }

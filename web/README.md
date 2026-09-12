@@ -1,86 +1,83 @@
-# MoveMailbox public website
+# MoveMailbox — сайт
 
-Imported from the owner's Next.js archive. Design, CSS and framework retained.
-This is a **static documentation/product preview**, not the hosted migration service.
-No passwords, payment details or migration jobs are accepted by GitHub Pages.
-The original API adapter is retained in lib/workspace.ts for a separate reviewed
-backend integration; it is not imported by the public Workspace component.
-Backend handlers, CSP, Docker and Proxmox are unchanged.
+Next.js 15 (App Router) + React 19. Без Tailwind: вся стилизация — один
+файл `app/globals.css` на CSS-переменных. Тема (светлая/тёмная) переключается
+только переменными в `:root`, компоненты о цветах не знают.
 
-## Build and verify
+## Запуск
 
-Node 24.18.0, npm and network access for packages/build-time Google Fonts:
+```bash
+npm install
+npm run dev        # http://localhost:3000
+npm run export     # сборка + копирование в ../internal/web/out
+```
 
-~~~sh
-npm ci --ignore-scripts
-npm run build
-npm run check
-~~~
+Node 20+. Сайт собирается в статику (`output: 'export'`) и вшивается
+в Go-бинарь через `go:embed`. Как это подключено к бекенду — в
+`INTEGRATION.md` в корне.
 
-Static files are in out/ and are not committed. Fonts are downloaded at build
-and self-hosted; the published site needs no Node server. The export checker
-verifies canonical URLs, unique titles/descriptions, sitemap routes, JSON-LD,
-local assets/links, noindex drafts and disabled credentials in initial HTML.
+## Что где
 
-After publication, run `npm run check:live` from this directory. It makes only
-public GET/HEAD requests using ordinary DNS and verified TLS. It checks HTTP/www
-redirects (including deep paths), robots/sitemap, each indexable page's metadata,
-internal links/assets, draft noindex, a real 404 and disabled preview fields.
-It accepts the expected trailing-slash redirects, but rejects other unexpected
-redirects. Requests time out after 20 seconds; any failure returns nonzero.
-Run it after deployment, not as a PR build gate against the previous live site.
-It does not submit forms or contact mailboxes. Passing is technical deployment
-evidence, not proof of search-engine indexing or Rich Results eligibility.
+```
+app/                     страницы и метаданные
+  page.tsx               главная: форма переноса → безопасность → остальное
+  routes/                маршруты A → B + индекс всех 16 страниц
+  migrate/[route]/       16 SSG-страниц маршрутов из data/migration-routes.ts
+  guides/                гайды по провайдерам
+  docs/errors/           разбор ошибок IMAP
+  docs/errors/[code]/    7 SSG-страниц ошибок из data/imap-errors.ts
+  pricing/ security/ download/ blog/
+  privacy/ terms/        ⚠ содержат {{ПЛЕЙСХОЛДЕРЫ}}, см. ниже
+  sitemap.ts robots.ts
+components/
+  sections/*.tsx         блоки страниц, один файл на секцию
+  site-header/footer     шапка и подвал
+  icon-sprite.tsx        SVG-спрайт, 31 символ, подключается как <use href="#ck" />
+lib/
+  seo.ts                 метаданные и генераторы JSON-LD
+  workspace.ts           логика формы переноса (императивный порт из макета)
+  guides.ts calculator.ts effects.ts
+data/
+  providers.ts           11 провайдеров: хосты, порты, пароли приложений
+  migration-routes.ts    16 маршрутов с уникальными текстами
+  imap-errors.ts         7 ошибок IMAP
+public/brand/            логотип, фавиконки
+```
 
-## Publishing
+`lib/workspace.ts`, `guides.ts`, `calculator.ts`, `effects.ts` — прямой порт
+императивного JS из статического макета, помечены `// @ts-nocheck`.
+Они вызываются из `useEffect` соответствующих клиентских компонентов.
+При переписывании на React снимайте `@ts-nocheck`, а не добавляйте новый.
 
-The Website Pages workflow builds and checks the site, then deploys the artifact.
-PRs only build/check. Initial publication is authorized from web/github-pages-seo;
-after review/merge, remove that branch from the workflow and the Pages environment
-allowlist. Main remains the long-term publishing branch. Backend PR #11 was merged
-separately; the site does not deploy or change the VM.
-GitHub Pages is for the static site only, not a SaaS runtime or payment checkout.
+## Перед публикацией — обязательно
 
-## Domain and HTTPS
+1. **`app/privacy/page.tsx` и `app/terms/page.tsx`** содержат `{{...}}`:
+   юрлицо, контактный email, аналитика, условия возврата, применимое право.
+   Заполните и поменяйте в метаданных `robots: { index: false }` на `true`.
+2. **`lib/seo.ts` → `SITE`** — сейчас `https://movemailbox.com`.
+   Если домен другой, поменяйте там: отсюда берутся canonical, OG и sitemap.
+3. **`public/og.png`** — картинка для соцсетей 1735×909. Если её нет,
+   ссылка на сайт будет разворачиваться без превью.
+4. **API переноса.** Фронт ходит в `/api/check`, `/api/measure`, `/api/jobs`
+   (см. объект `API` в `lib/workspace.ts`). Сайт и API на одном origin,
+   поэтому пути относительные и CORS не нужен. Контракт — в `INTEGRATION.md`.
 
-Pages custom domain: movemailbox.com. Namecheap Advanced DNS, when Namecheap
-hosts the authoritative DNS:
+## Шрифты
 
-| Type | Host | Value |
-| --- | --- | --- |
-| A | @ | 185.199.108.153 |
-| A | @ | 185.199.109.153 |
-| A | @ | 185.199.110.153 |
-| A | @ | 185.199.111.153 |
-| CNAME | www | Anton-Babaskin.github.io |
+Manrope, JetBrains Mono, Instrument Serif подключены `<link>`'ом на
+Google Fonts в `app/layout.tsx`. Так сборка не зависит от сети.
+Если захотите самохостинг (быстрее и без внешнего запроса) — замените
+`<link>` на `next/font/google`; сборка тогда будет скачивать шрифты сама.
+Фолбэк на системные уже прописан в `--font-sans/-serif/-mono`.
 
-Replace only conflicting web A/AAAA/ALIAS/URL Redirect records for @ and www.
-Preserve MX, TXT (SPF/DKIM/DMARC), NS and other subdomains. Do not use the VM IP.
-Do not add a wildcard. Export/screenshot old records before replacing them.
-GitHub must finish DNS validation and issue its certificate before Enforce HTTPS
-can be enabled. Check both apex and www redirects, certificate and deep routes.
-Do not use IP/Host-header tests as proof that the public DNS/HTTPS path works.
+## SEO
 
-Verified September 12, 2026: GitHub reports an approved certificate for apex and
-www and HTTPS enforcement enabled. The live checker passed all 30 sitemap pages
-and 74 internal URLs, including redirects preserving `/security/`.
+- 31 URL в `sitemap.xml`, все отдают 200 — проверено.
+- Уникальные `title` и `description` у всех 16 маршрутов.
+- JSON-LD: BreadcrumbList, HowTo и FAQPage на маршрутах,
+  TechArticle и FAQPage на ошибках, SoftwareApplication на главной.
+- `hreflang` и переключатель RU/EN/UK **выключены** до появления
+  реальных деревьев `/en` и `/uk`: ссылка на 404 хуже её отсутствия.
+  Включать в том же коммите, в котором появятся страницы.
 
-Official instructions: [custom domain](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
-For takeover protection, verify the domain in the owner's GitHub Pages account
-settings using the unique TXT record GitHub supplies; never invent that token.
-
-## SEO and launch limits
-
-- Russian only; no nonexistent EN/UK hreflang. Add translations, language links
-  and reciprocal hreflang together in a later reviewed change.
-- Real static HTML, directory URLs ending in /, matching canonical and sitemap.
-  No hash router or universal 200 fallback for unknown paths.
-- Sitemap excludes unfinished legal/blog pages, which have noindex, follow.
-- No invented last-modified dates. Existing social card retained.
-- No claim that indexing, rankings or FAQ rich results are guaranteed.
-- After DNS and HTTPS work, verify ownership in Search Console and submit
-  https://movemailbox.com/sitemap.xml. User supplies Google verification token.
-- Full online-service legal terms/operator details, commercial entitlements,
-  live backend contract verification and payment handling remain future work.
-- License selection remains with the owner. Public source does not itself grant
-  an open-source license; avoid advertising one before it is chosen.
+Дальнейшие шаги по трафику — в `docs/seo/` в корне репозитория.

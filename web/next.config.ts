@@ -2,13 +2,18 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /**
-   * Статический экспорт: сборка кладёт готовый HTML в out/,
-   * его отдаёт Go-бинарь вместе с /api/*. Один origin — нет CORS,
-   * нет второго рантайма в проде, нет прокси между сайтом и бекендом.
+   * Статический экспорт: на выходе готовый HTML в out/.
+   * Его публикует GitHub Pages, он же вшивается в Go-бинарь,
+   * когда подключится бекенд — адреса при переезде не меняются.
    */
   output: 'export',
+  /**
+   * Обязательно true для GitHub Pages: Pages отдаёт файл только по
+   * точному пути, extensionless-адреса он не разрешает. С этим флагом
+   * каждая страница становится каталогом с index.html, и /migrate/x/
+   * открывается сам собой.
+   */
   trailingSlash: true,
-  // GitHub Pages serves route/index.html; canonical URLs and sitemap use /.
   reactStrictMode: true,
   images: { unoptimized: true },
 };

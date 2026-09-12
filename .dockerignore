@@ -13,3 +13,8 @@ website
 *.db-wal
 *.db-shm
 *.db.lock
+
+web/node_modules
+web/.next
+web/out
+internal/web/out

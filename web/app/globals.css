@@ -1082,3 +1082,13 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .legal > section h2{font-size:1.25rem;margin-bottom:14px}
 .legal > section p{color:var(--ink-2);line-height:1.72;margin-bottom:14px}
 .legal > section p:last-child{margin-bottom:0}
+
+
+/* Записи блога. Тело статьи наследует типографику .legal: та же мера
+   строки и тот же ритм абзацев, разными их делать незачем. */
+.post-body{max-width:70ch;margin-top:18px}
+.post-body p{color:var(--ink-2);line-height:1.72;margin-bottom:14px}
+.post-body p:last-child{margin-bottom:0}
+.post-meta{display:flex;gap:10px;align-items:center;margin-top:16px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}

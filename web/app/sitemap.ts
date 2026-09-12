@@ -1,30 +1,33 @@
 import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
 import { imapErrorSlugs } from '@/data/imap-errors';
+import { blogSlugs } from '@/data/blog-posts';
+import { LANGS, href } from '@/i18n/config';
 import { SITE } from '@/lib/seo';
+
+/** Экспортируется как статический файл при output: 'export'. */
+export const dynamic = 'force-static';
 
 type ChangeFrequency = NonNullable<
   MetadataRoute.Sitemap[number]['changeFrequency']
 >;
 
-const base = SITE;
-
 type Entry = { path: string; changeFrequency: ChangeFrequency; priority: number };
 
 /**
  * В карте только те URL, которые реально отдаются 200.
- * Локали /en и /uk и страницы /privacy, /terms добавляются сюда
- * в тот же коммит, в котором появляются сами страницы: sitemap,
- * ведущий на 404, Search Console считает ошибкой.
+ * /privacy и /terms сюда не идут намеренно: они под noindex,
+ * пока в них не подставлены реквизиты.
  */
 const pages: Entry[] = [
-  { path: '', changeFrequency: 'weekly', priority: 1 },
+  { path: '/', changeFrequency: 'weekly', priority: 1 },
   { path: '/routes', changeFrequency: 'weekly', priority: 0.86 },
   { path: '/guides', changeFrequency: 'weekly', priority: 0.84 },
   { path: '/docs/errors', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/pricing', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/download', changeFrequency: 'weekly', priority: 0.78 },
   { path: '/security', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/blog', changeFrequency: 'weekly', priority: 0.6 },
 ];
 
 const routePages: Entry[] = migrationRoutes.map((route) => ({
@@ -39,13 +42,33 @@ const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
   priority: 0.75,
 }));
 
-/** Экспортируется как статический файл при output: 'export'. */
-export const dynamic = 'force-static';
+/**
+ * Каждая запись несёт взаимные hreflang: без них три языковые версии
+ * конкурируют за один запрос, и поисковик сам решает, какую показать.
+ * Обычно не ту.
+ */
+const blogPages: Entry[] = blogSlugs.map((slug) => ({
+  path: `/blog/${slug}`,
+  changeFrequency: 'monthly' as ChangeFrequency,
+  priority: 0.68,
+}));
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [...pages, ...routePages, ...errorPages].map((page) => ({
-    url: `${base}${page.path}/`,
-    changeFrequency: page.changeFrequency,
-    priority: page.priority,
-  }));
+  const all = [...pages, ...routePages, ...errorPages, ...blogPages];
+
+  return all.flatMap((page) => {
+    const languages: Record<string, string> = {
+      'x-default': `${SITE}${href('ru', page.path)}`,
+    };
+    for (const lang of LANGS) languages[lang] = `${SITE}${href(lang, page.path)}`;
+
+    return LANGS.map((lang) => ({
+      url: `${SITE}${href(lang, page.path)}`,
+      lastModified: new Date(),
+      changeFrequency: page.changeFrequency,
+      priority:
+        lang === 'ru' ? page.priority : Math.max(0.1, page.priority - 0.05),
+      alternates: { languages },
+    }));
+  });
 }

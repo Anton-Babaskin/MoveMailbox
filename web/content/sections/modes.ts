@@ -1,0 +1,126 @@
+/** Копия секции «Режимы». Один файл на секцию — три языка рядом. */
+export const modes = {
+  ru: {
+    eyebrow: 'Один продукт · два способа переноса',
+    h2a: 'Запустите в облаке или ',
+    h2b: 'заберите контроль себе.',
+    lede: 'Онлайн-версия удобна для разового переноса и продолжает работу после закрытия браузера. Windows-клиент использует ресурсы вашего компьютера и не расходует облачный лимит.',
+    cloud: {
+      tag: 'Облако',
+      h3: 'Перенос онлайн',
+      t: 'Ничего устанавливать не нужно. Подключите два ящика, узнайте объём и оставьте задачу нашему серверу.',
+      ticks: [
+        'Один полный ящик до 5 ГБ бесплатно',
+        'Без аккаунта и регистрации MoveMailbox',
+        'Миграция продолжается после закрытия вкладки',
+        'Очередь, статус и итоговый отчёт',
+      ],
+      go: 'Попробовать интерфейс',
+    },
+    desktop: {
+      h3: 'Настольный клиент',
+      t: 'Интерфейс и управление запускаются локально. Почтовый трафик не расходует ресурсы MoveMailbox Cloud.',
+      ticks: [
+        'Без коммерческого лимита на объём',
+        'Локальная история и технический журнал',
+        'Работает поверх imapsync — проверенного движка',
+      ],
+      win: 'Скачать',
+      lnx: 'Binary',
+      mac: 'Скоро',
+    },
+    selfHosted: {
+      h3: 'Свой сервер',
+      t1: 'Один ',
+      t2: ' — и веб-интерфейс поднимается у вас. Почта проходит через ваш сервер, без инфраструктуры MoveMailbox.',
+      ticks: [
+        'Никаких лимитов по объёму и числу ящиков',
+        'SQLite-история без открытых паролей',
+        'Пароли уходят в процесс imapsync и не сохраняются',
+      ],
+      go: 'Docker и systemd',
+    },
+  },
+  en: {
+    eyebrow: 'One product · two ways to transfer',
+    h2a: 'Run it in the cloud or ',
+    h2b: 'take control yourself.',
+    lede: 'The online version is handy for a one-off transfer and keeps going after you close the browser. The Windows client uses your own machine and does not eat into the cloud limit.',
+    cloud: {
+      tag: 'Cloud',
+      h3: 'Transfer online',
+      t: 'Nothing to install. Connect the two mailboxes, run a size check and leave the job to our server.',
+      ticks: [
+        'One full mailbox up to 5 GB free',
+        'No MoveMailbox account, no sign-up',
+        'The migration keeps running after you close the tab',
+        'Queue, status and a final report',
+      ],
+      go: 'Try the interface',
+    },
+    desktop: {
+      h3: 'Desktop client',
+      t: 'The interface and the controls run locally. Mail traffic does not consume MoveMailbox Cloud resources.',
+      ticks: [
+        'No commercial limit on size',
+        'Local history and a technical log',
+        'Runs on top of imapsync — a proven engine',
+      ],
+      win: 'Download',
+      lnx: 'Binary',
+      mac: 'Soon',
+    },
+    selfHosted: {
+      h3: 'Your own server',
+      t1: 'A single ',
+      t2: ' and the web interface comes up on your side. Mail goes through your own server, with no MoveMailbox infrastructure involved.',
+      ticks: [
+        'No limits on size or number of mailboxes',
+        'SQLite history with no plaintext passwords',
+        'Passwords go to the imapsync process and are not stored',
+      ],
+      go: 'Docker and systemd',
+    },
+  },
+  uk: {
+    eyebrow: 'Один продукт · два способи перенесення',
+    h2a: 'Запустіть у хмарі або ',
+    h2b: 'заберіть контроль собі.',
+    lede: 'Онлайн-версія зручна для разового перенесення і продовжує роботу після закриття браузера. Windows-клієнт використовує ресурси вашого комп’ютера і не витрачає хмарний ліміт.',
+    cloud: {
+      tag: 'Хмара',
+      h3: 'Перенесення онлайн',
+      t: 'Нічого встановлювати не потрібно. Підключіть дві скриньки, дізнайтеся обсяг і залиште завдання нашому серверу.',
+      ticks: [
+        'Одна повна скринька до 5 ГБ безкоштовно',
+        'Без акаунта та реєстрації MoveMailbox',
+        'Міграція триває після закриття вкладки',
+        'Черга, статус і підсумковий звіт',
+      ],
+      go: 'Спробувати інтерфейс',
+    },
+    desktop: {
+      h3: 'Настільний клієнт',
+      t: 'Інтерфейс і керування запускаються локально. Поштовий трафік не витрачає ресурси MoveMailbox Cloud.',
+      ticks: [
+        'Без комерційного ліміту на обсяг',
+        'Локальна історія та технічний журнал',
+        'Працює поверх imapsync — перевіреного рушія',
+      ],
+      win: 'Завантажити',
+      lnx: 'Binary',
+      mac: 'Незабаром',
+    },
+    selfHosted: {
+      h3: 'Власний сервер',
+      t1: 'Один ',
+      t2: ' — і вебінтерфейс піднімається у вас. Пошта проходить через ваш сервер, без інфраструктури MoveMailbox.',
+      ticks: [
+        'Жодних лімітів за обсягом і кількістю скриньок',
+        'SQLite-історія без відкритих паролів',
+        'Паролі йдуть у процес imapsync і не зберігаються',
+      ],
+      go: 'Docker і systemd',
+    },
+  },
+} as const;

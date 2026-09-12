@@ -1,0 +1,42 @@
+cluster,query,language,intent,priority,landing,note
+Перенос между провайдерами,перенос почты с gmail на outlook,ru,commercial,1,/migrate/gmail-to-outlook,ядро кластера маршрутов
+Перенос между провайдерами,как перенести почту с gmail на outlook,ru,informational,1,/migrate/gmail-to-outlook,информационная форма того же интента
+Перенос между провайдерами,перенос почты с outlook на gmail,ru,commercial,1,/migrate/outlook-to-gmail,
+Перенос между провайдерами,перенос почты с gmail на microsoft 365,ru,commercial,1,/migrate/gmail-to-microsoft-365,"B2B-интент, самый высокий чек"
+Перенос между провайдерами,перенос почты с яндекса на gmail,ru,commercial,1,/migrate/yandex-to-gmail,всплеск после изменений тарифов Яндекс 360
+Перенос между провайдерами,перенос почты с mail ru на gmail,ru,commercial,1,/migrate/mailru-to-gmail,
+Перенос между провайдерами,перенести почту с icloud на gmail,ru,commercial,2,/migrate/icloud-to-gmail,
+Перенос между провайдерами,перенос почты с хостинга на gmail,ru,commercial,2,/migrate/cpanel-to-gmail,часто ищут владельцы сайтов при смене хостера
+Перенос между провайдерами,перенос почты между хостингами,ru,commercial,1,/routes,"широкий запрос, ведёт на индекс маршрутов"
+Перенос между провайдерами,migrate email from gmail to outlook,en,commercial,1,/en/migrate/gmail-to-outlook,после включения локали
+Перенос между провайдерами,transfer emails between imap servers,en,commercial,1,/en,
+Инструмент и способ,перенос почты по imap,ru,commercial,1,/,основной коммерческий запрос сервиса
+Инструмент и способ,imapsync онлайн,ru,commercial,1,/,прямой конкурентный запрос к imapsync.lamiral.info
+Инструмент и способ,imapsync windows,ru,transactional,1,/download,у imapsync под Windows всё плохо — это наше преимущество
+Инструмент и способ,imapsync gui,ru,transactional,1,/download,
+Инструмент и способ,программа для переноса почты,ru,commercial,1,/download,
+Инструмент и способ,синхронизация двух почтовых ящиков,ru,commercial,2,/,
+Инструмент и способ,копирование почты с сервера на сервер,ru,commercial,2,/routes,
+Инструмент и способ,imapsync online free,en,commercial,1,/en,
+Инструмент и способ,imap migration tool,en,commercial,1,/en,"высокая конкуренция, вендорские SEO-фермы"
+Ошибки IMAP,imap authenticationfailed,ru,informational,1,/docs/errors/authenticationfailed,"нулевая конкуренция, горячий интент"
+Ошибки IMAP,imap certificate verify failed,ru,informational,1,/docs/errors/certificate-verify-failed,
+Ошибки IMAP,imap quota exceeded,ru,informational,1,/docs/errors/quota-exceeded,
+Ошибки IMAP,too many simultaneous connections imap,ru,informational,1,/docs/errors,
+Ошибки IMAP,connection reset by peer imap,ru,informational,2,/docs/errors,
+Ошибки IMAP,imap authenticationfailed gmail,en,informational,1,/en/docs/errors/authenticationfailed,
+Настройка провайдера,imap gmail настройки,ru,informational,2,/guides,"трафик широкий, конверсия низкая — берём как верх воронки"
+Настройка провайдера,пароль приложения gmail,ru,informational,1,/guides,"очень частый запрос, ведёт прямо в наш сценарий"
+Настройка провайдера,пароль приложения яндекс почта,ru,informational,1,/guides,
+Настройка провайдера,imap outlook office365 настройки,ru,informational,2,/guides,
+Настройка провайдера,включить imap в gmail,ru,informational,2,/guides,
+Смена домена и хостинга,перенос почты при смене хостинга,ru,commercial,1,/routes,высокий коммерческий интент
+Смена домена и хостинга,перенос корпоративной почты,ru,commercial,1,/pricing,B2B
+Смена домена и хостинга,перенос почты сотрудников на новый домен,ru,commercial,1,/pricing,"массовый перенос, самый высокий чек"
+Смена домена и хостинга,миграция почты организации,ru,commercial,2,/pricing,
+Самостоятельно и приватность,перенос почты без передачи пароля,ru,commercial,2,/security,наш дифференциатор
+Самостоятельно и приватность,перенос почты локально на компьютере,ru,transactional,1,/download,
+Самостоятельно и приватность,imapsync docker,ru,transactional,2,/download,
+Самостоятельно и приватность,self hosted email migration,en,transactional,2,/en/download,
+Цена,сколько стоит перенос почты,ru,commercial,1,/pricing,
+Цена,перенос почты бесплатно,ru,commercial,1,/,наш бесплатный лимит 5 ГБ — точный ответ на запрос
