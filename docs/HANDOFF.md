@@ -1,5 +1,80 @@
 # Engineering handoff — 2026-09-12
 
+## WAL-safe updater and full reboot acceptance
+
+- Added `scripts/staging_update.py`, a staging-only transactional updater. It
+  resolves local tags to immutable image IDs, requires the rollback image,
+  stops both writers, snapshots both SQLite stores through the Backup API,
+  rejects active/enveloped/inconsistent pairs, atomically updates the root-only
+  image pin and requires both exact-image health checks plus `/api/ready`.
+- Failed updates retain a diagnostic snapshot and restore the previously
+  validated pair after removing failed-image WAL/SHM sidecars; the old image,
+  volumes and backups are never deleted. Tests cover committed state living in
+  WAL, active-state rejection, corrupt-pair rejection before overwrite,
+  sidecar-safe restore and the automatic image/database rollback sequence.
+- The closed test VM completed a full reboot. Boot ID changed from
+  `4d98986c-ae1d-4e5c-9381-f3a3a0e3474e` to
+  `9741c808-5bd8-4269-88e2-fe6deb218dad`. Monotonic activation evidence was
+  egress `2960444`, Docker `5281745`, stage `5689752`; Docker also reports the
+  egress unit in both `Requires` and `After`.
+- After reboot both containers were healthy on exact digest
+  `sha256:07761ebafcdb3fccce8ba420f1be2e47aa5508a5fae2730ed65360ae5e0f1e7f`.
+  The full private verifier passed resource/isolation, guest/CSRF/Host/SSRF,
+  egress-denial and verified TLS checks to both authorized IMAP hosts without
+  logging in or creating a job. Readiness returned HTTP 200/no-store; storage
+  remained 24 completed, 2 cancelled, zero active jobs and zero envelopes.
+- Local WSL verification: 49 Python tests passed except the expected `age`
+  integration skip because that binary is not installed there; documentation
+  checks and exact-head CI must be checked after push. Website/frontend files
+  were not modified. No mailbox content, strict mirror, public exposure,
+  off-site upload, production deployment or platform host was touched.
+
+### Next two technical steps
+
+1. Obtain green CI for the exact PR head, review/merge PR #17 when authorized,
+   then use only that merged updater for the next reviewed staging image.
+2. After the owner selects an object store and scoped credentials, seal, upload,
+   retrieve and restore the database pair into isolated empty storage; record
+   checksum, retention/versioning and measured RPO/RTO.
+
+## Active technical task: closed-stage deployment of merged main
+
+- PRs #13/#15 were green and merged. Exact main `bc80040` passed full CI.
+  Claude owns website/frontend/SEO; no frontend source was edited in this task.
+- Built and deployed version `staging-bc80040`, image digest
+  `sha256:07761ebafcdb3fccce8ba420f1be2e47aa5508a5fae2730ed65360ae5e0f1e7f`.
+  The former digest `sha256:15d062fa52b8d9bb3e3cdea83045e4481ae72eb7476be87087404ccaafd476b3`
+  remains for rollback. Both containers are healthy; remote worker, SQLite and
+  `/api/ready` HTTP 200/no-store passed.
+- Before deployment: zero active jobs/envelopes. A stopped paired rollback
+  snapshot `pre-bc80040-20260912T181033Z`, made with SQLite Backup API, passed
+  checksums, integrity, terminal-queue and paired-status validation. It is local
+  to the VM, not an encrypted off-site backup.
+- A prior plain `.db` copy was correctly rejected because current worker state
+  remained in WAL. It is retained root-only as
+  `rejected-pre-bc80040-20260912T180936Z` and must never be restored. Service
+  stayed on the old image until the valid snapshot existed.
+- Post-deploy private checks passed: isolation/resources, loopback API, private
+  worker, guest cookie/CSRF/Host/SSRF, nftables egress and verified IMAP TLS to
+  both authorized Mail-in-a-Box hosts.
+- A new 13-job real-mail pilot passed: preflights made no destination writes;
+  folder hierarchy/subfolder, both directions, a 6 MiB attachment, exact SHA-256,
+  flags and INTERNALDATE, zero-copy repeats, cancel recovery and worker SIGKILL
+  recovery. Source/INBOXes stayed unchanged; guest isolation/SQLite integrity
+  passed; final state is 24 completed, 2 cancelled, zero active/envelopes, and no
+  plaintext test password in inspected DB/WAL/SHM/logs. Retained fixture prefix:
+  `MoveMailbox-Stage-73f998de0f3e`.
+- No strict mirror, mail deletion, public exposure, VM reboot, off-site upload or
+  production deployment was performed.
+
+### Previous next steps (now superseded above)
+
+1. Implement and test a reusable WAL-aware staging snapshot/update/rollback
+   command; then perform full VM reboot acceptance with console fallback.
+2. After the owner selects an object store and scoped credentials, seal, upload,
+   retrieve and restore the pair into isolated empty storage; record checksum,
+   retention/versioning and measured RPO/RTO.
+
 ## Integration of technical PRs #13 and #15
 
 The owner authorized merging both technical PRs after green CI. PR #13 now
