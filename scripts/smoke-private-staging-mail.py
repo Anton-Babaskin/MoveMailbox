@@ -122,6 +122,17 @@ def require_owned_active(path, job_id):
     check(active == [(job_id, "running")], "Refusing fault: active queue is not exclusively this running job")
 
 
+def kill_and_restart():
+    # A timed-out CLI can still have killed the container. Always attempt
+    # restoration once the explicitly authorized kill has been attempted.
+    try:
+        docker("kill", "--signal=KILL", WORKER_NAME)
+        check(not json.loads(docker("inspect", WORKER_NAME))[0]["State"]["Running"],
+              "Worker did not stop")
+    finally:
+        docker("start", WORKER_NAME)
+
+
 def run(args):
     check(sys.flags.optimize == 0, "Do not run acceptance tests with Python -O")
     source, destination = read_accounts(sys.stdin)
@@ -234,12 +245,7 @@ def run(args):
                         time.sleep(1)
                     complete(request)
                 else:
-                    docker("kill", "--signal=KILL", WORKER_NAME)
-                    try:
-                        check(not json.loads(docker("inspect", WORKER_NAME))[0]["State"]["Running"],
-                              "Worker did not stop")
-                    finally:
-                        docker("start", WORKER_NAME)
+                    kill_and_restart()
                     check(api.wait(job_id)["status"] == "completed", "Interrupted copy did not recover")
                     check(rows(worker_db, "SELECT attempts FROM worker_jobs WHERE job_id=?", (job_id,)) == [(2,)],
                           "Expected one supervised recovery attempt")

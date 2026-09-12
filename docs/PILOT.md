@@ -35,9 +35,11 @@ cover that separately. This run did not repeat strict mirror, quota growth,
 key rotation, off-site restore, full VM reboot or additional provider coverage.
 Passing these fixtures is not a universal exactly-once or public-launch guarantee.
 
-The four new offline tests cover unsafe account input, fixed TLS/port policy,
-foreign/non-running queue interruption refusal and inclusion of stderr in secret
-scans. Local WSL suite: 39 passed, one crypto integration test skipped because
+The six new offline tests cover unsafe account input, fixed TLS/port policy,
+foreign/non-running queue interruption refusal, inclusion of stderr in secret
+scans and worker restart after a kill CLI error/timeout. The latter cleanup guard
+was added after the live pilot and verified offline, not by another mailbox run.
+Local WSL suite: 41 passed, one crypto integration test skipped because
 age tools were absent. CI installs the pinned tools and must be checked separately.
 
 Status: **local-engine pilot executed 2026-09-07; remote-worker pilot verified

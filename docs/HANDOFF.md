@@ -17,10 +17,13 @@
   original INBOXes and source fixture stayed unchanged. Crash recovery used two
   attempts for the same job. SQLite integrity and terminal envelope cleanup
   passed; raw mailbox passwords absent from inspected DB/WAL/SHM and service logs.
-- Four new offline guard tests passed. WSL suite: 39 passed, one age integration
+- Six new offline guard tests passed. WSL suite: 41 passed, one age integration
   test skipped because age/age-keygen are unavailable in that WSL environment.
   Consult the current PR's CI for pinned age integration and Go/Docker checks;
   a previous branch's green CI is not proof for this branch.
+- Post-pilot harness review also added a restart attempt when the Docker kill
+  command errors/times out; two offline tests cover both success and failure
+  paths. This cleanup change was not a second live-mail run.
 - Test scripts were staged temporarily on the VM; credentials were supplied
   through SSH stdin after hidden local input. No credential file was created.
   Synthetic folders remain for inspection; both deployed services are healthy.

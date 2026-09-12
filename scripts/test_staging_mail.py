@@ -42,6 +42,20 @@ class MailStageTests(unittest.TestCase):
             self.assertIn("synthetic-secret", stage.docker("logs", stage.WORKER_NAME))
             self.assertEqual(stage.docker("inspect", stage.WORKER_NAME), "normal")
 
+    def test_worker_restart_attempted_even_when_kill_command_fails(self):
+        with mock.patch.object(stage, "docker", side_effect=[RuntimeError("timeout"), ""]) as docker:
+            with self.assertRaises(RuntimeError):
+                stage.kill_and_restart()
+            self.assertEqual(docker.call_args_list, [
+                mock.call("kill", "--signal=KILL", stage.WORKER_NAME),
+                mock.call("start", stage.WORKER_NAME),
+            ])
+
+    def test_successful_kill_checks_stop_then_restarts(self):
+        with mock.patch.object(stage, "docker", side_effect=["", '[{"State":{"Running":false}}]', ""]) as docker:
+            stage.kill_and_restart()
+            self.assertEqual(docker.call_args_list[-1], mock.call("start", stage.WORKER_NAME))
+
 
 if __name__ == "__main__":
     unittest.main()
