@@ -197,3 +197,41 @@ export function techArticleLd({
     },
   };
 }
+
+/**
+ * BlogPosting для записей блога.
+ *
+ * Отличается от TechArticle не только типом: у записи есть дата, и без
+ * datePublished поисковик берёт её из своих догадок — обычно из даты
+ * обхода, из-за чего статья годами выглядит «сегодняшней».
+ */
+export function blogPostingLd({
+  headline,
+  description,
+  path,
+  datePublished,
+  section,
+}: {
+  headline: string;
+  description: string;
+  path: string;
+  /** ISO-дата публикации. */
+  datePublished: string;
+  /** Рубрика — articleSection. */
+  section: string;
+}): Json {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline,
+    description,
+    url: `${SITE}${path}`,
+    datePublished,
+    dateModified: datePublished,
+    articleSection: section,
+    inLanguage: path.startsWith('/en/') ? 'en' : path.startsWith('/uk/') ? 'uk' : 'ru',
+    author: { '@type': 'Organization', name: SITE_NAME, url: SITE },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE}${path}` },
+  };
+}

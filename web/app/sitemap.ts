@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
 import { imapErrorSlugs } from '@/data/imap-errors';
+import { blogSlugs } from '@/data/blog-posts';
 import { LANGS, href } from '@/i18n/config';
 import { SITE } from '@/lib/seo';
 
@@ -46,8 +47,14 @@ const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
  * конкурируют за один запрос, и поисковик сам решает, какую показать.
  * Обычно не ту.
  */
+const blogPages: Entry[] = blogSlugs.map((slug) => ({
+  path: `/blog/${slug}`,
+  changeFrequency: 'monthly' as ChangeFrequency,
+  priority: 0.68,
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const all = [...pages, ...routePages, ...errorPages];
+  const all = [...pages, ...routePages, ...errorPages, ...blogPages];
 
   return all.flatMap((page) => {
     const languages: Record<string, string> = {

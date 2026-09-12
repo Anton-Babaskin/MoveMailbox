@@ -404,7 +404,7 @@ export const imapErrors: ImapError[] = [
       ],
     },
     uk: {
-      title: 'Too many simultaneous connections IMAP — MoveMailbox',
+      title: 'Забагато з’єднань IMAP: too many connections — MoveMailbox',
       description:
         'Провайдер обмежує кількість одночасних IMAP-сесій. Чому збільшення потоків сповільнює перенесення і які ліміти в Microsoft 365 та iCloud.',
       h1: 'Too many simultaneous connections: провайдер ріже сесії',
@@ -578,7 +578,7 @@ export const imapErrors: ImapError[] = [
       ],
     },
     uk: {
-      title: 'CREATE failed invalid folder name IMAP — MoveMailbox',
+      title: 'CREATE failed: хибне ім’я папки IMAP — MoveMailbox',
       description:
         'Призначення не приймає ім’я папки. Причина майже завжди в роздільнику рівнів: Dovecot використовує слеш, старі сервери Courier — крапку.',
       h1: 'CREATE failed: призначення не приймає ім’я папки',

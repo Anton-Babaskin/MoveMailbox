@@ -124,7 +124,7 @@ export const pages: Record<string, Record<Lang, PageMeta>> = {
         'Migration write-ups, provider changes, and the rakes people keep stepping on when moving email.',
     },
     uk: {
-      title: 'Блог — MoveMailbox',
+      title: 'Блог про перенесення пошти — MoveMailbox',
       description:
         'Розбори міграцій, зміни у провайдерів і граблі, на які наступають під час перенесення пошти.',
     },
