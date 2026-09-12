@@ -3,6 +3,7 @@ import { IconSprite } from '@/components/icon-sprite';
 import { PageEffects } from '@/components/page-effects';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { LangSuggest } from '@/components/lang-suggest';
 import { HTML_LANG, type Lang } from '@/i18n/config';
 import '@/app/globals.css';
 
@@ -50,7 +51,6 @@ export function SiteShell({
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
       <head>
         <script src="/theme.js" />
-        <script src="/lang.js" />
       </head>
       <body className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
         <IconSprite />
@@ -59,6 +59,7 @@ export function SiteShell({
         <SiteHeader lang={lang} notFound={notFound} />
         {children}
         <SiteFooter lang={lang} />
+        <LangSuggest lang={lang} />
       </body>
     </html>
   );

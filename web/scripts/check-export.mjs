@@ -57,4 +57,26 @@ if (withPlaceholders.length) {
   process.exit(1);
 }
 
-console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров`);
+/**
+ * Страница 404 должна быть одним нормальным документом.
+ *
+ * Корневого layout у проекта нет — их два, по одному на языковое дерево, —
+ * и обычный not-found.tsx получал от Next собственную обёртку поверх нашей:
+ * в файле оказывалось два тега <html>, браузер второй выбрасывал, React
+ * падал с ошибкой гидратации. Лечится это global-not-found.tsx и флагом
+ * experimental.globalNotFound. Флаг экспериментальный, поэтому инвариант
+ * закреплён проверкой: если Next однажды снова начнёт оборачивать страницу,
+ * сборка упадёт здесь, а не тихо на живом сайте.
+ */
+const notFound = await readFile(join(out, '404.html'), 'utf8');
+const htmlTags = notFound.match(/<html[^>]*>/g) ?? [];
+if (htmlTags.length !== 1) {
+  console.error(`404.html: тегов <html> ${htmlTags.length}, ожидался ровно один: ${htmlTags.join(' ')}`);
+  process.exit(1);
+}
+if (!/<html[^>]*\blang=/.test(htmlTags[0])) {
+  console.error(`404.html: у <html> нет атрибута lang: ${htmlTags[0]}`);
+  process.exit(1);
+}
+
+console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый`);

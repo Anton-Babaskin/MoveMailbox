@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteHeader } from '@/content/site-header';
+import { remember } from '@/components/lang-suggest';
 import {
   DEFAULT_LANG,
   LANGS,
@@ -125,7 +126,7 @@ export function SiteHeader({
                 key={l}
                 href={href(l, switchPath)}
                 prefetch={false}
-                data-lang={l}
+                onClick={() => remember(l)}
                 aria-current={l === here.lang ? 'page' : undefined}
               >
                 {LANG_LABEL[l]}
@@ -184,7 +185,7 @@ export function SiteHeader({
                 key={l}
                 href={href(l, switchPath)}
                 prefetch={false}
-                data-lang={l}
+                onClick={() => remember(l)}
                 aria-current={l === here.lang ? 'page' : undefined}
               >
                 {LANG_LABEL[l]}
