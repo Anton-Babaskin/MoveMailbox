@@ -40,6 +40,9 @@ func main() {
 			os.Exit(runKeygen(os.Stdout))
 		}
 	}
+	if err := validateEnvironment(false, os.Getenv); err != nil {
+		log.Fatal(err)
+	}
 	logFile := setupLogging()
 	if logFile != nil {
 		defer logFile.Close()
@@ -215,6 +218,10 @@ func main() {
 }
 
 func runWorkerService(arguments []string) int {
+	if err := validateEnvironment(true, os.Getenv); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
 	mailboxLimit, err := strconv.ParseInt(env("MOVEMAILBOX_MAX_MAILBOX_BYTES", "5000000000"), 10, 64)
 	if err != nil || mailboxLimit < 0 {
 		fmt.Fprintln(os.Stderr, "invalid MOVEMAILBOX_MAX_MAILBOX_BYTES")
@@ -493,7 +500,7 @@ func envBool(name string, fallback bool) bool {
 	}
 	parsed, err := strconv.ParseBool(value)
 	if err != nil {
-		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
+		log.Printf("Некорректное значение %s; используется значение по умолчанию", name)
 		return fallback
 	}
 	return parsed
@@ -506,7 +513,7 @@ func envInt(name string, fallback int) int {
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
-		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
+		log.Printf("Некорректное значение %s; используется значение по умолчанию", name)
 		return fallback
 	}
 	return parsed
@@ -519,7 +526,7 @@ func envDuration(name string, fallback time.Duration) time.Duration {
 	}
 	parsed, err := time.ParseDuration(value)
 	if err != nil {
-		log.Printf("Некорректное значение %s=%q; используется значение по умолчанию", name, value)
+		log.Printf("Некорректное значение %s; используется значение по умолчанию", name)
 		return fallback
 	}
 	return parsed

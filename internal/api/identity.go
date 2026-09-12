@@ -92,7 +92,7 @@ func newGuestGateway(config Config) *guestGateway {
 
 func (gateway *guestGateway) wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/api/health" {
+		if !strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/api/health" || r.URL.Path == "/api/ready" {
 			next.ServeHTTP(w, r)
 			return
 		}
