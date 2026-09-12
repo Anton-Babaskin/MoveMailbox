@@ -27,6 +27,15 @@
 | — | `MOVEMAILBOX_MASTER_KEY` | empty | legacy embedded-worker key; never use for the hosted topology |
 
 Legacy `MM_*` variables remain supported during the preview transition.
+The API and worker service reject invalid boolean, integer and duration
+environment settings before opening listeners, storage or log files. An unset
+or whitespace-only value uses the default; surrounding whitespace is ignored.
+Explicit concurrency/history/session limits and durations must be positive.
+An invalid value is rejected even if a command-line flag would override it;
+remove or correct the setting. Errors identify its name, never its value.
+Only settings consumed by the selected process role are checked. Worker mailbox
+quota remains special: an explicit `MOVEMAILBOX_MAX_MAILBOX_BYTES=0` disables it.
+
 Loopback hostnames are allowed automatically. Do not use wildcards in
 `MOVEMAILBOX_ALLOWED_HOSTS`; include a non-default port when the reverse proxy
 forwards one.
@@ -41,5 +50,8 @@ The unrestricted manual-port option remains available in local/self-hosted mode.
 Generate the worker recipient keys and token with `movemailbox keygen`. Changing
 the private key invalidates pending worker envelopes, so rotate it only after
 draining or explicitly cancelling the queue.
+
+See [backend health and event-stream contract](BACKEND-OPERATIONS.md) for probes
+and frontend integration (maintained independently from the website).
 
 [Back to documentation](README.md)
