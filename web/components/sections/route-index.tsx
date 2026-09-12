@@ -25,7 +25,7 @@ export function RouteIndex({ lang }: { lang: Lang }) {
             </code>
             <strong>{r[lang].h1}</strong>
             <span>{r[lang].description}</span>
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ar" />
             </svg>
           </a>

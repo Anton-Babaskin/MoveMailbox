@@ -17,7 +17,7 @@ export function ProtocolLimits({ lang }: { lang: Lang }) {
             <p>{t.yesNote}</p>
             <ul className="tx-list">
               {t.yes.map((it) => (
-                <li key={it.b}><span className="m"><svg><use href="#ck" /></svg></span><div><b>{it.b}</b><span>{it.s}</span></div></li>
+                <li key={it.b}><span className="m"><svg aria-hidden="true"><use href="#ck" /></svg></span><div><b>{it.b}</b><span>{it.s}</span></div></li>
               ))}
             </ul>
           </div>
@@ -26,7 +26,7 @@ export function ProtocolLimits({ lang }: { lang: Lang }) {
             <p>{t.noNote}</p>
             <ul className="tx-list">
               {t.no.map((it) => (
-                <li key={it.b}><span className="m"><svg><use href="#ar" /></svg></span><div><b>{it.b}</b><span>{it.s}</span></div></li>
+                <li key={it.b}><span className="m"><svg aria-hidden="true"><use href="#ar" /></svg></span><div><b>{it.b}</b><span>{it.s}</span></div></li>
               ))}
             </ul>
           </div>

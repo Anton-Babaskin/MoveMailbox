@@ -7,10 +7,10 @@ export function TrustRow({ lang }: { lang: Lang }) {
     <>
       <div className="trust">
         <ul className="shell">
-          <li><svg><use href="#ml" /></svg>{t.protocol}</li>
-          <li><svg><use href="#ck" /></svg>{t.sourceKept}</li>
-          <li><svg><use href="#ck" /></svg>{t.imapsync}</li>
-          <li><svg><use href="#ck" /></svg>{t.free}</li>
+          <li><svg aria-hidden="true"><use href="#ml" /></svg>{t.protocol}</li>
+          <li><svg aria-hidden="true"><use href="#ck" /></svg>{t.sourceKept}</li>
+          <li><svg aria-hidden="true"><use href="#ck" /></svg>{t.imapsync}</li>
+          <li><svg aria-hidden="true"><use href="#ck" /></svg>{t.free}</li>
         </ul>
       </div>
     </>

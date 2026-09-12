@@ -39,7 +39,7 @@ function Block({ block }: { block: BlogBlock }) {
       {block.sample && (
         <div className="error-sample">
           <span>
-            <svg>
+            <svg aria-hidden="true">
               <use href="#tx" />
             </svg>
             {block.sample.caption}
@@ -54,7 +54,7 @@ function Block({ block }: { block: BlogBlock }) {
         <ul className="error-causes">
           {block.bullets.map((item) => (
             <li key={item}>
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#al" />
               </svg>
               <span>{item}</span>
@@ -67,7 +67,7 @@ function Block({ block }: { block: BlogBlock }) {
         <ol className="error-fixes">
           {block.steps.map((step) => (
             <li key={step}>
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#ck" />
               </svg>
               <span>{step}</span>
@@ -177,7 +177,7 @@ export function BlogPostPage({ lang, slug }: { lang: Lang; slug: string }) {
           {copy.links.map((link) => (
             <a key={link.path} className="brief-link" href={href(lang, link.path)}>
               {link.label}
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#ar" />
               </svg>
             </a>
@@ -186,7 +186,7 @@ export function BlogPostPage({ lang, slug }: { lang: Lang; slug: string }) {
         <p style={{ marginTop: '24px' }}>
           <a className="brief-link" href={`${href(lang, '/')}#workspace`}>
             {t.cta}
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ar" />
             </svg>
           </a>
@@ -208,7 +208,7 @@ export function BlogPostPage({ lang, slug }: { lang: Lang; slug: string }) {
                 href={href(lang, `/blog/${other.slug}`)}
               >
                 <div className="cover">
-                  <svg className="gl">
+                  <svg aria-hidden="true" className="gl">
                     <use href={`#${other.icon}`} />
                   </svg>
                 </div>

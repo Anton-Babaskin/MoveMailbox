@@ -22,10 +22,10 @@ export function Errors({ lang, pageTitle = false }: { lang: Lang; pageTitle?: bo
         <div className="errs">
           {t.items.map((item, i) => (
             <details className="err" key={item.code} open={i === 0}>
-              <summary><code className="e">{item.code}</code><b>{item.title}</b><svg className="chev"><use href="#cv" /></svg></summary>
+              <summary><code className="e">{item.code}</code><b>{item.title}</b><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
               <div className="err-in">
                 <p>{parts(item.body)}</p>
-                <div className="fix"><svg><use href="#ck" /></svg><span><b>{item.fixLabel}</b>{parts(item.fix)}</span></div>
+                <div className="fix"><svg aria-hidden="true"><use href="#ck" /></svg><span><b>{item.fixLabel}</b>{parts(item.fix)}</span></div>
               </div>
             </details>
           ))}

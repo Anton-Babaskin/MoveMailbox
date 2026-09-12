@@ -116,7 +116,7 @@ export function MigrationRoutePage({ lang, slug }: { lang: Lang; slug: string })
         <p style={{ marginTop: '24px' }}>
           <a className="brief-link" href={`${href(lang, '/')}#workspace`}>
             {t.cta(from.name, to.name)}
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ar" />
             </svg>
           </a>
@@ -132,7 +132,7 @@ export function MigrationRoutePage({ lang, slug }: { lang: Lang; slug: string })
         <ul>
           {copy.pitfalls.map((item) => (
             <li key={item}>
-              <svg>
+              <svg aria-hidden="true">
                 <use href="#al" />
               </svg>
               <span>{item}</span>
@@ -192,7 +192,7 @@ export function MigrationRoutePage({ lang, slug }: { lang: Lang; slug: string })
                 href={href(lang, `/migrate/${r.slug}`)}
               >
                 {provider(r.source).short} → {provider(r.destination).short}
-                <svg>
+                <svg aria-hidden="true">
                   <use href="#ar" />
                 </svg>
               </a>

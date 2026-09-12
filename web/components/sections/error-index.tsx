@@ -18,7 +18,7 @@ export function ErrorIndex({ lang }: { lang: Lang }) {
             <code>{e.code}</code>
             <strong>{e[lang].h1}</strong>
             <span>{e[lang].description}</span>
-            <svg>
+            <svg aria-hidden="true">
               <use href="#ar" />
             </svg>
           </a>

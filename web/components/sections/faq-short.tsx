@@ -23,7 +23,7 @@ export function FaqShort({ lang }: { lang: Lang }) {
             {t.colB.map((item) => <Item key={item.q} item={item} />)}
           </div>
         </div>
-        <p style={{ marginTop: '22px' }}><a className="brief-link" href={href(lang, '/guides')}>{t.allLink}<svg><use href="#ar" /></svg></a></p>
+        <p style={{ marginTop: '22px' }}><a className="brief-link" href={href(lang, '/guides')}>{t.allLink}<svg aria-hidden="true"><use href="#ar" /></svg></a></p>
       </section>
     </>
   );
