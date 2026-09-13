@@ -141,16 +141,20 @@ func sameMailbox(source, destination Endpoint) bool {
 }
 
 type Event struct {
-	Type          string    `json:"type"`
-	Message       string    `json:"message,omitempty"`
-	Phase         string    `json:"phase,omitempty"`
-	CurrentFolder string    `json:"currentFolder,omitempty"`
-	Progress      int       `json:"progress,omitempty"`
-	Indeterminate bool      `json:"indeterminate,omitempty"`
-	Transferred   int64     `json:"transferred,omitempty"`
-	Skipped       int64     `json:"skipped,omitempty"`
-	Bytes         int64     `json:"bytes,omitempty"`
-	Timestamp     time.Time `json:"timestamp"`
+	ProgressCounters
+	// A complete counter snapshot, including clearing unknown values. Older
+	// engines omit this flag and leave the previous counters untouched.
+	CountersUpdated bool      `json:"countersUpdated,omitempty"`
+	Type            string    `json:"type"`
+	Message         string    `json:"message,omitempty"`
+	Phase           string    `json:"phase,omitempty"`
+	CurrentFolder   string    `json:"currentFolder,omitempty"`
+	Progress        int       `json:"progress,omitempty"`
+	Indeterminate   bool      `json:"indeterminate,omitempty"`
+	Transferred     int64     `json:"transferred,omitempty"`
+	Skipped         int64     `json:"skipped,omitempty"`
+	Bytes           int64     `json:"bytes,omitempty"`
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 type Result struct {

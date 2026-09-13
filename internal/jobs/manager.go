@@ -74,6 +74,7 @@ type Config struct {
 }
 
 type View struct {
+	migrator.ProgressCounters
 	ID            string           `json:"id"`
 	Status        Status           `json:"status"`
 	Engine        string           `json:"engine"`
@@ -664,6 +665,7 @@ func (m *Manager) shuttingDownWithDurableWorker() bool {
 }
 
 func (m *Manager) publish(id string, event migrator.Event) {
+	event = cloneEvent(event)
 	if event.Timestamp.IsZero() {
 		event.Timestamp = m.now()
 	}
@@ -694,6 +696,9 @@ func (m *Manager) publish(id string, event migrator.Event) {
 	if event.Bytes > 0 {
 		record.view.Bytes = event.Bytes
 	}
+	if event.CountersUpdated {
+		record.view.ProgressCounters = event.ProgressCounters.Clone()
+	}
 	m.appendEventLocked(record, event)
 }
 
@@ -717,6 +722,10 @@ func (m *Manager) finishLocked(record *record, status Status, result migrator.Re
 	record.view.Bytes = result.Bytes
 	record.view.Error = errorMessage
 	record.view.Error = truncateUTF8(record.view.Error, maxEventMessageLength)
+	// No time prediction remains live after failure, cancellation or success.
+	// Retain the last observed remaining count; never infer that success copied
+	// every source message (dry runs and folder-only runs can also succeed).
+	record.view.ETASeconds = nil
 	switch status {
 	case StatusCompleted:
 		record.view.Progress = 100
@@ -727,14 +736,16 @@ func (m *Manager) finishLocked(record *record, status Status, result migrator.Re
 		record.view.Phase = PhaseFailed
 	}
 	event := migrator.Event{
-		Type:        "finished",
-		Phase:       record.view.Phase,
-		Progress:    record.view.Progress,
-		Transferred: result.Transferred,
-		Skipped:     result.Skipped,
-		Bytes:       result.Bytes,
-		Message:     record.view.Error,
-		Timestamp:   now,
+		ProgressCounters: record.view.ProgressCounters.Clone(),
+		CountersUpdated:  true,
+		Type:             "finished",
+		Phase:            record.view.Phase,
+		Progress:         record.view.Progress,
+		Transferred:      result.Transferred,
+		Skipped:          result.Skipped,
+		Bytes:            result.Bytes,
+		Message:          record.view.Error,
+		Timestamp:        now,
 	}
 	m.appendEventLocked(record, event)
 	_ = m.persistLocked(record, true)
@@ -879,6 +890,7 @@ func (m *Manager) eventsAfter(id string, after uint64) ([]StreamEvent, bool, boo
 	}
 	for _, event := range record.history {
 		if event.Sequence > after {
+			event.Event = cloneEvent(event.Event)
 			events = append(events, event)
 		}
 	}
@@ -1142,6 +1154,7 @@ func truncateUTF8(value string, limit int) string {
 }
 
 func sanitizeStoredEvent(event migrator.Event) migrator.Event {
+	event = cloneEvent(event)
 	event.Message = truncateUTF8(event.Message, maxEventMessageLength)
 	event.CurrentFolder = truncateUTF8(event.CurrentFolder, maxCurrentFolderLength)
 	event.Progress = clampProgress(event.Progress)
@@ -1158,7 +1171,11 @@ func (m *Manager) uniqueIDLocked() string {
 }
 
 func cloneView(view View) View {
+	view.ProgressCounters = view.ProgressCounters.Clone()
 	view.RecentEvents = append([]migrator.Event(nil), view.RecentEvents...)
+	for index := range view.RecentEvents {
+		view.RecentEvents[index] = cloneEvent(view.RecentEvents[index])
+	}
 	return view
 }
 

@@ -43,11 +43,12 @@ func runImapsyncProcess(ctx context.Context, cmd *exec.Cmd, request Request, emi
 
 	if emit != nil {
 		emit(Event{
-			Type:          "progress",
-			Phase:         "preparing",
-			Indeterminate: true,
-			Message:       "imapsync готовит список папок и сообщений",
-			Timestamp:     time.Now(),
+			CountersUpdated: true,
+			Type:            "progress",
+			Phase:           "preparing",
+			Indeterminate:   true,
+			Message:         "imapsync готовит список папок и сообщений",
+			Timestamp:       time.Now(),
 		})
 	}
 
@@ -75,6 +76,10 @@ func runImapsyncProcess(ctx context.Context, cmd *exec.Cmd, request Request, emi
 		if !isProgress {
 			event = Event{Type: "log"}
 		}
+		// Repeat the complete observation on each line so bounded worker log
+		// retention does not discard counters before a reconnecting API reads it.
+		event.ProgressCounters = progress.counters.Clone()
+		event.CountersUpdated = true
 		event.Message = line
 		event.Transferred = result.Transferred
 		event.Skipped = result.Skipped

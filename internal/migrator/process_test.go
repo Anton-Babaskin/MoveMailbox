@@ -32,6 +32,23 @@ func TestRunImapsyncProcessDrainsOutputTailBeforeWait(t *testing.T) {
 	}
 }
 
+func TestProcessRepeatsCounterSnapshotAfterLongLogTail(t *testing.T) {
+	var events []Event
+	_, err := runImapsyncProcess(context.Background(), helperProcessCommand(context.Background(), "counters"), testRequest(), func(event Event) {
+		events = append(events, event)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !events[0].CountersUpdated || events[0].TotalMessages != nil {
+		t.Fatal("new attempt must clear previous observations")
+	}
+	last := events[len(events)-1]
+	if !last.CountersUpdated || last.TotalMessages == nil || *last.TotalMessages != 10 || last.TotalBytes == nil || *last.TotalBytes != 2048 || last.RemainingMessages == nil || *last.RemainingMessages != 4 || last.ETASeconds != nil {
+		t.Fatalf("tail lost counters or retained ETA after verification: %+v", last)
+	}
+}
+
 func TestRunImapsyncProcessScrubsChildEnvironmentSecrets(t *testing.T) {
 	request := testRequest()
 	cmd := helperProcessCommand(context.Background(), "secrets")
@@ -132,6 +149,14 @@ func TestImapsyncHelperProcess(t *testing.T) {
 	}
 	scenario := os.Args[len(os.Args)-1]
 	switch scenario {
+	case "counters":
+		fmt.Fprintln(os.Stdout, "Host1 Nb messages: 10 messages")
+		fmt.Fprintln(os.Stdout, "Host1 Total size: 2048 bytes (2.0 KiB)")
+		fmt.Fprintln(os.Stdout, "ETA: Sun Sep 13 14:00:00 2026  3 s  4/10 msgs left")
+		fmt.Fprintln(os.Stdout, "++++ End looping on each folder")
+		for index := 0; index < 200; index++ {
+			fmt.Fprintln(os.Stdout, "diagnostic tail")
+		}
 	case "budget":
 		fmt.Fprintln(os.Stdout, "Messages transferred : 1")
 		fmt.Fprintln(os.Stdout, "Total bytes transferred : 600")
