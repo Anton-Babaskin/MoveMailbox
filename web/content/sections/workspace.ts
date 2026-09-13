@@ -1,5 +1,9 @@
 /** Копия разметки рабочей области. Один файл на секцию — три языка рядом.
- * Строки, которые подставляет императивный код, лежат в workspace-runtime.ts. */
+ * Строки, которые подставляет императивный код, лежат в workspace-runtime.ts.
+ *
+ * Цифр в разметке нет намеренно: счётчики писем, объёмы папок, скорость и
+ * оставшееся время приходят только от настоящего задания. Пока задания нет,
+ * в интерфейсе стоят прочерки, а не красивые выдуманные числа. */
 export const workspace = {
   ru: {
     staticPasswordPlaceholder: 'Онлайн-перенос пока недоступен',
@@ -44,12 +48,8 @@ export const workspace = {
     stop: 'Остановить',
 
     foldersTitle: 'Папки для переноса',
-    foldersSum: 'Все папки · 41 208 писем · 12.4 ГБ',
-    sizeInbox: '5.9 ГБ',
-    sizeSent: '3.1 ГБ',
-    sizeArchive: '2.9 ГБ',
-    sizeInvoices: '412 МБ',
-    sizeJunk: '88 МБ',
+    foldersSum: 'Все папки',
+    foldersHint: 'Список папок приходит с вашего сервера-источника — мы его не угадываем. Пока список не загружен, переносятся все папки.',
 
     advTitle: 'Расширенные настройки',
     advSum: 'Режимы запуска · строгое зеркало',
@@ -77,9 +77,10 @@ export const workspace = {
     logSub: 'Папка за папкой, в реальном времени',
     statusWaiting: 'Ожидание',
     metricProgress: 'Прогресс',
-    metricLeft: 'Осталось',
-    metricSpeed: 'Скорость',
-    speedUnit: 'пис/с',
+    metricTransferred: 'Перенесено',
+    metricSkipped: 'Пропущено',
+    metricBytes: 'Объём',
+    phaseIdle: 'Задание не запущено',
     logFirst: 'Подключите оба ящика и нажмите «Проверить оба».',
     logFoot: 'Каждая папка, счётчики с обеих сторон и причина по каждому пропущенному письму.',
   },
@@ -126,12 +127,8 @@ export const workspace = {
     stop: 'Stop',
 
     foldersTitle: 'Folders to transfer',
-    foldersSum: 'All folders · 41,208 messages · 12.4 GB',
-    sizeInbox: '5.9 GB',
-    sizeSent: '3.1 GB',
-    sizeArchive: '2.9 GB',
-    sizeInvoices: '412 MB',
-    sizeJunk: '88 MB',
+    foldersSum: 'All folders',
+    foldersHint: 'The folder list comes from your own source server — we do not guess it. Until the list is loaded, all folders are transferred.',
 
     advTitle: 'Advanced settings',
     advSum: 'Run modes · strict mirror',
@@ -159,9 +156,10 @@ export const workspace = {
     logSub: 'Folder by folder, in real time',
     statusWaiting: 'Idle',
     metricProgress: 'Progress',
-    metricLeft: 'Remaining',
-    metricSpeed: 'Speed',
-    speedUnit: 'msg/s',
+    metricTransferred: 'Transferred',
+    metricSkipped: 'Skipped',
+    metricBytes: 'Volume',
+    phaseIdle: 'No job running',
     logFirst: 'Connect both mailboxes and press “Check both”.',
     logFoot: 'Every folder, counts from both sides, and a reason for each skipped message.',
   },
@@ -208,12 +206,8 @@ export const workspace = {
     stop: 'Зупинити',
 
     foldersTitle: 'Папки для перенесення',
-    foldersSum: 'Усі папки · 41 208 листів · 12.4 ГБ',
-    sizeInbox: '5.9 ГБ',
-    sizeSent: '3.1 ГБ',
-    sizeArchive: '2.9 ГБ',
-    sizeInvoices: '412 МБ',
-    sizeJunk: '88 МБ',
+    foldersSum: 'Усі папки',
+    foldersHint: 'Список папок надходить із вашого сервера-джерела — ми його не вгадуємо. Доки список не завантажено, переносяться всі папки.',
 
     advTitle: 'Розширені налаштування',
     advSum: 'Режими запуску · суворе дзеркало',
@@ -241,9 +235,10 @@ export const workspace = {
     logSub: 'Папка за папкою, у реальному часі',
     statusWaiting: 'Очікування',
     metricProgress: 'Прогрес',
-    metricLeft: 'Залишилось',
-    metricSpeed: 'Швидкість',
-    speedUnit: 'лист/с',
+    metricTransferred: 'Перенесено',
+    metricSkipped: 'Пропущено',
+    metricBytes: 'Обсяг',
+    phaseIdle: 'Завдання не запущене',
     logFirst: 'Підключіть обидві скриньки та натисніть «Перевірити обидві».',
     logFoot: 'Кожна папка, лічильники з обох боків і причина щодо кожного пропущеного листа.',
   },

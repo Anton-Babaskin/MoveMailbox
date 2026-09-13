@@ -1,5 +1,76 @@
 # Engineering handoff — 2026-09-13
 
+## Workspace wired to the guest client (website side)
+
+`web/lib/workspace.ts` now talks to the backend only through
+`sdk/guest-client.mjs`, per `docs/GUEST-INTEGRATION.md`. Every blocker listed
+in that document is addressed:
+
+- The session is awaited inside the client before any POST; the page no longer
+  fires requests with an empty CSRF token.
+- Named `snapshot` and `migration` events are consumed through `client.watch`;
+  `finished` is treated as terminal-but-unknown and the authoritative job view
+  decides between completed, failed and cancelled.
+- Errors are read as `{error:{code,message}}` and mapped to RU/EN/UK strings;
+  429, 503 and 403 get their own wording. Server text and folder names are put
+  into `textContent`, never `innerHTML`.
+- `start` sends the full request: both endpoints, `syncFlags`/`preserveDates`,
+  the selected run mode, the selected folder names and `destinationSubfolder`.
+  Strict mirror still requires both flags and the two UI confirmations, and the
+  confirmation is cleared when either endpoint changes.
+- Mock data is gone. The folder list is fetched from the user's own source
+  server and shows names only — no invented sizes or message counts. The
+  monitor shows progress, transferred, skipped and bytes, plus phase and
+  current folder; the fabricated speed and ETA tiles were removed, because the
+  API has no such fields.
+- Cancellation is a request, not a fact: the button shows «Останавливаем…» and
+  the stream keeps running until the view is terminal.
+- Only the job ID is stored, in `sessionStorage`. After a reload the page calls
+  `client.get(id)` and re-opens the stream; a 404 clears the ID and says the job
+  is gone instead of claiming success. Passwords are never stored and
+  `POST /api/jobs` is never replayed.
+
+Verified in headless Chromium against a mock API that follows the contract
+(session, test, folders, 202 + job view, named SSE events, cancel, 404):
+check, folder discovery, partial selection reaching the request payload, live
+progress, reload while running, cancellation to a terminal state, a server
+error message rendered as text, and no credentials in browser storage. The
+GitHub Pages build makes no `/api/*` request at all and keeps the network
+buttons disabled.
+
+Not done here and still open: one real disposable-mailbox transfer over the
+same HTTPS origin on the VM. That needs the API and the site on one origin, so
+it belongs to the backend side.
+
+## Guest UI integration slice (feature/guest-transfer-contract)
+
+Owner deferred off-site backup work and approved moving to a usable migration
+flow. PR #20 is merged and its updater was installed on the VM with matching
+SHA-256; current task is based on main 370bf69. Existing backend supports guest
+sessions, connection/folder discovery, quota admission, jobs, ownership, SSE,
+cancellation and retrieval after reload. Do not rebuild those features.
+
+- Added `sdk/guest-client.mjs`: independent same-origin API transport for Claude,
+  awaited CSRF bootstrap, actual nested errors, named snapshot/migration events,
+  cursor deduplication/reset, authoritative terminal status and observable stop
+  failures. It never stores credentials or automatically retries POSTs.
+- Six focused Node tests pass: concurrent CSRF bootstrap, failure/no replay,
+  SSE snapshots/gaps, cancelled completion, lost ownership/refresh and stop
+  rejection. Added the client tests to CI. Full checks depend on the pushed SHA.
+- `docs/GUEST-INTEGRATION.md` records exact API usage and concrete existing
+  frontend blockers: unnamed SSE handler, lost options, mock folder totals/ETA,
+  nested error parsing, premature stop and missing reload recovery. Claude owns
+  wiring the module into the UI; website source was not edited.
+- Limitations: no standalone structured size-estimate API; quota admission
+  occurs in normal worker jobs. Lost start acknowledgement has no client
+  idempotency key: inspect owned jobs instead of blindly replaying. Browser
+  end-to-end transfer is still pending UI integration and same-origin HTTPS.
+
+Next: (1) Claude connects the workspace using the integration contract;
+(2) run one complete real-browser disposable-mail transfer with reload/cancel
+and visible failure handling, then prepare the closed pilot release. Do not
+claim that transport unit tests alone complete this browser acceptance gate.
+
 ## Live transactional update to current main
 
 - PR #17 was merged and post-merge CI passed. Current main

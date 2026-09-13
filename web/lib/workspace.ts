@@ -1,7 +1,8 @@
 // @ts-nocheck — imperative bundle ported from the static mockup
 /* eslint-disable */
-// Перенесено из проверенного макета без изменений логики.
+// Разметка секции статична, поэтому обработчики вешаются императивно один раз.
 
+import { createGuestClient } from '../../sdk/guest-client.mjs';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import type { Lang } from '@/i18n/config';
 
@@ -20,206 +21,221 @@ const $ = (s: string, r: ParentNode = document) => r.querySelector(s) as HTMLEle
 const $$ = (s: string, r: ParentNode = document) =>
   Array.prototype.slice.call(r.querySelectorAll(s)) as HTMLElement[];
 
-/** Логика рабочей области: проверка подключения, выбор папок, режимы запуска,
- * строгое зеркало с подтверждением, прогресс переноса и поток частиц.
- * Разметка статична, поэтому обработчики вешаются императивно один раз. */
 /**
+ * Ключ, под которым в sessionStorage лежит ИДЕНТИФИКАТОР задания — и больше
+ * ничего. Пароли и реквизиты в хранилище браузера не попадают никогда, а по
+ * одному идентификатору чужую задачу не открыть: доступ даёт гостевая cookie.
+ * sessionStorage, а не localStorage: перезагрузка вкладки переживается,
+ * закрытая вкладка — нет.
+ */
+const JOB_KEY = 'movemailbox.job';
+
+const TERMINAL = ['completed', 'failed', 'cancelled'];
+
+/** Логика рабочей области: проверка подключения, список папок источника,
+ * режимы запуска, строгое зеркало с подтверждением, настоящий прогресс
+ * задания, отмена и восстановление после перезагрузки страницы.
+ *
+ * Весь обмен с сервером идёт через sdk/guest-client.mjs — общий клиент
+ * гостевого API (docs/GUEST-INTEGRATION.md). Он же владеет сессией, CSRF,
+ * потоком событий и переподключением; здесь остаётся только отрисовка.
+ *
  * @param lang   язык строк интерфейса
  * @param online false — статическая сборка без бекенда: интерфейс живёт
- *               полностью (переключатели, схема соединения, дерево папок,
- *               модалки), но ни один сетевой вызов не выполняется.
- *               Отключать инициализацию целиком нельзя: тогда страница
- *               выглядит сломанной, а не «ещё не запущенной».
+ *               полностью (переключатели, схема соединения, модалки),
+ *               но ни один сетевой вызов не выполняется.
  */
 export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
   /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
   var T = workspaceRuntime[lang] || workspaceRuntime.ru;
+  var ONLINE = online;
+  /* Клиент создаётся один раз на инициализацию: он держит промис сессии. */
+  var client = ONLINE ? createGuestClient() : null;
 
-  /* ---- lang + password + folders ---- */
-  $$('.seg button').forEach(function(b){b.addEventListener('click',function(){
-    $$('.seg button').forEach(function(o){o.setAttribute('aria-pressed','false')});
-    b.setAttribute('aria-pressed','true');});});
+  /* ---- пароль ---- */
   $$('[data-pw]').forEach(function(b){b.addEventListener('click',function(){
     var i=b.parentElement.querySelector('input');
     i.type = i.type==='password'?'text':'password';
     b.setAttribute('aria-label', i.type==='password'?T.showPassword:T.hidePassword);});});
 
-  var sizes=['5.9 ГБ','3.1 ГБ','2.9 ГБ','412 МБ','88 МБ'];
-  function recount(){
-    var rows=$$('#flist .frow'), n=0, msgs=0;
-    rows.forEach(function(r){ if(!r.querySelector('.bx').classList.contains('off')){
-      n++; msgs+=parseInt(r.querySelector('.c').dataset.c,10);} });
-    var gb=(msgs/41208*12.4).toFixed(1);
-    $('#fsum').textContent=(n===rows.length
-        ? T.allFolders
-        : T.selectedOf.replace('{n}', String(n)).replace('{total}', String(rows.length)))+
-      ' · '+msgs.toLocaleString(T.numberLocale)+' '+T.messagesUnit+' · '+gb+' '+T.gbUnit;
-    $('#start').disabled = n===0;
-  }
-  $$('#flist .frow').forEach(function(r){ r.addEventListener('click',function(){
-    r.querySelector('.bx').classList.toggle('off'); recount(); });});
+  /* ==================================================================
+     Реквизиты подключения и параметры задания.
+     Формы запросов повторяют migrator.Endpoint и migrator.Options.
+     ================================================================== */
+  function pane(side){ return $$('.mbx')[side === 'source' ? 0 : 1]; }
 
-  /* ---- connection check ---- */
+  function endpoint(side){
+    var p = pane(side), f = $$('input', p),
+        sec = p.querySelector('select[data-sec]'),
+        mode = p.querySelector('select[data-port]'),
+        manual = p.querySelector('input[data-port-num]');
+    var security = sec && sec.value === 'starttls' ? 'starttls' : 'tls';
+    /* Порт и режим шифрования уходят явно: API не угадывает их сам и
+       не выключает проверку сертификата. */
+    var port = (mode && mode.value === 'manual' && manual && manual.value)
+      ? parseInt(manual.value, 10)
+      : (security === 'starttls' ? 143 : 993);
+    return {
+      host: f[0].value.trim(), port: port, security: security,
+      username: f[1].value.trim(), password: f[2].value
+    };
+  }
+
+  /* ---- перевод ошибок API в человеческие строки ----
+     APIError несёт status и code; сетевой обрыв приходит обычным TypeError.
+     403 значит «сессия не подтверждена», а не «повторить запрос молча». */
+  function message(e){
+    if(!e) return '';
+    if(e.status === 429) return T.errTooMany;
+    if(e.status === 503) return T.errUnavailable;
+    if(e.status === 403) return T.errForbidden;
+    if(e.name === 'TypeError') return T.errNetwork;
+    return e.message || String(e);
+  }
+
+  /* ---- значения, которых может не быть ----
+     Отсутствующее поле события — это «не менялось», а не ноль. */
+  function hasNumber(value){ return typeof value === 'number' && isFinite(value); }
+  function count(value){
+    return hasNumber(value) ? value.toLocaleString(T.numberLocale) : T.noValue;
+  }
+  function bytes(value){
+    if(!hasNumber(value)) return T.noValue;
+    var units = String(T.bytesUnits).split(','), n = value, i = 0;
+    /* Десятичные приставки: бесплатный лимит на бекенде тоже десятичный. */
+    while(n >= 1000 && i < units.length - 1){ n /= 1000; i++; }
+    var digits = i === 0 ? 0 : n < 10 ? 1 : 0;
+    return n.toLocaleString(T.numberLocale, {
+      minimumFractionDigits: digits, maximumFractionDigits: digits
+    }) + ' ' + units[i];
+  }
+  function phaseLabel(phase){
+    if(!phase) return '';
+    var key = 'phase' + phase.charAt(0).toUpperCase() + phase.slice(1);
+    return T[key] || phase;
+  }
 
   /* ==================================================================
-     Слой доступа к бэкенду.
+     Папки источника.
 
-     Это ЕДИНСТВЕННОЕ место, где интерфейс общается с сервером.
-     Пути и формы запросов повторяют internal/api/server.go и
-     internal/migrator/types.go. Если контракт на бекенде меняется,
-     правится только этот блок — остальной код страницы о сервере
-     ничего не знает.
-
-       check(side)       POST /api/connections/test
-       folders(side)     POST /api/connections/folders
-       start(opts, cb)   POST /api/jobs + SSE /api/jobs/{id}/events
-       stop()            POST /api/jobs/{id}/cancel
+     Список приходит с сервера пользователя и содержит только имена и
+     разделители — ни размеров, ни счётчиков писем в API нет, поэтому их
+     нет и в интерфейсе. Пока список не загружен (folders === null),
+     задание уходит без поля folders, то есть переносятся все папки.
+     Выбор родителя не распространяется на вложенные папки: сервер их
+     сам не добавит, и мы не делаем вид, что добавит.
      ================================================================== */
-  var ONLINE = online;
+  var folders = null;
 
-  var API = (function(){
-    var csrf = '', es = null, jobId = null;
+  function rows(){ return $$('#flist .frow'); }
+  function chosen(){
+    return rows().filter(function(r){ return !r.querySelector('.bx').classList.contains('off'); });
+  }
+  function selectedFolders(){
+    if(folders === null) return null;
+    return chosen().map(function(r){ return r.dataset.name; });
+  }
 
-    /* CSRF-токен нужен только в публичном режиме; в локальном он пустой. */
-    function session(){
-      return fetch('/api/session', { credentials:'same-origin' })
-        .then(function(r){ return r.ok ? r.json() : {}; })
-        .then(function(d){ csrf = (d && d.csrfToken) || ''; })
-        .catch(function(){ csrf = ''; });
-    }
-    if (ONLINE) session();
+  function hint(text, bad){
+    var el = $('#fhint'); if(!el) return;
+    el.textContent = text;                    /* имена папок и ошибки — только текстом */
+    el.classList.toggle('bad', !!bad);
+  }
 
-    function send(method, url, body){
-      var h = { 'Accept':'application/json' };
-      if(body !== undefined) h['Content-Type'] = 'application/json';
-      if(csrf) h['X-CSRF-Token'] = csrf;
-      return fetch(url, {
-        method: method, headers: h, credentials: 'same-origin',
-        body: body === undefined ? undefined : JSON.stringify(body)
-      }).then(function(r){
-        return r.text().then(function(t){
-          var d = {}; try { d = t ? JSON.parse(t) : {}; } catch(e) {}
-          if(!r.ok){
-            var err = new Error(d.message || d.error ||
-              T.serverResponded.replace('{status}', String(r.status)));
-            err.code = d.code || '';
-            throw err;
-          }
-          return d;
-        });
+  function recount(){
+    var all = rows(), n = chosen().length, sum = $('#fsum');
+    if(sum) sum.textContent = folders === null || n === all.length
+      ? T.allFolders
+      : n === 0
+        ? T.selectedNothing
+        : T.selectedOf.replace('{n}', String(n)).replace('{total}', String(all.length));
+    var toggle = $('#fallBtn');
+    if(toggle && !toggle.hidden) toggle.textContent = n === all.length ? T.selectNone : T.selectAll;
+    controls();
+  }
+
+  function renderFolders(list){
+    var box = $('#flist'); if(!box) return;
+    box.textContent = '';
+    list.forEach(function(item){
+      var name = typeof item === 'string' ? item : (item && item.name) || '';
+      if(!name) return;
+      var row = document.createElement('div');
+      row.className = 'frow';
+      row.dataset.name = name;
+      row.setAttribute('role', 'checkbox');
+      row.setAttribute('aria-checked', 'true');
+      row.tabIndex = 0;
+      var box2 = document.createElement('span');
+      box2.className = 'bx';
+      box2.innerHTML = '<svg aria-hidden="true"><use href="#ck"/></svg>';
+      var nm = document.createElement('span');
+      nm.className = 'nm';
+      nm.textContent = name;                  /* имя папки приходит с чужого сервера */
+      row.appendChild(box2); row.appendChild(nm);
+      function toggle(){
+        var off = box2.classList.toggle('off');
+        row.setAttribute('aria-checked', off ? 'false' : 'true');
+        recount();
+      }
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', function(e){
+        if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); }
       });
-    }
-
-    function pane(side){ return $$('.mbx')[side === 'source' ? 0 : 1]; }
-
-    /* Совпадает с migrator.Endpoint в internal/migrator/types.go. */
-    function endpoint(side){
-      var p = pane(side), f = $$('input', p),
-          sec = p.querySelector('select[data-sec]'),
-          mode = p.querySelector('select[data-port]'),
-          manual = p.querySelector('input[data-port-num]');
-      var security = sec && sec.value === 'starttls' ? 'starttls' : 'tls';
-      var port = (mode && mode.value === 'manual' && manual && manual.value)
-        ? parseInt(manual.value, 10)
-        : (security === 'starttls' ? 143 : 993);
-      return {
-        host: f[0].value.trim(), port: port, security: security,
-        username: f[1].value.trim(), password: f[2].value
-      };
-    }
-
-    /* Совпадает с migrator.Options. Взаимоисключающие режимы бекенд
-       отвергает сам — здесь мы их не фильтруем, чтобы не разойтись
-       с его правилами валидации. */
-    function options(){
-      function on(name){
-        var el = document.querySelector('input[data-mode="' + name + '"]');
-        return !!(el && el.checked);
-      }
-      var strict = document.querySelector('#strict');
-      return {
-        dryRun: on('verbose'),
-        justLogin: on('creds'),
-        justFolderSizes: on('sizes'),
-        justFolders: on('folders'),
-        strictMirror: !!(strict && strict.dataset.on),
-        strictMirrorConfirmed: !!(strict && strict.dataset.on)
-      };
-    }
-
-    function close(){ if(es){ es.close(); es = null; } }
-
-    return {
-      creds: endpoint,
-      endpoint: endpoint,
-      options: options,
-
-      /* POST /api/connections/test */
-      check: function(side){
-        if(!ONLINE) return Promise.resolve({ ok:false, message: T.offlineStatus, details: [] });
-        return send('POST', '/api/connections/test', endpoint(side))
-          .then(function(d){
-            return { ok:true, message: d.message || T.connectionOk,
-                     details: d.details || [] };
-          })
-          .catch(function(e){ return { ok:false, message: e.message }; });
-      },
-
-      /* POST /api/connections/folders — дерево папок источника */
-      folders: function(side){
-        return send('POST', '/api/connections/folders', endpoint(side || 'source'))
-          .then(function(d){ return d.folders || []; });
-      },
-
-      /* POST /api/jobs, дальше SSE на /api/jobs/{id}/events.
-         Переподключение по Last-Event-ID делает сам браузер. */
-      start: function(opts, cb){
-        if(!ONLINE){ cb.error(T.offlineStatus); return Promise.resolve(); }
-        var req = {
-          source: endpoint('source'),
-          destination: endpoint('destination'),
-          options: opts || options()
-        };
-        return send('POST', '/api/jobs', req).then(function(job){
-          jobId = job.id || job.jobId;
-          if(!jobId) throw new Error(T.noJobId);
-          close();
-          es = new EventSource('/api/jobs/' + encodeURIComponent(jobId) + '/events',
-                               { withCredentials:true });
-          es.onmessage = function(m){
-            var ev; try { ev = JSON.parse(m.data); } catch(e){ return; }
-            if(ev.message) cb.log(ev.message, ev.type === 'error' ? 2 : ev.type === 'done' ? 1 : 0);
-            if(typeof ev.progress === 'number' && !ev.indeterminate) cb.progress(ev.progress);
-            if(ev.type === 'done' || ev.type === 'finished'){ close(); cb.done(ev); }
-            if(ev.type === 'error' || ev.type === 'failed'){ close(); cb.error(ev.message); }
-          };
-          return jobId;
-        }).catch(function(e){ cb.error(e.message); });
-      },
-
-      /* POST /api/jobs/{id}/cancel */
-      stop: function(){
-        var id = jobId;
-        close(); jobId = null;
-        if(!id) return Promise.resolve();
-        return send('POST', '/api/jobs/' + encodeURIComponent(id) + '/cancel')
-          .catch(function(){});
-      }
-    };
-  })();
+      box.appendChild(row);
+    });
+    folders = rows().map(function(r){ return r.dataset.name; });
+    var toggleAll = $('#fallBtn');
+    if(toggleAll) toggleAll.hidden = folders.length === 0;
+  }
 
   (function(){
+    var btn = $('#floadBtn'); if(!btn) return;
+    btn.addEventListener('click', function(){
+      if(!ONLINE) return;
+      var ep = endpoint('source');
+      if(!ep.host || !ep.username || !ep.password){ hint(T.foldersNeedCreds, true); return; }
+      btn.disabled = true;
+      hint(T.foldersLoading, false);
+      client.folders(ep).then(function(data){
+        var list = (data && data.folders) || [];
+        if(!list.length){ hint(T.foldersNone, true); return; }
+        renderFolders(list);
+        hint(T.foldersLoaded.replace('{n}', String(folders.length)), false);
+      }).catch(function(e){
+        hint(T.foldersFailed.replace('{message}', message(e)), true);
+      }).then(function(){ btn.disabled = false; recount(); });
+    });
+    var all = $('#fallBtn');
+    if(all) all.addEventListener('click', function(){
+      var turnOn = chosen().length !== rows().length;
+      rows().forEach(function(r){
+        r.querySelector('.bx').classList.toggle('off', !turnOn);
+        r.setAttribute('aria-checked', turnOn ? 'true' : 'false');
+      });
+      recount();
+    });
+  })();
+
+  /* ---- проверка подключения ---- */
+  (function(){
     var btn=$('#checkBoth'); if(!btn) return;
+    function fill(pill, text, cls){
+      pill.className = 'st ' + cls;
+      pill.textContent = '';
+      pill.appendChild(document.createElement('i'));
+      pill.appendChild(document.createTextNode(text));   /* ответ сервера — текстом */
+    }
     btn.addEventListener('click',function(){
+      if(!ONLINE) return;
       var pills=$$('.st[data-st]');
       btn.disabled=true;
-      pills.forEach(function(p){ p.className='st checking'; p.innerHTML='<i></i>'+T.checking; });
+      pills.forEach(function(p){ fill(p, T.checking, 'checking'); });
       Promise.all(['source','destination'].map(function(side,i){
-        return API.check(side).then(function(r){
-          var p=pills[i];
-          p.className = r.ok ? 'st ok' : 'st fail';
-          p.innerHTML = '<i></i>' + r.message;
-          return r;
+        return client.check(endpoint(side)).then(function(d){
+          fill(pills[i], d && d.message ? d.message : T.connectionOk, 'ok');
+        }).catch(function(e){
+          fill(pills[i], message(e), 'fail');
         });
       })).then(function(){ btn.disabled=false; });
     });
@@ -310,11 +326,12 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     btn.addEventListener('click',function(){
       if(btn.dataset.on==='1') setState(false); else ask();
     });
-    /* подтверждение выдано под конкретный ящик назначения:
-       меняются реквизиты или стороны — зеркало сбрасывается */
-    var dstPane=$$('.mbx')[1];
-    if(dstPane) $$('input',dstPane).forEach(function(inp){
-      inp.addEventListener('input',function(){ if(btn.dataset.on==='1') setState(false); });
+    /* подтверждение выдано под конкретную пару ящиков: меняются реквизиты
+       любой стороны или стороны меняются местами — зеркало сбрасывается */
+    $$('.mbx').forEach(function(mbx){
+      $$('input',mbx).forEach(function(inp){
+        inp.addEventListener('input',function(){ if(btn.dataset.on==='1') setState(false); });
+      });
     });
     var swapBtn=$('#swap');
     if(swapBtn) swapBtn.addEventListener('click',function(){ if(btn.dataset.on==='1') setState(false); });
@@ -340,59 +357,251 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     if(i.checked)$$('[data-mode]').forEach(function(o){ if(o!==i)o.checked=false; });
     modeSync(); });});
 
-  /* ---- transfer sim ---- */
-  var TRANSFER_STEPS=[
-   [3,'Проверка TLS: сертификат валиден, IMAP4rev1 · STARTTLS · IDLE'],
-   [7,'Авторизация подтверждена на обоих серверах',1],
-   [11,'Открываю INBOX — 18 442 письма, 5.9 ГБ'],
-   [26,'INBOX  6 812 / 18 442 скопировано'],
-   [41,'INBOX  завершено — 18 442 / 18 442',1],
-   [52,'INBOX.Sent  4 003 / 9 117 скопировано'],
-   [66,'INBOX.Sent  завершено — 9 117 / 9 117',1],
-   [78,'INBOX.Archive.2019-2024  7 940 / 11 863 скопировано'],
-   [88,'INBOX.Clients.Invoices  завершено — 1 604 / 1 604',1],
-   [94,'Сверка счётчиков папок: расхождений нет',2],
-   [100,'Готово. 41 026 писем, 0 ошибок. Источник не изменён.',1]
-  ];
-  var running=false,lastP=0,idx=0,
-      bar=$('#mbar'),mp=$('#mp'),me=$('#me'),mv=$('#mv'),stt=$('#stt'),log=$('#log'),
-      bStart=$('#start'),bStop=$('#stop');
-  function t2(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-  function push(txt,kind,sec){
-    var d=document.createElement('div');
-    d.innerHTML='<time>'+t2(sec)+'</time><b class="'+(kind===1?'g':kind===2?'a':'')+'"></b>';
-    d.querySelector('b').textContent=txt; log.appendChild(d); log.scrollTop=log.scrollHeight;
+  /* ==================================================================
+     Ход задания.
+
+     Единственный источник правды — представление задания с сервера
+     (snapshot). События потока только уточняют его между снимками:
+     отсутствующее поле события значит «не изменилось». Полей скорости и
+     оставшегося времени в API нет, и мы их не выдумываем.
+     ================================================================== */
+  var bar=$('#mbar'), track=bar && bar.parentElement, mp=$('#mp'), mt=$('#mt'),
+      msk=$('#msk'), mv=$('#mv'), mph=$('#mphase'), stt=$('#stt'), log=$('#log'),
+      bStart=$('#start'), bStop=$('#stop');
+  var jobId = null, jobStatus = null, stopping = false, running = false,
+      lost = false, disconnect = null;
+
+  function clock(stamp){
+    var d = stamp ? new Date(stamp) : new Date();
+    if(isNaN(d.getTime())) d = new Date();
+    return [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map(function(v){ return String(v).padStart(2,'0'); }).join(':');
   }
-  function reset(){ API.stop(); running=false; }
-  bStart.addEventListener('click',function(){
-    reset(); lastP=0; idx=0; log.innerHTML=''; bStop.disabled=false; bStart.disabled=true;
-    stt.className='stt run'; stt.innerHTML='<i></i>'+T.statusRunning;
-    API.start({}, {
-      progress: function(p){
-        running=p<100;
-        bar.style.width=p+'%'; mp.textContent=p+'%';
-        me.textContent=t2(Math.round((100-p)*2.4));
-        mv.innerHTML=(180+Math.round(Math.sin(p/7)*40)).toString()+
-          ' <span style="font-size:.7em;color:#5E7284">'+T.speedUnit+'</span>';
-        lastP=p;
+
+  /* Журнал строится узлами: сообщения сервера и имена папок не должны
+     попадать в разметку как HTML. */
+  function push(text, kind, stamp){
+    if(!text || !log) return;
+    var line=document.createElement('div'),
+        time=document.createElement('time'),
+        body=document.createElement('b');
+    time.textContent=clock(stamp);
+    body.className = kind===1 ? 'g' : kind===2 ? 'a' : '';
+    body.textContent=text;
+    line.appendChild(time); line.appendChild(body);
+    log.appendChild(line);
+    while(log.children.length > 400) log.removeChild(log.firstChild);
+    log.scrollTop=log.scrollHeight;
+  }
+
+  function status(text, cls){
+    if(!stt) return;
+    stt.className = 'stt' + (cls ? ' ' + cls : '');
+    stt.textContent='';
+    stt.appendChild(document.createElement('i'));
+    stt.appendChild(document.createTextNode(text));
+  }
+
+  function progress(value, indeterminate){
+    if(!track) return;
+    if(indeterminate){
+      track.classList.add('wait');
+      if(mp) mp.textContent='…';
+      return;
+    }
+    if(!hasNumber(value)) return;
+    track.classList.remove('wait');
+    var p=Math.max(0, Math.min(100, Math.round(value)));
+    bar.style.width=p+'%';
+    if(mp) mp.textContent=p+'%';
+  }
+
+  function metrics(data){
+    if('transferred' in data && mt) mt.textContent=count(data.transferred);
+    if('skipped' in data && msk) msk.textContent=count(data.skipped);
+    if('bytes' in data && mv) mv.textContent=bytes(data.bytes);
+    if(mph && (data.phase || data.currentFolder)){
+      var parts=[phaseLabel(data.phase)];
+      if(data.currentFolder) parts.push(T.folderLabel + ': ' + data.currentFolder);
+      mph.textContent=parts.filter(Boolean).join(' · ');
+    }
+  }
+
+  var STATUS_TEXT = {
+    queued: ['statusQueued','run'], running: ['statusRunning','run'],
+    completed: ['statusDone','done'], failed: ['statusError',''],
+    cancelled: ['statusCancelled','']
+  };
+
+  /* Полный снимок задания: заменяет и метрики, и журнал целиком. */
+  function renderView(view){
+    if(!view || !view.id) return;
+    jobId = view.id;
+    jobStatus = view.status;
+    running = TERMINAL.indexOf(view.status) < 0;
+    var style = STATUS_TEXT[view.status] || ['statusRunning','run'];
+    status(stopping && running ? T.statusCancelling : T[style[0]], style[1]);
+    progress(view.progress, false);
+    metrics(view);
+    if(log){
+      log.textContent='';
+      (view.recentEvents || []).forEach(function(ev){ logEvent(ev); });
+    }
+    if(view.error) push(view.error, 2, view.finishedAt);
+    if(view.status === 'failed' && !view.error) push(T.finishedFailed, 2, view.finishedAt);
+    if(view.status === 'cancelled') push(T.finishedCancelled, 2, view.finishedAt);
+    if(!running){
+      stopping=false;
+      forget();
+      if(disconnect){ disconnect(); disconnect=null; }
+      if(mph) mph.textContent=phaseLabel(view.phase) || T.phaseIdle;
+    }
+    controls();
+  }
+
+  function logEvent(ev){
+    if(!ev) return;
+    var text = ev.message;
+    if(!text){
+      var parts=[phaseLabel(ev.phase)];
+      if(ev.currentFolder) parts.push(ev.currentFolder);
+      text = parts.filter(Boolean).join(' · ');
+    }
+    push(text, ev.type === 'error' ? 2 : ev.type === 'finished' ? 1 : 0, ev.timestamp);
+  }
+
+  /* Событие потока: уточняет метрики и добавляет строку журнала.
+     'finished' терминальным не считаем — клиент сам запросит снимок. */
+  function applyEvent(ev){
+    if(!ev) return;
+    if('progress' in ev || ev.indeterminate) progress(ev.progress, !!ev.indeterminate);
+    metrics(ev);
+    logEvent(ev);
+  }
+
+  function observe(id){
+    if(disconnect){ disconnect(); disconnect=null; }
+    disconnect = client.watch(id, {
+      snapshot: renderView,
+      event: applyEvent,
+      connection: function(state){
+        if(state === 'reconnecting' && !lost){ lost=true; push(T.streamLost, 2); }
+        if(state === 'connected' && lost){ lost=false; push(T.streamBack, 0); }
       },
-      log: function(text,kind){ push(text,kind,Math.round(lastP*2.4)); },
-      done: function(){
-        running=false; bStop.disabled=true; bStart.disabled=false;
-        stt.className='stt done'; stt.innerHTML='<i></i>'+T.statusDone; me.textContent='00:00';
-      },
-      error: function(msg){
-        running=false; bStop.disabled=true; bStart.disabled=false;
-        stt.className='stt'; stt.innerHTML='<i></i>'+T.statusError;
-        push(msg||T.transferFailed, 2, Math.round(lastP*2.4));
+      error: function(e){
+        if(e && (e.status === 404 || e.status === 403)){
+          forget(); running=false; stopping=false;
+          push(T.jobGone, 2); status(T.statusError, ''); controls();
+          return;
+        }
+        push(message(e), 2);
       }
     });
+  }
+
+  /* Хранится только идентификатор: ни пароля, ни адресов серверов. */
+  function remember(id){
+    jobId=id;
+    try { sessionStorage.setItem(JOB_KEY, id); } catch(e) {}
+  }
+  function forget(){
+    try { sessionStorage.removeItem(JOB_KEY); } catch(e) {}
+  }
+
+  /* Кнопка запуска гаснет, пока задание живо, и пока выбран пустой список
+     папок: сервер такой запрос отвергнет, и лучше сказать это заранее. */
+  function controls(){
+    if(!bStart || !bStop) return;
+    var empty = folders !== null && chosen().length === 0;
+    bStart.disabled = !ONLINE || running || empty;
+    bStop.disabled = !ONLINE || !running || stopping;
+  }
+
+  function buildOptions(){
+    function on(name){
+      var el = document.querySelector('input[data-mode="' + name + '"]');
+      return !!(el && el.checked);
+    }
+    /* syncFlags и preserveDates — нормальное копирование: пропущенные
+       булевы поля бекенд считает выключенными. */
+    var opts = {
+      syncFlags: true, preserveDates: true,
+      dryRun: on('verbose'), justLogin: on('creds'),
+      justFolderSizes: on('sizes'), justFolders: on('folders')
+    };
+    var strict = $('#strict');
+    if(strict && strict.dataset.on === '1'){
+      /* Оба флага и только после двух подтверждений в интерфейсе. */
+      opts.strictMirror = true;
+      opts.strictMirrorConfirmed = true;
+    }
+    var picked = selectedFolders();
+    if(picked && picked.length) opts.folders = picked;
+    var sub = document.querySelector('input[data-subfolder]');
+    if(sub && sub.value.trim()) opts.destinationSubfolder = sub.value.trim();
+    return opts;
+  }
+
+  if(bStart) bStart.addEventListener('click', function(){
+    if(!ONLINE || running) return;
+    if(folders !== null && chosen().length === 0){
+      hint(T.startNeedsFolders, true);
+      return;
+    }
+    running=true; stopping=false; lost=false;
+    if(log) log.textContent='';
+    progress(0, false);
+    if(mt) mt.textContent=T.noValue;
+    if(msk) msk.textContent=T.noValue;
+    if(mv) mv.textContent=T.noValue;
+    status(T.statusQueued, 'run');
+    controls();
+    client.start({
+      source: endpoint('source'),
+      destination: endpoint('destination'),
+      options: buildOptions()
+    }).then(function(job){
+      if(!job || !job.id) throw new Error(T.noJobId);
+      remember(job.id);
+      renderView(job);
+      observe(job.id);
+    }).catch(function(e){
+      /* Повторной отправки нет и быть не должно: задание могло быть принято. */
+      running=false; controls();
+      status(T.statusError, '');
+      push(message(e) || T.transferFailed, 2);
+    });
   });
-  bStop.addEventListener('click',function(){
-    reset(); bStop.disabled=true; bStart.disabled=false;
-    stt.className='stt'; stt.innerHTML='<i></i>'+T.statusStopped;
-    push(T.stoppedLog,2,Math.round(lastP*2.4));
+
+  /* Отмена — это запрос, а не факт: ждём терминального состояния. */
+  if(bStop) bStop.addEventListener('click', function(){
+    if(!ONLINE || !jobId || !running) return;
+    stopping=true; controls();
+    status(T.statusCancelling, 'run');
+    push(T.cancelRequested, 2);
+    client.cancel(jobId).catch(function(e){
+      stopping=false; controls();
+      push(message(e), 2);
+    });
   });
+
+  /* ---- восстановление после перезагрузки страницы ----
+     Пароли не сохраняются, POST /api/jobs не повторяется: по сохранённому
+     идентификатору запрашивается представление и заново открывается поток.
+     404 значит, что задание этой сессии больше не доступно. */
+  if(ONLINE){
+    var saved = null;
+    try { saved = sessionStorage.getItem(JOB_KEY); } catch(e) { saved = null; }
+    if(saved) client.get(saved).then(function(view){
+      push(T.restored, 0);
+      renderView(view);
+      if(TERMINAL.indexOf(view.status) < 0) observe(view.id);
+    }).catch(function(e){
+      if(e && (e.status === 404 || e.status === 403)){ forget(); push(T.jobGone, 2); }
+      else push(message(e), 2);
+    });
+  }
+
   recount(); modeSync();
 
   /* ---- flow canvas ---- */
@@ -418,11 +627,10 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     requestAnimationFrame(loop);
   })();
 
-  /* В статической сборке кнопки запуска остаются выключенными: обработчики
-     внутри могли их включить по ходу инициализации. Интерфейс при этом живой —
-     гаснет только то, что ушло бы в сеть. */
+  /* В статической сборке сетевые кнопки остаются выключенными: интерфейс
+     живой — гаснет только то, что ушло бы в сеть. */
   if (!ONLINE) {
-    ['#start', '#stop', '#checkBoth'].forEach(function (sel) {
+    ['#start', '#stop', '#checkBoth', '#floadBtn'].forEach(function (sel) {
       var el = $(sel) as HTMLButtonElement | null;
       if (el) el.disabled = true;
     });

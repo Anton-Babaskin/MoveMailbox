@@ -8,9 +8,11 @@ import type { Lang } from '../i18n/config';
  * Тексты правовых страниц на трёх языках.
  *
  * Перевод намеренно буквальный по смыслу: правовой документ не должен
- * обещать в переводе больше, чем в оригинале. Плейсхолдеры {{...}}
- * сохранены во всех языках — владелец находит их поиском по скобкам,
- * переведено только пояснение внутри.
+ * обещать в переводе больше, чем в оригинале. Реквизиты заполнены: оператор
+ * описан без выдуманного юридического лица, контакт — admin@movemailbox.com,
+ * предел ответственности и применимое право привязаны к первому платному
+ * тарифу. Плейсхолдеров {{...}} в тексте больше нет, и сборка их не пропустит:
+ * scripts/check-export.mjs падает, если они появятся на индексируемой странице.
  */
 export type LegalSection = { h: string; p: string[] };
 
@@ -39,7 +41,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Кто обрабатывает данные',
           p: [
-            'Сервис MoveMailbox по адресу movemailbox.com управляется {{ОПЕРАТОР: юридическое лицо или ИП, адрес}}. Вопросы по обработке данных — {{КОНТАКТНЫЙ EMAIL}}.',
+            'Сервис MoveMailbox по адресу movemailbox.com ведёт частный разработчик проекта: юридическое лицо не зарегистрировано, оплата не принимается, персонал и подрядчики к данным не привлекаются. Вопросы по обработке данных, запросы и жалобы — admin@movemailbox.com; отвечаем на том языке, на котором вы написали. Как только появится юридическое лицо, его название, адрес и регистрационные данные будут указаны здесь.',
             'Локальный клиент MoveMailbox работает на вашем компьютере и не отправляет нам ни учётные данные, ни содержимое писем. Всё, что описано ниже, относится только к онлайн-переносу.',
           ],
         },
@@ -75,7 +77,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Ваши права',
           p: [
-            'Вы можете запросить сведения о своих данных, их исправление или удаление, написав на {{КОНТАКТНЫЙ EMAIL}}. Задание можно остановить в любой момент — перенесённые письма останутся в ящике назначения, источник не изменяется.',
+            'Вы можете запросить сведения о своих данных, их исправление или удаление, написав на admin@movemailbox.com. Задание можно остановить в любой момент — перенесённые письма останутся в ящике назначения, источник не изменяется.',
           ],
         },
       ],
@@ -93,7 +95,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Who processes the data',
           p: [
-            'The MoveMailbox service at movemailbox.com is operated by {{OPERATOR: legal entity or sole proprietor, address}}. Questions about data processing — {{CONTACT EMAIL}}.',
+            'The MoveMailbox service at movemailbox.com is run by the private developer of the project: no legal entity is registered, no payment is accepted, and no staff or contractors are given access to the data. Questions about data processing, requests and complaints — admin@movemailbox.com; we reply in the language you write in. Once a legal entity exists, its name, address and registration details will be stated here.',
             'The local MoveMailbox client runs on your own computer and sends us neither credentials nor message content. Everything described below applies to the online transfer only.',
           ],
         },
@@ -129,7 +131,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Your rights',
           p: [
-            'You can request information about your data, its correction or its deletion by writing to {{CONTACT EMAIL}}. A job can be stopped at any moment — the messages already transferred stay in the destination mailbox, the source is not changed.',
+            'You can request information about your data, its correction or its deletion by writing to admin@movemailbox.com. A job can be stopped at any moment — the messages already transferred stay in the destination mailbox, the source is not changed.',
           ],
         },
       ],
@@ -147,7 +149,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Хто обробляє дані',
           p: [
-            'Сервісом MoveMailbox за адресою movemailbox.com керує {{ОПЕРАТОР: юридична особа або ФОП, адреса}}. Питання щодо обробки даних — {{КОНТАКТНИЙ EMAIL}}.',
+            'Сервісом MoveMailbox за адресою movemailbox.com опікується приватний розробник проєкту: юридичну особу не зареєстровано, оплата не приймається, персонал і підрядники до даних не залучаються. Питання щодо обробки даних, запити та скарги — admin@movemailbox.com; відповідаємо тією мовою, якою ви написали. Щойно з’явиться юридична особа, її назву, адресу та реєстраційні дані буде вказано тут.',
             'Локальний клієнт MoveMailbox працює на вашому комп’ютері й не надсилає нам ні облікових даних, ні вмісту листів. Усе, що описано нижче, стосується лише онлайн-перенесення.',
           ],
         },
@@ -183,7 +185,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
         {
           h: 'Ваші права',
           p: [
-            'Ви можете запитати відомості про свої дані, їх виправлення або видалення, написавши на {{КОНТАКТНИЙ EMAIL}}. Завдання можна зупинити будь-якої миті — перенесені листи залишаться у скриньці призначення, джерело не змінюється.',
+            'Ви можете запитати відомості про свої дані, їх виправлення або видалення, написавши на admin@movemailbox.com. Завдання можна зупинити будь-якої миті — перенесені листи залишаться у скриньці призначення, джерело не змінюється.',
           ],
         },
       ],
@@ -235,7 +237,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           h: 'Ответственность',
           p: [
             'Сервис предоставляется «как есть». Перед переносом сделайте резервную копию важной переписки и не отключайте старый ящик, пока не сверите счётчики папок.',
-            'Мы не несём ответственности за упущенную выгоду и за действия почтовых провайдеров. {{УКАЖИТЕ: предел ответственности и применимое право}}',
+            'Мы не несём ответственности за упущенную выгоду и за действия почтовых провайдеров. Совокупная ответственность ограничена суммой, которую вы заплатили за сервис за последние двенадцать месяцев; сейчас онлайн-перенос бесплатен и оплата не принимается, поэтому эта сумма равна нулю. Применимое право и место разрешения споров будут указаны здесь одновременно с регистрацией юридического лица — не позднее запуска первого платного тарифа; до этого момента обязательные нормы законодательства страны вашего проживания применяются в полном объёме и ничем не ограничиваются. Спорные вопросы просим сначала направлять на admin@movemailbox.com: мы отвечаем на каждое письмо.',
           ],
         },
         {
@@ -290,7 +292,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           h: 'Liability',
           p: [
             'The service is provided “as is”. Before a transfer, back up correspondence that matters to you and do not switch off the old mailbox until you have checked the folder counters.',
-            'We are not liable for lost profit or for the actions of email providers. {{SPECIFY: liability cap and governing law}}',
+            'We are not liable for lost profit or for the actions of email providers. Aggregate liability is capped at the amount you paid for the service over the previous twelve months; the online transfer is free today and no payment is accepted, so that amount is zero. The governing law and the venue for disputes will be stated here together with the registration of a legal entity — no later than the launch of the first paid plan; until then the mandatory rules of the law of your country of residence apply in full and are not limited by anything here. Please raise disputes at admin@movemailbox.com first: every message gets an answer.',
           ],
         },
         {
@@ -345,7 +347,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
           h: 'Відповідальність',
           p: [
             'Сервіс надається «як є». Перед перенесенням зробіть резервну копію важливого листування і не вимикайте стару скриньку, доки не звірите лічильники папок.',
-            'Ми не несемо відповідальності за втрачену вигоду та за дії поштових провайдерів. {{УКАЖІТЬ: межа відповідальності та застосовне право}}',
+            'Ми не несемо відповідальності за втрачену вигоду та за дії поштових провайдерів. Сукупна відповідальність обмежена сумою, яку ви сплатили за сервіс за останні дванадцять місяців; зараз онлайн-перенесення безкоштовне й оплата не приймається, тому ця сума дорівнює нулю. Застосовне право та місце вирішення спорів буде вказано тут одночасно з реєстрацією юридичної особи — не пізніше запуску першого платного тарифу; до того моменту імперативні норми законодавства країни вашого проживання застосовуються повністю і нічим не обмежуються. Спірні питання просимо спершу надсилати на admin@movemailbox.com: ми відповідаємо на кожен лист.',
           ],
         },
         {

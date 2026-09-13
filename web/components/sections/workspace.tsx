@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { initWorkspace } from '@/lib/workspace';
 import { workspace } from '@/content/sections/workspace';
+import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
 
 /**
@@ -13,6 +14,10 @@ const STATIC_SITE = process.env.NEXT_PUBLIC_STATIC_SITE === '1';
 
 export function Workspace({ lang }: { lang: Lang }) {
   const t = workspace[lang];
+  // Подписи кнопок, которые код меняет по ходу работы, живут в runtime-словаре:
+  // здесь берём из него же исходное состояние, чтобы серверная разметка и
+  // первое обновление в браузере не расходились.
+  const rt = workspaceRuntime[lang];
 
   // Интерфейс инициализируется всегда: без этого не работают ни схема
   // соединения, ни расширенные настройки, ни дерево папок — страница
@@ -85,8 +90,8 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <div className="adv-in">
                   <label>{t.securityLabel}<select data-sec><option value="tls">SSL / TLS</option><option value="starttls">STARTTLS</option></select></label>
                   <label>{t.portLabel}<select data-port><option value="auto">{t.portAuto}</option><option value="manual">{t.portManual}</option></select><input data-port-num type="number" min="1" max="65535" placeholder="993" inputMode="numeric" hidden /></label>
-                            <label style={{ gridColumn: '1/-1' }}>{t.subfolderLabel}
-                    <input type="text" placeholder={t.subfolderPlaceholder} spellCheck="false" /></label>
+                  <label style={{ gridColumn: '1/-1' }}>{t.subfolderLabel}
+                    <input type="text" data-subfolder placeholder={t.subfolderPlaceholder} spellCheck="false" /></label>
       </div>
               </details>
             </div>
@@ -115,12 +120,17 @@ export function Workspace({ lang }: { lang: Lang }) {
           <div className="opts">
             <details className="drop">
               <summary><span className="sn">03</span><b>{t.foldersTitle}</b><span className="sum" id="fsum">{t.foldersSum}</span><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
-              <div className="drop-in" id="flist">
-              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX</span><span className="c" data-c="18442">18 442</span><span className="s">{t.sizeInbox}</span></div>
-              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Sent</span><span className="c" data-c="9117">9 117</span><span className="s">{t.sizeSent}</span></div>
-              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Archive.2019-2024</span><span className="c" data-c="11863">11 863</span><span className="s">{t.sizeArchive}</span></div>
-              <div className="frow"><span className="bx"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Clients.Invoices</span><span className="c" data-c="1604">1 604</span><span className="s">{t.sizeInvoices}</span></div>
-              <div className="frow"><span className="bx off"><svg aria-hidden="true"><use href="#ck" /></svg></span><span className="nm">INBOX.Junk</span><span className="c" data-c="7330">7 330</span><span className="s">{t.sizeJunk}</span></div>
+              <div className="drop-in">
+                <div className="fbar">
+                  <button className="btn btn-g" type="button" id="floadBtn" disabled={STATIC_SITE}>
+                    <svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#cv" /></svg>{rt.foldersLoad}
+                  </button>
+                  <button className="btn btn-g" type="button" id="fallBtn" hidden>{rt.selectNone}</button>
+                </div>
+                {/* Список заполняется именами папок, которые вернул сервер-источника.
+                    До запроса он пуст: придуманных папок и размеров здесь нет. */}
+                <div id="flist"></div>
+                <p className="fhint" id="fhint">{t.foldersHint}</p>
               </div>
             </details>
             <details className="drop">
@@ -158,12 +168,17 @@ export function Workspace({ lang }: { lang: Lang }) {
               <span><strong>{t.logTitle}</strong><small>{t.logSub}</small></span>
               <span className="stt" id="stt"><i></i>{t.statusWaiting}</span>
             </div>
+            {/* Четыре величины, которые действительно приходят от задания:
+                процент, перенесено, пропущено, объём. Скорости и «осталось»
+                в API нет — выдумывать их из процентов нечестно. */}
             <div className="mon-s">
               <div><small>{t.metricProgress}</small><strong id="mp">0%</strong></div>
-              <div><small>{t.metricLeft}</small><strong id="me">--:--</strong></div>
-              <div><small>{t.metricSpeed}</small><strong id="mv">— <span style={{ fontSize: '.7em', color: '#5E7284' }}>{t.speedUnit}</span></strong></div>
+              <div><small>{t.metricTransferred}</small><strong id="mt">—</strong></div>
+              <div><small>{t.metricSkipped}</small><strong id="msk">—</strong></div>
+              <div><small>{t.metricBytes}</small><strong id="mv">—</strong></div>
             </div>
             <div className="track"><i id="mbar"></i></div>
+            <p className="mon-ph" id="mphase">{t.phaseIdle}</p>
             <div className="log" id="log" aria-live="polite">
               <div><time>00:00</time><b>{t.logFirst}</b></div>
             </div>

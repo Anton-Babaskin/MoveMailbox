@@ -283,12 +283,18 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .drop-in{padding:2px 12px 12px;animation:slide .32s cubic-bezier(.2,.7,.3,1)}
 @media (max-width:620px){.drop .sum{display:none}}
 .btn-lg{height:46px;padding:0 24px;font-size:.95rem;border-radius:12px}
-.frow{display:grid;grid-template-columns:20px 1fr auto auto;gap:14px;align-items:center;padding:9px 10px;border-radius:9px;
+.frow{display:grid;grid-template-columns:20px 1fr auto;gap:14px;align-items:center;padding:9px 10px;border-radius:9px;
   cursor:pointer;transition:background .16s}
 .frow:hover{background:var(--surf)}
 .frow .nm{font-family:var(--mono);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .frow .c,.frow .s{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right}
 .frow .c{min-width:62px}.frow .s{min-width:58px}
+/* Панель над списком папок: список приходит с сервера-источника по запросу,
+   поэтому кнопка запроса и подсказка — часть обычного состояния, а не ошибки. */
+.fbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:4px 10px 10px}
+.fhint{margin:6px 10px 0;font-size:.78rem;color:var(--ink-3);line-height:1.5}
+.fhint.bad{color:var(--red,#C0392B)}
+#flist:empty{display:none}
 .bx{width:19px;height:19px;border-radius:6px;border:1.5px solid var(--acc);background:var(--acc);display:grid;place-items:center;
   transition:.18s}
 .bx svg{width:11px;height:11px;color:var(--acc-ink)}
@@ -360,10 +366,16 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .mon-h .stt.run{color:var(--term-a);border-color:rgba(229,167,94,.4)}
 .mon-h .stt.run i{animation:pulse .8s infinite}
 .mon-h .stt.done{color:var(--term-g);border-color:rgba(79,214,172,.4)}
-.mon-s{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07)}
+.mon-s{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.07)}
+@media (max-width:720px){.mon-s{grid-template-columns:repeat(2,1fr)}}
 .mon-s div{background:var(--term);padding:15px 24px}
 .mon-s small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5E7284;display:block}
 .mon-s strong{font-size:1.45rem;color:var(--term-hi);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mon-ph{margin:0;padding:11px 24px 0;font-family:var(--mono);font-size:11.5px;color:#6E8494;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Неопределённый прогресс: сервер сообщил indeterminate — показываем движение,
+   а не проценты, которых он не давал. */
+.track.wait i{width:100%!important;opacity:.35}
 .track{height:6px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
 .track i{position:absolute;inset:0 auto 0 0;width:0%;border-radius:0 4px 4px 0;
   background:linear-gradient(90deg,var(--term-g),var(--term-a));transition:width .4s ease}
