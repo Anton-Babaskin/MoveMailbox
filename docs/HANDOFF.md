@@ -1,5 +1,82 @@
 # Engineering handoff — 2026-09-13
 
+## Real-mail pilot interruption (2026-09-14)
+
+- The updated image `staging-3ab2b71` was tested against the two owner-supplied
+  disposable Mail-in-a-Box accounts through `smoke-private-staging-mail.py`.
+  Both IMAP logins succeeded and one synthetic job reached `completed` with one
+  attempt. The operator interrupted the run before the remaining acceptance
+  cases because the interactive PTY echoed the stdin JSON; the credentials must
+  be rotated and must not be reused.
+- Post-interruption inspection found zero nonterminal worker jobs and zero
+  credential envelopes. The staging containers stayed healthy. Temporary pilot
+  scripts were removed from `/home/nomak`; synthetic test folders/messages remain
+  for the owner to remove after rotating the disposable accounts. No credentials,
+  message content or job IDs are recorded here.
+- This is not an acceptance pass. Selected-folder counters, repeat-without-
+  duplicates, cancellation and worker-restart recovery still need a rerun using
+  a no-echo secret channel (for example, a root-owned one-shot FIFO or an
+  operator-provided secret manager). PR #27 remains open until that pilot is
+  completed as requested; no public exposure was changed.
+
+The incident was closed by rotating both disposable mailbox passwords and
+rerunning through an SSH PTY with echo disabled and a shell trap restoring echo.
+The replacement passwords were supplied once via stdin and were not printed,
+stored or committed. Do not paste credentials into chat, commands, screenshots
+or Git.
+
+## Real-mail acceptance rerun (2026-09-14)
+
+- On `staging-3ab2b71`, both rotated test accounts authenticated successfully.
+  The pilot passed justLogin, justFolderSizes, dryRun and justFolders without
+  destination writes, then selected-folder/subfolder transfer in both directions.
+- A 6 MiB attachment, complete-message SHA-256, flags and INTERNALDATE matched;
+  repeats copied zero messages. Cancellation during native imapsync recovered
+  with an exact repeat; worker SIGKILL recovery completed on attempt 2 and its
+  repeat also copied zero messages.
+- Final checks passed: original INBOX/source fixtures unchanged, guest ownership
+  isolation, SQLite integrity, zero active jobs, zero credential envelopes and
+  no plaintext replacement password in DB/WAL/SHM or inspected service logs.
+  Synthetic fixture prefix was retained for manual cleanup; no cleanup password
+  is recorded here. VM staging remains healthy and private.
+- This closes the real-mail technical acceptance gate for this image. It does
+  not authorize public exposure, production DNS, strict mirror or off-site
+  backup. The earlier PTY echo incident is documented above; no mailbox password
+  should be reused.
+
+Next two technical steps: (1) merge PR #27 now that the documented pilot and
+CI are complete; (2) define closed-pilot admission/rate limits and schedule the
+first encrypted off-site metadata backup/restore drill. Keep website/frontend
+changes with Claude.
+
+## Closed VM update after native progress counters (ops/progress-stage-load)
+
+- PR #26 was merged as `3ab2b71bf3d42ae0573c25b4c82e6f146d29a19c`; the exact
+  source archive was transferred to the closed Ubuntu VM and its SHA-256 matched
+  on both machines. The image `staging-3ab2b71` built successfully, including
+  the real imapsync TLS verification stage.
+- The staging updater created and validated paired snapshot
+  `pre-3ab2b71bf3d4-20260913T211250Z`, atomically switched the immutable pin from
+  the previous image to `sha256:bb696a8a2cc9f3b89d1690842f6d75d45e7bc2620729e5a59d64039a62df2805`,
+  and reported healthy readiness. Both API and worker remain on the new image;
+  the previous digest remains the rollback target.
+- Closed-stage verifier passed: non-root/read-only/capability/resource limits,
+  private worker and API exposure, remote-worker health, secure guest session,
+  CSRF, Host/SSRF checks, egress denials for metadata/bridge/NAT/arbitrary HTTPS,
+  and certificate-verified TLS to `box.cekomcelik.com` and `box.arc-trading.com`.
+  No mailbox credentials, jobs or messages were used in this verification.
+- Owner requested teaching mode. `AGENTS.md` now instructs the agent to explain
+  changes and evidence in plain Russian for an administrator, keep MVP stages
+  explicit, and retain only risk-driven bounded load checks. Website/frontend
+  remains Claude's scope.
+
+Next two technical steps: (1) use the deployed image for one explicitly supplied
+  secret-mechanism real-mail acceptance (selected folders, counters, repeat,
+  cancel and worker restart), without storing credentials in chat or shell
+  history; (2) decide the closed-pilot admission/rate limits from that evidence,
+  then schedule a reversible off-site encrypted metadata backup drill. Public
+  access, production DNS and website work remain outside this agent's scope.
+
 ## Backend native progress counters (feature/backend-progress-counters)
 
 - Safely fast-forwarded main to `8701fed`; PRs #22/#23/#24 are merged, no open

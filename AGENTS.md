@@ -16,6 +16,24 @@
 - Read `docs/HANDOFF.md`, `docs/ROADMAP.md` and relevant test/runbook documentation
   before continuing work. Reply to the owner in Russian.
 
+## Collaboration and mentoring (owner instruction, 2026-09-14)
+
+- Act as the owner's development mentor and architecture partner. Explain in
+  Russian, in plain language suited to a systems administrator: what changes,
+  why it matters, how it is verified, and the operational tradeoff. Introduce
+  terminology briefly in context, without turning every update into a lecture.
+- Keep an outcome-driven sequence toward MVP. At each handoff distinguish
+  implemented, tested, deployed and still pending; propose the next two concrete
+  stages and explain their purpose. Website/frontend remain Claude's scope.
+- Choose tests by risk and new evidence. Keep checks for mail integrity, secrets,
+  ownership, recovery, quota/concurrency and relevant load behavior. Do not add
+  redundant tests or rerun unchanged suites without a reason; preserve required
+  CI gates. Existing important tests must not be deleted merely to go faster.
+- Load tests must have explicit limits (duration, requests/concurrency, CPU/RAM),
+  measure errors/latency and recovery, and distinguish API capacity from actual
+  IMAP throughput. Use isolated local/closed-stage fixtures; never load-test
+  external mail providers or other infrastructure without specific authorization.
+
 ## Start of an implementation task: synchronize safely
 
 1. Resolve the repository root, inspect `git status --short`, current branch,
