@@ -106,6 +106,31 @@ native counters, repeat/cancel/restart), retaining the separate browser gate for
 when website integration resumes. Do not add paid accounts or widen public access
 as part of this slice.
 
+## Competitor review (MailJerry) — what falls to the backend
+
+The owner reviewed mailjerry.com and approved the feature list below. The
+website side is taken care of here (provider presets in the form, provider
+landing pages, quickstart tiles); these items are backend work and are listed
+so they are not lost:
+
+- **Background transfer that survives the closed tab.** The job already runs
+  server-side; what is missing for the user is a way back to it — a list of the
+  guest's jobs is in the API (`GET /api/jobs`), but a job started in another
+  tab cannot be found without its ID.
+- **Re-sync and scheduled sync.** Run the same pair again, on demand or on a
+  schedule, without re-entering credentials. Needs stored (encrypted)
+  endpoints, which is a product decision, not a UI one.
+- **Backup mode** — periodic one-way sync into a target mailbox.
+- **Date-range migration.** imapsync supports it; the API has no field for it,
+  and the UI cannot offer what the API will not accept.
+- **Rate limiting** per job, to stay under provider throttling.
+- **Bulk migration from CSV** — many mailboxes in one run, for the business
+  tier.
+
+Also still open from the site side: exposing `totalMessages`,
+`remainingMessages`, `totalBytes` and `etaSeconds` in the job view (see the
+request above) — with them the console stops showing computed estimates.
+
 ## Request to the backend: expose the counters imapsync already prints
 
 Addressed by the backend slice above, with the inventory/ETA corrections noted.

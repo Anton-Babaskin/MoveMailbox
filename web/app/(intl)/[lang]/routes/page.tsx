@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { ProtocolLimits } from '@/components/sections/protocol-limits';
 import { PopularRoutes } from '@/components/sections/popular-routes';
+import { Quickstart } from '@/components/sections/quickstart';
 import { RouteIndex } from '@/components/sections/route-index';
 import { FinalCta } from '@/components/sections/final-cta';
 import { pages } from '@/content/pages';
@@ -40,6 +41,9 @@ export default async function Page({
       <HowItWorks lang={l} pageTitle />
       <ProtocolLimits lang={l} />
       <PopularRoutes lang={l} />
+      {/* Каталог маршрутов и страницы провайдеров ссылаются друг на друга:
+          часть спроса приходит на пару A → B, часть — на один сервис. */}
+      <Quickstart lang={l} />
       <RouteIndex lang={l} />
       <FinalCta lang={l} />
     </main>

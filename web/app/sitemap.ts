@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
+import { providerHubSlugs } from '@/data/provider-hubs';
 import { imapErrorSlugs } from '@/data/imap-errors';
 import { blogPosts } from '@/data/blog-posts';
 import { LANGS, href } from '@/i18n/config';
@@ -57,6 +58,15 @@ const routePages: Entry[] = migrationRoutes.map((route) => ({
   lastModified: CONTENT_UPDATED,
 }));
 
+/* Страницы провайдеров: точка входа по запросу про один сервис.
+   Приоритет как у маршрутов первого эшелона — по ним приходит основной спрос. */
+const hubPages: Entry[] = providerHubSlugs.map((slug) => ({
+  path: `/migrate/${slug}`,
+  changeFrequency: 'monthly' as ChangeFrequency,
+  priority: 0.86,
+  lastModified: CONTENT_UPDATED,
+}));
+
 const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
   path: `/docs/errors/${slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
@@ -77,11 +87,14 @@ const blogPages: Entry[] = blogPosts.map((post) => ({
 }));
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const all = [...pages, ...routePages, ...errorPages, ...blogPages];
+  const all = [...pages, ...routePages, ...hubPages, ...errorPages, ...blogPages];
 
   return all.flatMap((page) => {
     const languages: Record<string, string> = {
-      'x-default': `${SITE}${href('ru', page.path)}`,
+      /* Тот же x-default, что в метаданных страниц: английская версия.
+         Расхождение между sitemap и <link rel="alternate"> поисковик
+         трактует как ошибку разметки и может проигнорировать обе. */
+      'x-default': `${SITE}${href('en', page.path)}`,
     };
     for (const lang of LANGS) languages[lang] = `${SITE}${href(lang, page.path)}`;
 
@@ -89,8 +102,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE}${href(lang, page.path)}`,
       lastModified: page.lastModified,
       changeFrequency: page.changeFrequency,
-      priority:
-        lang === 'ru' ? page.priority : Math.max(0.1, page.priority - 0.05),
+      /* Приоритеты у трёх версий равные: русская больше не главная.
+         Английская и украинская — основные рынки, русская идёт наравне. */
+      priority: page.priority,
       alternates: { languages },
     }));
   });

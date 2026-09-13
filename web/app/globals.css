@@ -1252,3 +1252,30 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
   box-shadow:0 0 12px -2px color-mix(in srgb,var(--term-g) 70%,transparent)}
 .calc-bar.slow .calc-bar-l,.calc-bar.slow b{color:var(--term-hi)}
 @media (max-width:520px){.calc-bar{grid-template-columns:64px 1fr auto;gap:8px}}
+
+/* --- Быстрый старт: плитки провайдеров --- */
+.qs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(214px,1fr));gap:14px;margin-top:34px;
+  align-items:stretch}
+.qs-card{display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--card,var(--surf));
+  text-decoration:none;color:inherit;transition:.26s cubic-bezier(.2,.7,.3,1)}
+.qs-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--b2) 42%,var(--line));
+  box-shadow:0 18px 40px -26px color-mix(in srgb,var(--b2) 70%,transparent)}
+.qs-card:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.qs-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.qs-body b{font-size:1.02rem;font-weight:600;letter-spacing:-.01em}
+.qs-body small{font-size:.84rem;color:var(--ink-3);line-height:1.45}
+.qs-go{display:inline-flex;align-items:center;gap:7px;margin-top:auto;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--b2)}
+.qs-go svg{width:13px;height:13px;transition:transform .26s}
+.qs-card:hover .qs-go svg{transform:translateX(3px)}
+.qs-card .pvi.lg{align-self:start}
+
+/* --- Страница провайдера: карточка настроек --- */
+.hub-settings{margin-top:32px;padding:22px 24px;border:1px solid var(--line);border-radius:16px;background:var(--surf)}
+.hub-settings h2{margin:0;font-size:1.1rem}
+.hub-settings-lede{margin:8px 0 0;font-size:.88rem;color:var(--ink-3);max-width:68ch}
+.hub-settings dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;margin:18px 0 0;
+  background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.hub-settings dl>div{background:var(--card,var(--surf));padding:13px 16px}
+.hub-settings dt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.hub-settings dd{margin:5px 0 0;font-family:var(--mono);font-size:13px;word-break:break-word}
