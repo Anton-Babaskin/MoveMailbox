@@ -1,5 +1,30 @@
 # Engineering handoff — 2026-09-13
 
+## Real-mail pilot interruption (2026-09-14)
+
+- The updated image `staging-3ab2b71` was tested against the two owner-supplied
+  disposable Mail-in-a-Box accounts through `smoke-private-staging-mail.py`.
+  Both IMAP logins succeeded and one synthetic job reached `completed` with one
+  attempt. The operator interrupted the run before the remaining acceptance
+  cases because the interactive PTY echoed the stdin JSON; the credentials must
+  be rotated and must not be reused.
+- Post-interruption inspection found zero nonterminal worker jobs and zero
+  credential envelopes. The staging containers stayed healthy. Temporary pilot
+  scripts were removed from `/home/nomak`; synthetic test folders/messages remain
+  for the owner to remove after rotating the disposable accounts. No credentials,
+  message content or job IDs are recorded here.
+- This is not an acceptance pass. Selected-folder counters, repeat-without-
+  duplicates, cancellation and worker-restart recovery still need a rerun using
+  a no-echo secret channel (for example, a root-owned one-shot FIFO or an
+  operator-provided secret manager). PR #27 remains open until that pilot is
+  completed as requested; no public exposure was changed.
+
+Next two technical steps: (1) rotate both disposable mailbox passwords and wire
+the VM test command to a secret channel with terminal echo disabled, then rerun
+only the unfinished acceptance cases; (2) after the evidence is complete, merge
+PR #27 and record the final pilot result. Do not paste credentials into chat,
+commands, screenshots or Git.
+
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
 - PR #26 was merged as `3ab2b71bf3d42ae0573c25b4c82e6f146d29a19c`; the exact
