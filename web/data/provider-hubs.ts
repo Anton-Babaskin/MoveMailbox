@@ -334,14 +334,14 @@ export const providerHubs: ProviderHub[] = [
     ru: {
       title: 'Перенос почты по IMAP между любыми серверами — MoveMailbox',
       description:
-        'Как перенести ящик по IMAP: где взять адрес сервера, порты 993 и 143, SSL/TLS против STARTTLS и перенос по IP-адресу.',
+        'Как перенести ящик по IMAP: где взять адрес сервера, порты 993 и 143, SSL/TLS против STARTTLS и что делать во время переезда домена.',
       h1: 'Перенос почты по IMAP',
       intro:
-        'IMAP поддерживают все почтовые сервисы и почти каждый хостинг, поэтому перенести ящик можно между любыми двумя серверами — не спрашивая разрешения ни у одного из них. Нужны четыре вещи с каждой стороны: адрес сервера, порт, логин и пароль. Ниже — где их взять, когда порт 993, а когда 143, и что делать, если домен ещё не переключён на новый сервер.',
+        'IMAP поддерживают все почтовые сервисы и почти каждый хостинг, поэтому перенести ящик можно между любыми двумя серверами — не спрашивая разрешения ни у одного из них. Нужны четыре вещи с каждой стороны: адрес сервера, порт, логин и пароль. Ниже — где их взять, когда порт 993, а когда 143, и как подключиться, пока домен ещё указывает на старый сервер.',
       pitfalls: [
         'Адрес сервера почти всегда есть в панели хостинга («Настройка почтового клиента») или в письме от провайдера при заведении ящика. Если панели нет, работает imap.домен или mail.домен.',
         'Порт 993 — это SSL/TLS, порт 143 — STARTTLS. Мы не подключаемся без шифрования и не отключаем проверку сертификата: если сертификат сервера не проходит проверку, это видно в журнале, а не молча игнорируется.',
-        'Пока домен переключается на нового провайдера, имя сервера может вести на старый. Поэтому в поле сервера можно указать IP-адрес — перенос пойдёт туда, куда нужно, а не туда, куда показывает DNS.',
+        'Пока домен переключается на нового провайдера, ваше имя mail.домен ещё ведёт на старый сервер. Правильный обход — не IP, а собственное имя хостинга (вроде mail.хостер.tld), которое от вашего DNS не зависит: сертификат проверяется ровно по тому имени, которое вы ввели, и на IP он почти никогда не выписан.',
         'У части хостингов логин — не адрес почты, а имя вида user@domain или просто user. Ошибка авторизации при верном пароле чаще всего означает именно это.',
       ],
       faq: [
@@ -351,7 +351,7 @@ export const providerHubs: ProviderHub[] = [
         ],
         [
           'Можно ли указать IP вместо имени сервера?',
-          'Да, поле принимает и имя, и IP. Это стандартный приём на время переезда домена, когда DNS ещё показывает на старый сервер.',
+          'Поле его принимает, но подключение по IP пройдёт только если сертификат сервера выписан на этот IP — это редкость. Проверка сертификата идёт по тому, что введено в поле, и отключить её нельзя: именно так пароль и уезжает не на тот сервер. На время переезда домена используйте имя хостинга, а не своё.',
         ],
         [
           'Перенос идёт через ваши серверы?',
@@ -366,14 +366,14 @@ export const providerHubs: ProviderHub[] = [
     en: {
       title: 'IMAP mailbox migration between any servers — MoveMailbox',
       description:
-        'How to migrate a mailbox over IMAP: where to find the server address, ports 993 and 143, SSL/TLS versus STARTTLS, and migrating by IP.',
+        'How to migrate a mailbox over IMAP: where to find the server address, ports 993 and 143, SSL/TLS versus STARTTLS, and what to do mid-domain-transfer.',
       h1: 'IMAP mailbox migration',
       intro:
-        'Every mail service and almost every hosting panel speaks IMAP, so a mailbox can be moved between any two servers without asking either of them for permission. You need four things per side: server address, port, login and password. Below is where to find them, when the port is 993 and when it is 143, and what to do while the domain still points at the old host.',
+        'Every mail service and almost every hosting panel speaks IMAP, so a mailbox can be moved between any two servers without asking either of them for permission. You need four things per side: server address, port, login and password. Below is where to find them, when the port is 993 and when it is 143, and how to connect while the domain still points at the old host.',
       pitfalls: [
         'The server address is nearly always in the hosting panel under "mail client configuration", or in the message the provider sent when the mailbox was created. With no panel, imap.yourdomain or mail.yourdomain usually answers.',
         'Port 993 means SSL/TLS, port 143 means STARTTLS. We never connect unencrypted and never turn certificate verification off: a certificate that fails validation shows up in the log instead of being silently ignored.',
-        'While a domain is moving to a new provider, the server name can still resolve to the old host. That is why the server field also takes an IP address — the transfer then goes where you intend, not where DNS points.',
+        'While a domain is moving to a new provider, your own mail.yourdomain still resolves to the old host. The right workaround is not an IP but the hosting provider’s own mail hostname (something like mail.hoster.tld), which does not depend on your DNS: the certificate is verified against exactly the name you typed, and certificates are almost never issued for an IP.',
         'On some hosts the login is not the email address but user@domain or plain user. An authentication failure with a correct password usually means exactly this.',
       ],
       faq: [
@@ -383,7 +383,7 @@ export const providerHubs: ProviderHub[] = [
         ],
         [
           'Can I enter an IP instead of a hostname?',
-          'Yes, the field accepts both. It is the standard move during a domain transfer, while DNS still points at the old server.',
+          'The field accepts one, but the connection succeeds only if the server certificate covers that IP — which is rare. Verification runs against whatever you typed and cannot be turned off: skipping it is exactly how a password ends up on the wrong server. During a domain transfer use the hosting provider’s hostname instead of your own.',
         ],
         [
           'Does the mail pass through your servers?',
@@ -398,14 +398,14 @@ export const providerHubs: ProviderHub[] = [
     uk: {
       title: 'Перенесення пошти за IMAP між будь-якими серверами — MoveMailbox',
       description:
-        'Як перенести скриньку за IMAP: де взяти адресу сервера, порти 993 і 143, SSL/TLS проти STARTTLS і перенесення за IP-адресою.',
+        'Як перенести скриньку за IMAP: де взяти адресу сервера, порти 993 і 143, SSL/TLS проти STARTTLS і що робити під час переїзду домену.',
       h1: 'Перенесення пошти за IMAP',
       intro:
-        'IMAP підтримують усі поштові сервіси та майже кожен хостинг, тому скриньку можна перенести між будь-якими двома серверами — не питаючи дозволу в жодного з них. Потрібні чотири речі з кожного боку: адреса сервера, порт, логін і пароль. Нижче — де їх узяти, коли порт 993, а коли 143, і що робити, якщо домен ще не переключено на новий сервер.',
+        'IMAP підтримують усі поштові сервіси та майже кожен хостинг, тому скриньку можна перенести між будь-якими двома серверами — не питаючи дозволу в жодного з них. Потрібні чотири речі з кожного боку: адреса сервера, порт, логін і пароль. Нижче — де їх узяти, коли порт 993, а коли 143, і як підключитися, доки домен ще вказує на старий сервер.',
       pitfalls: [
         'Адреса сервера майже завжди є в панелі хостингу («Налаштування поштового клієнта») або в листі від провайдера, коли скриньку створювали. Якщо панелі немає, працює imap.домен або mail.домен.',
         'Порт 993 — це SSL/TLS, порт 143 — STARTTLS. Ми не підключаємось без шифрування і не вимикаємо перевірку сертифіката: якщо сертифікат сервера не проходить перевірку, це видно в журналі, а не мовчки ігнорується.',
-        'Поки домен переходить до нового провайдера, ім’я сервера може вести на старий. Тому в полі сервера можна вказати IP-адресу — перенесення піде туди, куди потрібно, а не туди, куди показує DNS.',
+        'Поки домен переходить до нового провайдера, ваше ім’я mail.домен ще веде на старий сервер. Правильний обхід — не IP, а власне ім’я хостингу (на кшталт mail.хостер.tld), яке від вашого DNS не залежить: сертифікат перевіряється саме за тим ім’ям, яке ви ввели, а на IP його майже ніколи не виписують.',
         'У частини хостингів логін — не адреса пошти, а ім’я на кшталт user@domain або просто user. Помилка авторизації за правильного пароля найчастіше означає саме це.',
       ],
       faq: [
@@ -415,7 +415,7 @@ export const providerHubs: ProviderHub[] = [
         ],
         [
           'Чи можна вказати IP замість імені сервера?',
-          'Так, поле приймає і ім’я, і IP. Це стандартний прийом на час переїзду домену, коли DNS ще показує на старий сервер.',
+          'Поле його приймає, але підключення за IP пройде лише якщо сертифікат сервера виписано на цю IP — це рідкість. Перевірка сертифіката йде за тим, що введено в полі, і вимкнути її не можна: саме так пароль і потрапляє не на той сервер. На час переїзду домену використовуйте ім’я хостингу, а не своє.',
         ],
         [
           'Чи йде перенесення через ваші сервери?',

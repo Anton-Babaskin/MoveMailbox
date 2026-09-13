@@ -15,9 +15,9 @@ export const providerHubPage = {
     settingsLede: 'То же самое подставляется в форму автоматически, когда вы выбираете провайдера.',
     genericTitle: 'Где взять настройки',
     genericLede:
-      'У своего сервера параметры смотрят в панели хостинга — раздел «Почта → Настройка клиента». Форма принимает и имя сервера, и IP-адрес.',
+      'У своего сервера параметры смотрят в панели хостинга — раздел «Почта → Настройка клиента». Вводите имя сервера, а не IP: сертификат проверяется по тому, что введено, и на IP он обычно не выписан.',
     genericRows: [
-      ['Сервер', 'imap.домен или mail.домен, либо IP-адрес'],
+      ['Сервер', 'imap.домен или mail.домен — имя из сертификата'],
       ['Порт', '993 — SSL/TLS, 143 — STARTTLS'],
       ['Логин', 'чаще полный адрес, иногда user@domain или user'],
       ['Пароль', 'от ящика; у крупных сервисов — пароль приложения'],
@@ -56,9 +56,9 @@ export const providerHubPage = {
     settingsLede: 'The form fills these in for you as soon as you pick the provider.',
     genericTitle: 'Where to find the settings',
     genericLede:
-      'For your own server the values live in the hosting panel, under "Mail → client configuration". The form accepts a hostname or an IP address.',
+      'For your own server the values live in the hosting panel, under "Mail → client configuration". Enter the hostname rather than an IP: the certificate is checked against what you type, and certificates rarely cover an IP.',
     genericRows: [
-      ['Server', 'imap.yourdomain or mail.yourdomain, or an IP address'],
+      ['Server', 'imap.yourdomain or mail.yourdomain — the name in the certificate'],
       ['Port', '993 for SSL/TLS, 143 for STARTTLS'],
       ['Username', 'usually the full address, sometimes user@domain or user'],
       ['Password', 'the mailbox password; large services need an app password'],
@@ -97,9 +97,9 @@ export const providerHubPage = {
     settingsLede: 'Те саме форма підставляє автоматично, щойно ви обираєте провайдера.',
     genericTitle: 'Де взяти налаштування',
     genericLede:
-      'Для власного сервера параметри дивляться в панелі хостингу — розділ «Пошта → Налаштування клієнта». Форма приймає і ім’я сервера, і IP-адресу.',
+      'Для власного сервера параметри дивляться в панелі хостингу — розділ «Пошта → Налаштування клієнта». Уводьте ім’я сервера, а не IP: сертифікат перевіряють за тим, що введено, і на IP його зазвичай не виписують.',
     genericRows: [
-      ['Сервер', 'imap.домен або mail.домен, чи IP-адреса'],
+      ['Сервер', 'imap.домен або mail.домен — ім’я із сертифіката'],
       ['Порт', '993 — SSL/TLS, 143 — STARTTLS'],
       ['Логін', 'найчастіше повна адреса, іноді user@domain або user'],
       ['Пароль', 'від скриньки; у великих сервісів — пароль застосунку'],
