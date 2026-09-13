@@ -60,4 +60,7 @@ func cloneSnapshot(ownerID string, view View, history []StreamEvent) Snapshot {
 	return Snapshot{OwnerID: ownerID, View: cloneView(view), History: clonedHistory}
 }
 
-func cloneEvent(event migrator.Event) migrator.Event { return event }
+func cloneEvent(event migrator.Event) migrator.Event {
+	event.ProgressCounters = event.ProgressCounters.Clone()
+	return event
+}

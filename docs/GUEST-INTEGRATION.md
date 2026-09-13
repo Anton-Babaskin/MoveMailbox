@@ -50,7 +50,8 @@ in `HANDOFF.md` for what was verified in a browser and what is still open.
 6. `client.watch(id,{snapshot,event,connection,error})` listens to named events.
    Replace the full view and recent logs on snapshot. For migration events,
    render `phase,currentFolder,progress,indeterminate,transferred,skipped,bytes`.
-   An absent field is not an explicit zero. No guaranteed ETA/speed field exists.
+   An absent field is not an explicit zero. Native optional counters are
+   documented below; ETA is always an estimate, not a guaranteed completion time.
 7. `await client.cancel(id)` acknowledges the request, not completed shutdown.
    Continue monitoring until status is `completed`, `failed`, or `cancelled`.
 8. On refresh `client.get(savedId)` restores the owned view, then `watch` resumes
@@ -82,6 +83,38 @@ does not yet offer a client idempotency key for lost start acknowledgements.
 Map `APIError.code` into RU/EN/UK UI strings and retain the status for retry
 guidance. HTTP 429 means capacity/rate limit; 503 means a service is unavailable;
 403 requires investigation or a renewed guest session, not bypassing protection.
+
+## Native progress counters
+
+Events and job views optionally expose `totalMessages`, `remainingMessages`,
+`totalBytes` and `etaSeconds`. An omitted field means unknown; **zero is known**.
+The same fields survive worker JSON transport, job persistence, GET, and SSE
+snapshots. The SDK passes them through without requiring a frontend change.
+
+- `totalMessages`: source message count reported for the native run's selection.
+- `remainingMessages`: native unprocessed message count, not necessarily messages
+  that will be copied; some may already exist or be skipped. Never derive it by
+  subtracting transferred messages alone.
+- `totalBytes`: source inventory bytes reported by `Host1 Total size`, not traffic
+  still to send. It is **not** the entire-mailbox quota inventory when folders
+  are selected. Do not subtract copied bytes to promise exact remaining traffic.
+- `etaSeconds`: imapsync's last reported time estimate. Continue marking it as
+  approximate. Absent if its output format contains no seconds prediction, while
+  verifying, or in a terminal job view; historical events can retain older ETA.
+
+On events with `countersUpdated:true`, **replace all four counter fields**,
+clearing ones absent from that event. This is a full observation snapshot, not
+an incremental patch. A new native attempt emits an empty counter snapshot to
+clear the previous attempt's totals/ETA. Events from older engines omit the
+flag and do not change the last observation. A full job snapshot always replaces
+the view. Every native log event repeats the current observation so worker
+history trimming cannot remove the only record of a known total.
+
+Counts are point-in-time observations: incoming mail, filters, provider behavior
+and native retries can change them. Preflight/demo/older worker versions may
+provide none. Completion does not manufacture a remaining count of zero, since
+dry runs and folder-only jobs can also complete successfully. No extra IMAP
+connection or changes to quota policy are introduced for these counters.
 
 ## Free limit and acceptance
 

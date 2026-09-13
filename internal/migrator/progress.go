@@ -11,7 +11,9 @@ var (
 	skippedPattern     = regexp.MustCompile(`(?i)^\s*Messages skipped\s*:\s*([0-9]+)(?:\s|$)`)
 	bytesPattern       = regexp.MustCompile(`(?i)^\s*Total bytes transferred\s*:\s*([0-9]+)(?:\s|$)`)
 	host1TotalPattern  = regexp.MustCompile(`^Host1 Nb messages:\s*([0-9]+) messages\s*$`)
+	host1BytesPattern  = regexp.MustCompile(`^Host1 Total size:\s*([0-9]+) bytes(?:\s+\([^\r\n]*\))?\s*$`)
 	etaPattern         = regexp.MustCompile(`\bETA:.*\s([0-9]+)/([0-9]+) msgs left(?:\s|$)`)
+	etaSecondsPattern  = regexp.MustCompile(`\bETA:.*\s([0-9]+) s\s+[0-9]+/[0-9]+ msgs left(?:\s|$)`)
 	copiedPattern      = regexp.MustCompile(`^msg .+/[0-9]+\s+\{([0-9]+)\}\s+copied to\s+`)
 	skippedLinePattern = regexp.MustCompile(`^(?:-\s*)?msg .+\sskipped(?:\s|$)`)
 
@@ -23,20 +25,33 @@ var (
 
 type imapsyncProgress struct {
 	currentFolder string
-	totalMessages int64
+	counters      ProgressCounters
+	verifying     bool
 	lastProgress  int
 }
 
 func (progress *imapsyncProgress) consume(line string, result *Result) (Event, bool) {
 	if line == "++++ End looping on each folder" {
+		progress.verifying = true
+		progress.counters.ETASeconds = nil
 		progress.lastProgress = max(progress.lastProgress, 98)
 		return Event{Type: "progress", Phase: "verifying", Progress: progress.lastProgress}, true
 	}
 
-	if total, ok := parseHost1Total(line); ok && progress.totalMessages == 0 {
-		progress.totalMessages = total
+	if total, ok := parseHost1Total(line); ok {
+		progress.counters.TotalMessages = &total
+		progress.counters = progress.counters.Clone()
+		if progress.verifying {
+			return Event{}, false
+		}
 		progress.lastProgress = max(progress.lastProgress, 5)
 		return Event{Type: "progress", Phase: "preparing", Progress: progress.lastProgress}, true
+	}
+	if match := host1BytesPattern.FindStringSubmatch(line); len(match) == 2 {
+		if size, err := strconv.ParseInt(match[1], 10, 64); err == nil {
+			progress.counters.TotalBytes = &size
+		}
+		return Event{}, false
 	}
 
 	if folder, index, total, ok := parseFolderProgress(line); ok {
@@ -63,8 +78,15 @@ func (progress *imapsyncProgress) consume(line string, result *Result) (Event, b
 		result.Skipped++
 	}
 
-	if remaining, total, ok := parseETA(line); ok && total > 0 {
-		progress.totalMessages = total
+	if remaining, total, ok := parseETA(line); ok && !progress.verifying {
+		progress.counters.TotalMessages = &total
+		progress.counters.RemainingMessages = &remaining
+		progress.counters.ETASeconds = nil
+		if match := etaSecondsPattern.FindStringSubmatch(line); len(match) == 2 {
+			if seconds, err := strconv.ParseInt(match[1], 10, 64); err == nil {
+				progress.counters.ETASeconds = &seconds
+			}
+		}
 		processed := total - remaining
 		progress.lastProgress = max(progress.lastProgress, boundedProgress(processed, total))
 		return Event{
@@ -120,7 +142,7 @@ func parseETA(line string) (remaining, total int64, ok bool) {
 	}
 	remaining, firstErr := strconv.ParseInt(match[1], 10, 64)
 	total, secondErr := strconv.ParseInt(match[2], 10, 64)
-	if firstErr != nil || secondErr != nil || remaining < 0 || total < 1 || remaining > total {
+	if firstErr != nil || secondErr != nil || remaining < 0 || total < 0 || remaining > total {
 		return 0, 0, false
 	}
 	return remaining, total, true
@@ -137,7 +159,7 @@ func boundedProgress(done, total int64) int {
 		done = total
 	}
 	// Reserve 0-4% for startup and 96-100% for final verification.
-	return 5 + int(done*90/total)
+	return 5 + int(float64(done)/float64(total)*90)
 }
 
 func updateResult(line string, result *Result) {

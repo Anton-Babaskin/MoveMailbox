@@ -1,6 +1,37 @@
 # Engineering handoff — 2026-09-13
 
+## Backend native progress counters (feature/backend-progress-counters)
+
+- Safely fast-forwarded main to `8701fed`; PRs #22/#23/#24 are merged, no open
+  PR remained, and both main push workflows passed for that exact SHA.
+- Added optional native `totalMessages`, `remainingMessages`, `totalBytes` and
+  `etaSeconds` to events and job views. Unknown values remain omitted, observed
+  zero survives JSON, and `countersUpdated` explicitly replaces/clears observations.
+  New attempts reset counters; terminal views clear ETA without inventing zero
+  remaining messages. Bounded worker event retention preserves observations.
+- Corrected the proposal below: native ETA is still an estimate, and whole-mailbox
+  quota inventory must not masquerade as selected-transfer size. `totalBytes`
+  comes from native Host1 inventory for this run, not quota admission. No extra
+  mailbox login/inventory or website/frontend modification was introduced.
+- Tests cover native formats/overflow/zero, long log tails, reader isolation,
+  SQLite reopen, encrypted worker HTTP transport with trimmed history and service
+  restart, guest ownership and SSE/GET serialization. Full Go tests and vet pass
+  on Windows; Python harness checks in WSL: 48 passed, one expected skip (age
+  unavailable). All six SDK tests pass. CI status belongs to the exact pushed SHA.
+- No test VM update, real mailbox mutation, public deployment or release was
+  performed. Browser acceptance over same-origin HTTPS remains an open gate;
+  off-site backups remain deferred by the owner.
+
+Next two technical steps: (1) review/merge the counter PR after exact-head CI,
+then update the closed test VM with the reviewed image and transactional rollback;
+(2) run a bounded real-mail API/worker acceptance on that image (selected folders,
+native counters, repeat/cancel/restart), retaining the separate browser gate for
+when website integration resumes. Do not add paid accounts or widen public access
+as part of this slice.
+
 ## Request to the backend: expose the counters imapsync already prints
+
+Addressed by the backend slice above, with the inventory/ETA corrections noted.
 
 The workspace now shows elapsed time, measured transfer rate and a remaining
 estimate, all computed in the browser from `startedAt` plus the `transferred`
