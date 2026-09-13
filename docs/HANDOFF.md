@@ -19,11 +19,35 @@
   operator-provided secret manager). PR #27 remains open until that pilot is
   completed as requested; no public exposure was changed.
 
-Next two technical steps: (1) rotate both disposable mailbox passwords and wire
-the VM test command to a secret channel with terminal echo disabled, then rerun
-only the unfinished acceptance cases; (2) after the evidence is complete, merge
-PR #27 and record the final pilot result. Do not paste credentials into chat,
-commands, screenshots or Git.
+The incident was closed by rotating both disposable mailbox passwords and
+rerunning through an SSH PTY with echo disabled and a shell trap restoring echo.
+The replacement passwords were supplied once via stdin and were not printed,
+stored or committed. Do not paste credentials into chat, commands, screenshots
+or Git.
+
+## Real-mail acceptance rerun (2026-09-14)
+
+- On `staging-3ab2b71`, both rotated test accounts authenticated successfully.
+  The pilot passed justLogin, justFolderSizes, dryRun and justFolders without
+  destination writes, then selected-folder/subfolder transfer in both directions.
+- A 6 MiB attachment, complete-message SHA-256, flags and INTERNALDATE matched;
+  repeats copied zero messages. Cancellation during native imapsync recovered
+  with an exact repeat; worker SIGKILL recovery completed on attempt 2 and its
+  repeat also copied zero messages.
+- Final checks passed: original INBOX/source fixtures unchanged, guest ownership
+  isolation, SQLite integrity, zero active jobs, zero credential envelopes and
+  no plaintext replacement password in DB/WAL/SHM or inspected service logs.
+  Synthetic fixture prefix was retained for manual cleanup; no cleanup password
+  is recorded here. VM staging remains healthy and private.
+- This closes the real-mail technical acceptance gate for this image. It does
+  not authorize public exposure, production DNS, strict mirror or off-site
+  backup. The earlier PTY echo incident is documented above; no mailbox password
+  should be reused.
+
+Next two technical steps: (1) merge PR #27 now that the documented pilot and
+CI are complete; (2) define closed-pilot admission/rate limits and schedule the
+first encrypted off-site metadata backup/restore drill. Keep website/frontend
+changes with Claude.
 
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
