@@ -15,7 +15,7 @@ export function initCalculator(lang: Lang = 'ru') {
 
   /* ---- calculator ---- */
   (function(){
-    var sz=$('#cSize'), grid=$('#cSrc'); if(!sz) return;
+    var sz=$('#cSize'), grid=$('#cSrc'), dstGrid=$('#cDst'); if(!sz) return;
     /* Формы числительных приходят из словаря вместе с правилом выбора:
        'slavic' — три формы (1 день / 2 дня / 5 дней), 'english' — две. */
     function plural(n,f){
@@ -29,25 +29,53 @@ export function initCalculator(lang: Lang = 'ru') {
       return '<em>'+d+'</em> '+plural(d,T.days)+(r?' <em>'+r+'</em> '+T.hours:'');
     }
     /* Ключ словаря — значение data-n: разметка одна на все языки. */
-    function src(act){ return T.sources[act.dataset.n] || {name:act.dataset.n, note:act.dataset.note}; }
+    function pick(g){ return g.querySelector('[aria-pressed="true"]'); }
+    function info(act,dict){ return dict[act.dataset.n] || {name:act.dataset.n, note:''}; }
     function calc(){
-      var gb=+sz.value, act=grid.querySelector('[aria-pressed="true"]'),
-          rate=+act.dataset.r, mb=gb*1024, hours=mb/rate, s=src(act);
+      var gb=+sz.value,
+          from=pick(grid), to=pick(dstGrid),
+          fromRate=+from.dataset.r, toRate=+to.dataset.r,
+          /* Скорость переноса — минимум из двух: медленная сторона определяет
+             всё, быстрая просто ждёт. Именно поэтому приёмник вообще спрашивается. */
+          rate=Math.min(fromRate,toRate),
+          slow=toRate<fromRate?to:from,
+          mb=gb*1024, hours=mb/rate,
+          s=info(from,T.sources), d=info(to,T.destinations),
+          limit=info(slow, toRate<fromRate?T.destinations:T.sources);
       sz.style.setProperty('--fill',((gb-1)/119*100)+'%');
       $('#cSizeV').textContent=gb+' '+T.gb;
       $('#cTime').innerHTML=human(hours);
       $('#cName').textContent=s.name;
+      $('#cDstName').textContent=d.name;
       $('#cRate').textContent=(rate>=1024?(rate/1024).toFixed(1)+' '+T.gbPerHour:rate+' '+T.mbPerHour);
       $('#cMsgs').textContent=Math.round(gb*3400).toLocaleString(T.numberLocale);
       var plan = gb<=5?T.planFree : gb<=25?T.planStandard : gb<=100?T.planLarge : T.planBusiness;
       $('#cPlan').textContent=plan;
-      $('#cNote').textContent=T.notePrefix+s.note+T.noteTail;
+      /* В примечании называем узкое место: человеку важно не «медленно»,
+         а «медленно из-за приёмника» — это меняет решение, а не настроение. */
+      /* Полосы: доля от быстрой стороны, чтобы разрыв было видно глазами. */
+      var top=Math.max(fromRate,toRate);
+      function bar(id,r,slowest){
+        var el=$(id); if(!el) return;
+        el.classList.toggle('slow', slowest);
+        var fill=el.querySelector('u'), value=el.querySelector('b');
+        if(fill) fill.style.width=Math.max(3,Math.round(r/top*100))+'%';
+        if(value) value.textContent=(r>=1024?(r/1024).toFixed(1)+' '+T.gbPerHour:r+' '+T.mbPerHour);
+      }
+      bar('#cBarSrc',fromRate,fromRate<=toRate);
+      bar('#cBarDst',toRate,toRate<fromRate);
+
+      var side=(toRate<fromRate?T.sideDestination:T.sideSource);
+      $('#cNote').textContent=T.notePrefix+side+limit.note+T.noteTail;
     }
     sz.addEventListener('input',calc);
-    grid.addEventListener('click',function(e){
-      var b=e.target.closest('button'); if(!b) return;
-      $$('button',grid).forEach(function(o){o.setAttribute('aria-pressed','false')});
-      b.setAttribute('aria-pressed','true'); calc();
+    [grid,dstGrid].forEach(function(g){
+      if(!g) return;
+      g.addEventListener('click',function(e){
+        var b=e.target.closest('button'); if(!b) return;
+        $$('button',g).forEach(function(o){o.setAttribute('aria-pressed','false')});
+        b.setAttribute('aria-pressed','true'); calc();
+      });
     });
     calc();
   })();

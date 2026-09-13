@@ -27,11 +27,24 @@ export function Calculator({ lang }: { lang: Lang }) {
             <div className="ctrl">
               <label>{t.srcLabel}</label>
               <div className="src-grid" id="cSrc">
-                <button type="button" aria-pressed="true"  data-r="104"  data-n="Gmail"           data-note="суточный лимит выгрузки ~2.5 ГБ"><b>{t.src.gmail.name}</b><small>{t.src.gmail.rate}</small></button>
-                <button type="button" aria-pressed="false" data-r="520"  data-n="Microsoft 365"   data-note="троттлинг Exchange Online при активной записи"><b>{t.src.m365.name}</b><small>{t.src.m365.rate}</small></button>
-                <button type="button" aria-pressed="false" data-r="1450" data-n="Яндекс.Почта"    data-note="ограничение частоты запросов, рвёт частые сессии"><b>{t.src.yandex.name}</b><small>{t.src.yandex.rate}</small></button>
-                <button type="button" aria-pressed="false" data-r="820"  data-n="iCloud Mail"     data-note="низкий лимит одновременных подключений"><b>{t.src.icloud.name}</b><small>{t.src.icloud.rate}</small></button>
-                <button type="button" aria-pressed="false" data-r="4600" data-n="свой IMAP-сервер" data-note="упирается в канал, а не в лимиты провайдера"><b>{t.src.own.name}</b><small>{t.src.own.rate}</small></button>
+                <button type="button" aria-pressed="true"  data-r="104"  data-n="Gmail"><b>{t.src.gmail.name}</b><small>{t.src.gmail.rate}</small><i>{t.src.gmail.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="520"  data-n="Microsoft 365"><b>{t.src.m365.name}</b><small>{t.src.m365.rate}</small><i>{t.src.m365.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="1450" data-n="Яндекс.Почта"><b>{t.src.yandex.name}</b><small>{t.src.yandex.rate}</small><i>{t.src.yandex.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="820"  data-n="iCloud Mail"><b>{t.src.icloud.name}</b><small>{t.src.icloud.rate}</small><i>{t.src.icloud.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="4600" data-n="свой IMAP-сервер"><b>{t.src.own.name}</b><small>{t.src.own.rate}</small><i>{t.src.own.basis}</i></button>
+              </div>
+            </div>
+            <div className="ctrl">
+              <label>{t.dstLabel}</label>
+              {/* Приёмник считается отдельно: у Gmail документированный лимит на
+                  загрузку в пять раз строже, чем на выгрузку, и без этой колонки
+                  расчёт переноса В Gmail врал бы в пять раз. */}
+              <div className="src-grid" id="cDst">
+                <button type="button" aria-pressed="true"  data-r="4600" data-n="свой IMAP-сервер"><b>{t.dst.own.name}</b><small>{t.dst.own.rate}</small><i>{t.dst.own.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="21"   data-n="Gmail"><b>{t.dst.gmail.name}</b><small>{t.dst.gmail.rate}</small><i>{t.dst.gmail.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="520"  data-n="Microsoft 365"><b>{t.dst.m365.name}</b><small>{t.dst.m365.rate}</small><i>{t.dst.m365.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="1450" data-n="Яндекс.Почта"><b>{t.dst.yandex.name}</b><small>{t.dst.yandex.rate}</small><i>{t.dst.yandex.basis}</i></button>
+                <button type="button" aria-pressed="false" data-r="820"  data-n="iCloud Mail"><b>{t.dst.icloud.name}</b><small>{t.dst.icloud.rate}</small><i>{t.dst.icloud.basis}</i></button>
               </div>
             </div>
           </div>
@@ -42,9 +55,16 @@ export function Calculator({ lang }: { lang: Lang }) {
             </div>
             <div className="calc-rows">
               <div><span>{t.rowSource}</span><b id="cName">{t.sourceDefault}</b></div>
+              <div><span>{t.rowDest}</span><b id="cDstName">—</b></div>
               <div><span>{t.rowRate}</span><b id="cRate">—</b></div>
               <div><span>{t.rowMsgs}</span><b id="cMsgs">—</b></div>
               <div><span>{t.rowPlan}</span><b className="hi" id="cPlan">—</b></div>
+            </div>
+            {/* Две полосы: видно, какая сторона держит перенос. Числа те же,
+                что в строках выше, — это их прочтение, а не новые данные. */}
+            <div className="calc-bars" aria-hidden="true">
+              <div className="calc-bar" id="cBarSrc"><span className="calc-bar-l">{t.barSource}</span><i><u /></i><b /></div>
+              <div className="calc-bar" id="cBarDst"><span className="calc-bar-l">{t.barDest}</span><i><u /></i><b /></div>
             </div>
             <p className="calc-note" id="cNote">{t.note}</p>
           </div>

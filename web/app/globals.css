@@ -706,13 +706,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.14)}
 input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--surf);
   border:2px solid var(--acc);cursor:grab}
-.src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-.src-grid button{padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:var(--surf-2);
-  cursor:pointer;text-align:left;transition:.2s}
-.src-grid button:hover{border-color:var(--acc)}
-.src-grid button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft)}
+.src-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
+.src-grid button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:var(--surf-2);
+  cursor:pointer;text-align:left;transition:border-color .2s,background .2s,box-shadow .2s,transform .2s}
+.src-grid button:hover{border-color:var(--acc);transform:translateY(-1px)}
+.src-grid button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);
+  box-shadow:0 6px 18px -12px color-mix(in srgb,var(--acc) 80%,transparent)}
 .src-grid button b{display:block;font-size:.86rem;font-weight:700}
-.src-grid button small{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+.src-grid button small{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+/* Основание цифры: документировано у провайдера или наша оценка. Мелко, но
+   на виду — иначе оценка читается как обещание. */
+.src-grid button i{font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);opacity:.75;padding:2px 6px;border-radius:5px;
+  background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.src-grid button[aria-pressed="true"] i{color:var(--acc);opacity:1;
+  background:color-mix(in srgb,var(--acc) 14%,transparent)}
 .src-grid button[aria-pressed="true"] small{color:var(--acc)}
 .calc-out{background:var(--term);color:#fff;padding:clamp(22px,3vw,30px);display:flex;flex-direction:column;
   gap:16px;position:relative;overflow:hidden}
@@ -1202,3 +1211,18 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 @media (max-width:560px){
   .lang-suggest{left:12px;right:12px;width:auto;bottom:12px}
 }
+
+/* Сравнение сторон в калькуляторе: какая из них держит перенос.
+   Полосы — доля от быстрой стороны, поэтому разрыв виден глазами. */
+.calc-bars{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+.calc-bar{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:12px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase}
+.calc-bar-l{color:#6E8494}
+.calc-bar i{display:block;height:6px;border-radius:6px;background:rgba(255,255,255,.09);overflow:hidden}
+.calc-bar u{display:block;height:100%;border-radius:6px;text-decoration:none;
+  background:rgba(255,255,255,.26);transition:width .45s cubic-bezier(.2,.7,.3,1),background .3s}
+.calc-bar b{color:#96A9B6;font-weight:500;min-width:62px;text-align:right}
+.calc-bar.slow u{background:linear-gradient(90deg,var(--term-g),color-mix(in srgb,var(--term-g) 55%,transparent));
+  box-shadow:0 0 12px -2px color-mix(in srgb,var(--term-g) 70%,transparent)}
+.calc-bar.slow .calc-bar-l,.calc-bar.slow b{color:var(--term-hi)}
+@media (max-width:520px){.calc-bar{grid-template-columns:64px 1fr auto;gap:8px}}
