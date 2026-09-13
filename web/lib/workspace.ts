@@ -5,6 +5,7 @@
 import { createGuestClient } from '../../sdk/guest-client.mjs';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
+import { providers, providerByEmail } from '@/data/providers';
 
 /**
  * В исходном макете это была глобальная переменная одного большого
@@ -80,6 +81,83 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
       username: f[1].value.trim(), password: f[2].value
     };
   }
+
+  /* ==================================================================
+     Пресеты провайдеров.
+
+     Человек, который переносит почту, не обязан знать адрес IMAP-сервера и
+     номер порта. Выбор провайдера (или просто логин вида name@gmail.com)
+     подставляет сервер, порт и шифрование из справочника data/providers.ts —
+     того же, по которому сделаны страницы маршрутов и гайды. Ручной ввод
+     никуда не девается: нестандартный сервер остаётся вводимым руками.
+     ================================================================== */
+  function fields(side){
+    var p = pane(side);
+    return {
+      pane: p,
+      preset: p.querySelector('select[data-preset]'),
+      note: p.querySelector('[data-note]'),
+      host: $$('input', p)[0],
+      login: $$('input', p)[1],
+      security: p.querySelector('select[data-sec]'),
+      portMode: p.querySelector('select[data-port]'),
+      portNum: p.querySelector('input[data-port-num]')
+    };
+  }
+
+  function applyPreset(side, key, detected){
+    var f = fields(side), item = providers[key];
+    if(!item || !f.host) return;
+    f.host.value = item.host;
+    if(f.security) f.security.value = item.security;
+    /* Порт у всех пресетов стандартный, поэтому режим «автоматически»:
+       лишнее ручное поле — лишний способ ошибиться. */
+    if(f.portMode){
+      f.portMode.value = 'auto';
+      f.portMode.dispatchEvent(new Event('change'));
+    }
+    if(f.preset && f.preset.value !== key) f.preset.value = key;
+    if(!f.note) return;
+    var lines = [];
+    lines.push((detected ? T.presetDetected.replace('{name}', item.name)
+                         : T.presetFilled.replace('{name}', item.name)
+                             .replace('{host}', item.host)
+                             .replace('{port}', String(item.port))
+                             .replace('{security}', item.security === 'starttls' ? 'STARTTLS' : 'SSL/TLS')));
+    if(item.appPassword) lines.push(T.presetAppPassword.replace('{name}', item.name));
+    if(item.login === 'local') lines.push(T.presetLocalLogin.replace('{name}', item.name));
+    /* Точка с разделителем: без неё две фразы подряд читаются как одна. */
+    f.note.textContent = lines.join(' · ');
+    if(item.guide){
+      f.note.appendChild(document.createTextNode(' '));
+      var a = document.createElement('a');
+      a.href = href(lang, '/guides');
+      a.textContent = T.presetGuideLink;
+      f.note.appendChild(a);
+    }
+    f.note.hidden = false;
+  }
+
+  ['source', 'destination'].forEach(function(side){
+    var f = fields(side);
+    if(!f.preset) return;
+    f.preset.addEventListener('change', function(){
+      if(f.preset.value === 'manual'){
+        if(f.note) f.note.hidden = true;
+        if(f.host) f.host.focus();
+        return;
+      }
+      if(!f.preset.value){ if(f.note) f.note.hidden = true; return; }
+      applyPreset(side, f.preset.value, false);
+    });
+    /* Определение по адресу: только пока сервер не введён руками — чужой
+       ввод переписывать нельзя. */
+    if(f.login) f.login.addEventListener('change', function(){
+      if(f.preset.value || (f.host && f.host.value.trim())) return;
+      var guess = providerByEmail(f.login.value);
+      if(guess) applyPreset(side, guess.key, true);
+    });
+  });
 
   /* ==================================================================
      Проверка полей до отправки запроса.

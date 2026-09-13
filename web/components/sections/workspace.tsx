@@ -5,12 +5,30 @@ import { initWorkspace } from '@/lib/workspace';
 import { workspace } from '@/content/sections/workspace';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
+import { presetOrder, providers } from '@/data/providers';
 
 /**
  * На GitHub Pages бекенда нет: собирать пароли формой, которой некуда
  * их отправить, нечестно и опасно. Флаг выставляется в сборке Pages.
  */
 const STATIC_SITE = process.env.NEXT_PUBLIC_STATIC_SITE === '1';
+
+/** Список пресетов рисуется из справочника провайдеров: адреса серверов
+ *  живут в одном месте (data/providers.ts) и не расходятся между формой,
+ *  гайдами и страницами маршрутов. */
+function PresetSelect({ label, auto, manual }: { label: string; auto: string; manual: string }) {
+  return (
+    <label className="f f-preset"><span>{label}</span>
+      <select data-preset defaultValue="">
+        <option value="">{auto}</option>
+        {presetOrder.map((key) => (
+          <option key={key} value={key}>{providers[key].name}</option>
+        ))}
+        <option value="manual">{manual}</option>
+      </select>
+    </label>
+  );
+}
 
 export function Workspace({ lang }: { lang: Lang }) {
   const t = workspace[lang];
@@ -42,6 +60,7 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <div><small>{t.srcSmall}</small><h3>{t.srcTitle}</h3></div>
                 <span className="st" data-st="src"><i></i>{t.notChecked}</span>
               </div>
+              <PresetSelect label={t.presetLabel} auto={t.presetAuto} manual={t.presetManual} />
               <label className="f"><span>{t.hostLabel}</span>
                 <input placeholder={t.srcHostPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.loginLabel}</span>
@@ -56,6 +75,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                   <label>{t.portLabel}<select data-port><option value="auto">{t.portAuto}</option><option value="manual">{t.portManual}</option></select><input data-port-num type="number" min="1" max="65535" placeholder="993" inputMode="numeric" hidden /></label>
                 </div>
               </details>
+              {/* Сюда код пишет предупреждение про пароль приложения:
+                  у Gmail, Yahoo, iCloud и Яндекса обычный пароль не подойдёт. */}
+              <p className="pv-note" data-note hidden></p>
             </div>
 
             <div className="mid">
@@ -78,6 +100,7 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <div><small>{t.dstSmall}</small><h3>{t.dstTitle}</h3></div>
                 <span className="st" data-st="dst"><i></i>{t.notChecked}</span>
               </div>
+              <PresetSelect label={t.presetLabel} auto={t.presetAuto} manual={t.presetManual} />
               <label className="f"><span>{t.hostLabel}</span>
                 <input placeholder={t.dstHostPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.loginLabel}</span>
@@ -94,6 +117,7 @@ export function Workspace({ lang }: { lang: Lang }) {
                     <input type="text" data-subfolder placeholder={t.subfolderPlaceholder} spellCheck="false" /></label>
       </div>
               </details>
+              <p className="pv-note" data-note hidden></p>
             </div>
           </div>
 

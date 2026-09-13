@@ -335,6 +335,11 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 /* Строка запуска. Раньше кнопки прижимались к правому краю и «Остановить»
    висела уголком: ширины разные, высоты разные, выравнивания нет. Теперь это
    сетка — гарантии слева, пара кнопок справа единым блоком одной высоты. */
+/* Пресет провайдера и его подсказка: подстановка сервера должна быть видна,
+   иначе человек не поймёт, откуда в поле взялся адрес. */
+.f-preset select{width:100%}
+.pv-note{margin:0;padding:0 22px 16px;font-size:.8rem;line-height:1.5;color:var(--ink-3)}
+.pv-note a{color:var(--acc);text-decoration:underline;text-underline-offset:2px}
 .ws-err{width:100%;margin:0;padding:10px 13px;border-radius:10px;font-size:.85rem;line-height:1.5;
   color:var(--red,#B03A2E);background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.25)}
 .ws-err a{color:inherit;text-decoration:underline}
