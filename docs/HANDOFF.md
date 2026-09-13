@@ -1,5 +1,34 @@
 # Engineering handoff — 2026-09-13
 
+## Guest UI integration slice (feature/guest-transfer-contract)
+
+Owner deferred off-site backup work and approved moving to a usable migration
+flow. PR #20 is merged and its updater was installed on the VM with matching
+SHA-256; current task is based on main 370bf69. Existing backend supports guest
+sessions, connection/folder discovery, quota admission, jobs, ownership, SSE,
+cancellation and retrieval after reload. Do not rebuild those features.
+
+- Added `sdk/guest-client.mjs`: independent same-origin API transport for Claude,
+  awaited CSRF bootstrap, actual nested errors, named snapshot/migration events,
+  cursor deduplication/reset, authoritative terminal status and observable stop
+  failures. It never stores credentials or automatically retries POSTs.
+- Six focused Node tests pass: concurrent CSRF bootstrap, failure/no replay,
+  SSE snapshots/gaps, cancelled completion, lost ownership/refresh and stop
+  rejection. Added the client tests to CI. Full checks depend on the pushed SHA.
+- `docs/GUEST-INTEGRATION.md` records exact API usage and concrete existing
+  frontend blockers: unnamed SSE handler, lost options, mock folder totals/ETA,
+  nested error parsing, premature stop and missing reload recovery. Claude owns
+  wiring the module into the UI; website source was not edited.
+- Limitations: no standalone structured size-estimate API; quota admission
+  occurs in normal worker jobs. Lost start acknowledgement has no client
+  idempotency key: inspect owned jobs instead of blindly replaying. Browser
+  end-to-end transfer is still pending UI integration and same-origin HTTPS.
+
+Next: (1) Claude connects the workspace using the integration contract;
+(2) run one complete real-browser disposable-mail transfer with reload/cancel
+and visible failure handling, then prepare the closed pilot release. Do not
+claim that transport unit tests alone complete this browser acceptance gate.
+
 ## Live transactional update to current main
 
 - PR #17 was merged and post-merge CI passed. Current main
