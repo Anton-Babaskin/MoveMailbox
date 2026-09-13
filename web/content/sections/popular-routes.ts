@@ -16,7 +16,7 @@ export const popularRoutes = {
     aria3: 'Перенести почту из Yahoo Mail в Gmail',
     aria4: 'Перенести почту из iCloud Mail в Gmail',
     aria5: 'Перенести почту из cPanel в Microsoft 365',
-    aria6: 'Перенести почту из Яндекс в Zoho',
+    aria6: 'Перенести почту из Яндекс.Почты в Microsoft 365',
     aria7: 'Перенести почту из Старый хостинг в Новый хостинг',
   },
   en: {
@@ -35,7 +35,7 @@ export const popularRoutes = {
     aria3: 'Move mail from Yahoo Mail to Gmail',
     aria4: 'Move mail from iCloud Mail to Gmail',
     aria5: 'Move mail from cPanel to Microsoft 365',
-    aria6: 'Move mail from Yandex to Zoho',
+    aria6: 'Move mail from Yandex Mail to Microsoft 365',
     aria7: 'Move mail from an old host to a new host',
   },
   uk: {
@@ -54,7 +54,7 @@ export const popularRoutes = {
     aria3: 'Перенести пошту з Yahoo Mail до Gmail',
     aria4: 'Перенести пошту з iCloud Mail до Gmail',
     aria5: 'Перенести пошту з cPanel до Microsoft 365',
-    aria6: 'Перенести пошту з Яндекса до Zoho',
+    aria6: 'Перенести пошту з Яндекс.Пошти до Microsoft 365',
     aria7: 'Перенести пошту зі старого хостингу на новий',
   },
 } as const;

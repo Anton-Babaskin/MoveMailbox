@@ -19,6 +19,9 @@ export const workspace = {
     dstTitle: 'Назначение',
     notChecked: 'Не проверено',
 
+    presetLabel: 'Провайдер',
+    presetAuto: 'Определить по адресу почты',
+    presetManual: 'Другой — ввести вручную',
     hostLabel: 'IMAP-сервер или IP-адрес',
     srcHostPlaceholder: 'imap.old-company.com / 203.0.113.10',
     dstHostPlaceholder: 'imap.new-company.com / 203.0.113.20',
@@ -101,6 +104,9 @@ export const workspace = {
     dstTitle: 'Destination',
     notChecked: 'Not checked',
 
+    presetLabel: 'Provider',
+    presetAuto: 'Detect from the email address',
+    presetManual: 'Other — enter manually',
     hostLabel: 'IMAP server or IP address',
     srcHostPlaceholder: 'imap.old-company.com / 203.0.113.10',
     dstHostPlaceholder: 'imap.new-company.com / 203.0.113.20',
@@ -183,6 +189,9 @@ export const workspace = {
     dstTitle: 'Призначення',
     notChecked: 'Не перевірено',
 
+    presetLabel: 'Провайдер',
+    presetAuto: 'Визначити за адресою пошти',
+    presetManual: 'Інший — ввести вручну',
     hostLabel: 'IMAP-сервер або IP-адреса',
     srcHostPlaceholder: 'imap.old-company.com / 203.0.113.10',
     dstHostPlaceholder: 'imap.new-company.com / 203.0.113.20',

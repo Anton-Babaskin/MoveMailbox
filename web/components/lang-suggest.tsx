@@ -54,10 +54,9 @@ export function LangSuggest({ lang }: { lang: Lang }) {
     if (stored()) return;
     const guess = preferred();
     if (!guess || guess === lang) return;
-    /* Показываем не сразу: баннер, выехавший поверх первого экрана в момент
-       загрузки, воспринимается как всплывающее окно. */
-    const t = setTimeout(() => setWant(guess), 900);
-    return () => clearTimeout(t);
+    /* Без задержки: полоса стоит в потоке под шапкой и ничего не перекрывает,
+       а появление через секунду двигало бы уже прочитанную страницу. */
+    setWant(guess);
   }, [lang]);
 
   if (!want) return null;
@@ -77,6 +76,7 @@ export function LangSuggest({ lang }: { lang: Lang }) {
 
   return (
     <div className={`lang-suggest${leaving ? ' out' : ''}`} role="region" aria-label={t.title} lang={want}>
+      <div className="lang-suggest-in">
       <p>{t.title}</p>
       <div className="lang-suggest-acts">
         <a className="btn btn-p btn-s" href={href(want, clean)} onClick={() => remember(want)}>
@@ -96,6 +96,7 @@ export function LangSuggest({ lang }: { lang: Lang }) {
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       </button>
+      </div>
     </div>
   );
 }

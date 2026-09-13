@@ -37,6 +37,8 @@ export type Provider = {
   guide?: string;
   /** Папки, которые почти всегда исключают. */
   excludeFolders?: string[];
+  /** Почтовые домены, по которым провайдер узнаётся из логина. */
+  domains?: string[];
 };
 
 export const providers: Record<ProviderKey, Provider> = {
@@ -53,6 +55,7 @@ export const providers: Record<ProviderKey, Provider> = {
     rateMbPerHour: 104,
     guide: 'gmail',
     excludeFolders: ['[Gmail]/All Mail', '[Gmail]/Spam', '[Gmail]/Trash'],
+    domains: ['gmail.com', 'googlemail.com'],
   },
   'google-workspace': {
     key: 'google-workspace',
@@ -80,6 +83,7 @@ export const providers: Record<ProviderKey, Provider> = {
     oauth: true,
     rateMbPerHour: 520,
     guide: 'microsoft-365',
+    domains: ['onmicrosoft.com'],
   },
   outlook: {
     key: 'outlook',
@@ -94,6 +98,7 @@ export const providers: Record<ProviderKey, Provider> = {
     rateMbPerHour: 520,
     guide: 'microsoft-365',
     excludeFolders: ['Junk'],
+    domains: ['outlook.com', 'hotmail.com', 'live.com', 'msn.com'],
   },
   yahoo: {
     key: 'yahoo',
@@ -106,6 +111,7 @@ export const providers: Record<ProviderKey, Provider> = {
     appPassword: true,
     oauth: false,
     rateMbPerHour: 700,
+    domains: ['yahoo.com', 'yahoo.co.uk', 'ymail.com', 'rocketmail.com'],
   },
   icloud: {
     key: 'icloud',
@@ -118,6 +124,7 @@ export const providers: Record<ProviderKey, Provider> = {
     appPassword: true,
     oauth: false,
     rateMbPerHour: 820,
+    domains: ['icloud.com', 'me.com', 'mac.com'],
   },
   yandex: {
     key: 'yandex',
@@ -131,6 +138,7 @@ export const providers: Record<ProviderKey, Provider> = {
     oauth: true,
     rateMbPerHour: 1450,
     guide: 'yandex',
+    domains: ['yandex.ru', 'yandex.com', 'yandex.ua', 'ya.ru'],
   },
   mailru: {
     key: 'mailru',
@@ -143,6 +151,7 @@ export const providers: Record<ProviderKey, Provider> = {
     appPassword: true,
     oauth: false,
     rateMbPerHour: 1100,
+    domains: ['mail.ru', 'inbox.ru', 'bk.ru', 'list.ru', 'internet.ru'],
   },
   zoho: {
     key: 'zoho',
@@ -155,6 +164,7 @@ export const providers: Record<ProviderKey, Provider> = {
     appPassword: true,
     oauth: false,
     rateMbPerHour: 1200,
+    domains: ['zoho.com', 'zoho.eu', 'zohomail.com'],
   },
   cpanel: {
     key: 'cpanel',
@@ -184,4 +194,39 @@ export const providers: Record<ProviderKey, Provider> = {
 
 export function provider(key: ProviderKey): Provider {
   return providers[key];
+}
+
+/**
+ * Порядок пресетов в форме. Первыми — те, ради которых сюда приходят из
+ * поиска; последними — «любой IMAP» варианты, где адрес всё равно свой.
+ */
+export const presetOrder: ProviderKey[] = [
+  'gmail',
+  'google-workspace',
+  'microsoft-365',
+  'outlook',
+  'yahoo',
+  'icloud',
+  'yandex',
+  'mailru',
+  'zoho',
+  'cpanel',
+  'exchange',
+];
+
+/**
+ * Провайдер по адресу почты. Нужен, чтобы форма подставляла сервер и порт
+ * сама: человек вводит логин, а не читает документацию про IMAP.
+ * Корпоративный домен так не узнаётся — там остаётся ручной ввод.
+ */
+export function providerByEmail(email: string): Provider | null {
+  const at = String(email).lastIndexOf('@');
+  if (at < 0) return null;
+  const domain = email.slice(at + 1).trim().toLowerCase();
+  if (!domain) return null;
+  for (const key of presetOrder) {
+    const found = providers[key];
+    if (found.domains?.some((d) => domain === d || domain.endsWith('.' + d))) return found;
+  }
+  return null;
 }
