@@ -1,5 +1,31 @@
 # Engineering handoff — 2026-09-13
 
+## Request to the backend: expose the counters imapsync already prints
+
+The workspace now shows elapsed time, measured transfer rate and a remaining
+estimate, all computed in the browser from `startedAt` plus the `transferred`
+and `bytes` counters. They are marked with `≈` because they are arithmetic,
+not data from the API.
+
+They can stop being estimates without any new IMAP work:
+`internal/migrator/progress.go` already parses `Host1 Nb messages:` into
+`progress.totalMessages` and the `ETA: ... N/M msgs left` line into
+remaining/total, and `internal/migrator/estimate.go` already knows the whole
+source size in bytes and messages (it logs `Entire source: N bytes, M messages,
+K folders`). None of that reaches `migrator.Event` or `jobs.View`, so the UI
+cannot show it.
+
+Adding these optional fields to the event and the job view would let the
+workspace display exact values instead of computed ones (each still optional,
+absent meaning unknown — the UI already treats a missing field that way):
+
+- `totalMessages` and `remainingMessages` — from the ETA line already parsed.
+- `totalBytes` — from the admission estimate already computed.
+- `etaSeconds` — imapsync prints it; currently discarded.
+
+No frontend change is required to keep working if these never arrive: the
+estimates simply stay estimates. Website side does not touch `internal/`.
+
 ## Workspace wired to the guest client (website side)
 
 `web/lib/workspace.ts` now talks to the backend only through

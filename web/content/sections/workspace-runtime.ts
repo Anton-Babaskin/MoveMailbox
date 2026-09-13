@@ -78,6 +78,11 @@ export const workspaceRuntime = {
     folderLabel: 'Папка',
     noValue: '—',
     bytesUnits: 'Б,КБ,МБ,ГБ,ТБ',
+    speedLabel: 'скорость',
+    perSecond: '/с',
+    messagesShort: 'пис',
+    minuteShort: 'мин',
+    measured: 'измерено',
 
     /* --- поток событий и восстановление --- */
     streamLost: 'Связь с журналом потеряна — переподключаемся. Перенос продолжается на сервере.',
@@ -170,6 +175,11 @@ export const workspaceRuntime = {
     folderLabel: 'Folder',
     noValue: '—',
     bytesUnits: 'B,KB,MB,GB,TB',
+    speedLabel: 'rate',
+    perSecond: '/s',
+    messagesShort: 'msg',
+    minuteShort: 'min',
+    measured: 'measured',
 
     /* --- event stream and recovery --- */
     streamLost: 'Lost the log connection — reconnecting. The transfer keeps running on the server.',
@@ -262,6 +272,11 @@ export const workspaceRuntime = {
     folderLabel: 'Папка',
     noValue: '—',
     bytesUnits: 'Б,КБ,МБ,ГБ,ТБ',
+    speedLabel: 'швидкість',
+    perSecond: '/с',
+    messagesShort: 'лист',
+    minuteShort: 'хв',
+    measured: 'виміряно',
 
     /* --- потік подій і відновлення --- */
     streamLost: 'Зв’язок із журналом втрачено — перепідключаємось. Перенесення триває на сервері.',

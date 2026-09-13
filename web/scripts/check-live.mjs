@@ -90,6 +90,8 @@ for (const field of credentials) {
   assert(/\sdisabled(=|\s|\/?>)/.test(field), 'Preview credentials are not disabled: ' + field);
 }
 assert(home.includes('Онлайн-перенос без регистрации готовится к запуску'), 'Missing preview notice');
+// Фавиконка: Яндекс ищет её по корню и без файла пишет «не найдена».
+await request(origin + '/favicon.ico', 200, 'HEAD');
 await request(origin + '/__movemailbox_missing_page_check__/', 404);
 for (const url of links) {
   if (pages.has(url)) continue;

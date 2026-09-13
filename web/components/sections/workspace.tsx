@@ -168,17 +168,21 @@ export function Workspace({ lang }: { lang: Lang }) {
               <span><strong>{t.logTitle}</strong><small>{t.logSub}</small></span>
               <span className="stt" id="stt"><i></i>{t.statusWaiting}</span>
             </div>
-            {/* Четыре величины, которые действительно приходят от задания:
-                процент, перенесено, пропущено, объём. Скорости и «осталось»
-                в API нет — выдумывать их из процентов нечестно. */}
+            {/* Шесть величин. Четыре приходят от задания: процент, перенесено,
+                пропущено, объём. Две считаются здесь по часам браузера и по
+                реальным счётчикам — прошедшее время и оценка остатка; они
+                помечены знаком ≈, потому что это расчёт, а не поле API. */}
             <div className="mon-s">
               <div><small>{t.metricProgress}</small><strong id="mp">0%</strong></div>
+              <div><small>{t.metricElapsed}</small><strong id="mel">00:00</strong></div>
+              <div><small>{t.metricLeft}</small><strong id="me">—</strong></div>
               <div><small>{t.metricTransferred}</small><strong id="mt">—</strong></div>
               <div><small>{t.metricSkipped}</small><strong id="msk">—</strong></div>
               <div><small>{t.metricBytes}</small><strong id="mv">—</strong></div>
             </div>
             <div className="track"><i id="mbar"></i></div>
             <p className="mon-ph" id="mphase">{t.phaseIdle}</p>
+            <p className="mon-est" id="mest">{t.estimateNote}</p>
             <div className="log" id="log" aria-live="polite">
               <div><time>00:00</time><b>{t.logFirst}</b></div>
             </div>
