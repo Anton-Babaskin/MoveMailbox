@@ -1,5 +1,47 @@
 # Engineering handoff — 2026-09-13
 
+## Workspace wired to the guest client (website side)
+
+`web/lib/workspace.ts` now talks to the backend only through
+`sdk/guest-client.mjs`, per `docs/GUEST-INTEGRATION.md`. Every blocker listed
+in that document is addressed:
+
+- The session is awaited inside the client before any POST; the page no longer
+  fires requests with an empty CSRF token.
+- Named `snapshot` and `migration` events are consumed through `client.watch`;
+  `finished` is treated as terminal-but-unknown and the authoritative job view
+  decides between completed, failed and cancelled.
+- Errors are read as `{error:{code,message}}` and mapped to RU/EN/UK strings;
+  429, 503 and 403 get their own wording. Server text and folder names are put
+  into `textContent`, never `innerHTML`.
+- `start` sends the full request: both endpoints, `syncFlags`/`preserveDates`,
+  the selected run mode, the selected folder names and `destinationSubfolder`.
+  Strict mirror still requires both flags and the two UI confirmations, and the
+  confirmation is cleared when either endpoint changes.
+- Mock data is gone. The folder list is fetched from the user's own source
+  server and shows names only — no invented sizes or message counts. The
+  monitor shows progress, transferred, skipped and bytes, plus phase and
+  current folder; the fabricated speed and ETA tiles were removed, because the
+  API has no such fields.
+- Cancellation is a request, not a fact: the button shows «Останавливаем…» and
+  the stream keeps running until the view is terminal.
+- Only the job ID is stored, in `sessionStorage`. After a reload the page calls
+  `client.get(id)` and re-opens the stream; a 404 clears the ID and says the job
+  is gone instead of claiming success. Passwords are never stored and
+  `POST /api/jobs` is never replayed.
+
+Verified in headless Chromium against a mock API that follows the contract
+(session, test, folders, 202 + job view, named SSE events, cancel, 404):
+check, folder discovery, partial selection reaching the request payload, live
+progress, reload while running, cancellation to a terminal state, a server
+error message rendered as text, and no credentials in browser storage. The
+GitHub Pages build makes no `/api/*` request at all and keeps the network
+buttons disabled.
+
+Not done here and still open: one real disposable-mailbox transfer over the
+same HTTPS origin on the VM. That needs the API and the site on one origin, so
+it belongs to the backend side.
+
 ## Guest UI integration slice (feature/guest-transfer-contract)
 
 Owner deferred off-site backup work and approved moving to a usable migration

@@ -21,9 +21,6 @@ export async function generateMetadata({
     language: l,
     path: '/privacy',
     ...legal.privacy[l].meta,
-    // Заполните {{...}} и поменяйте на index:true — до этого страница в индекс
-    // не идёт: robots остаётся { index: false, follow: true }.
-    index: false,
   });
 }
 

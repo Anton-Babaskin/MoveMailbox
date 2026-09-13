@@ -33,8 +33,9 @@ const CONTENT_UPDATED = '2026-09-12';
 
 /**
  * В карте только те URL, которые реально отдаются 200.
- * /privacy и /terms сюда не идут намеренно: они под noindex,
- * пока в них не подставлены реквизиты.
+ * /privacy и /terms здесь с сентября 2026: реквизиты в них заполнены,
+ * noindex снят. Приоритет низкий — это не посадочные страницы, но и
+ * прятать их от поиска больше нет причины.
  */
 const pages: Entry[] = [
   { path: '/', changeFrequency: 'weekly', priority: 1 },
@@ -45,6 +46,8 @@ const pages: Entry[] = [
   { path: '/download', changeFrequency: 'weekly', priority: 0.78 },
   { path: '/security', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/blog', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
 ].map((page) => ({ ...page, lastModified: CONTENT_UPDATED }) as Entry);
 
 const routePages: Entry[] = migrationRoutes.map((route) => ({

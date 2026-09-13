@@ -9,6 +9,10 @@ user-supplied API URL or weaken Secure cookies to enable hosted browser tests.
 
 ## Existing blockers in web/lib/workspace.ts (reviewed at 370bf69)
 
+Status: all of the items below are fixed — the workspace imports the client
+from this SDK and no longer speaks to the API directly. See the workspace entry
+in `HANDOFF.md` for what was verified in a browser and what is still open.
+
 - `session()` runs asynchronously while POSTs can already start. Await it.
 - `es.onmessage` never receives named `snapshot` and `migration` events.
 - Errors are `{error:{code,message}}`, not top-level `code` or a string `error`.

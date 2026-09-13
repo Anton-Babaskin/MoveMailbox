@@ -69,14 +69,16 @@ for (const url of urls) {
   }
 }
 
-// Черновики: у них noindex во всех трёх языках и их нет в sitemap.
-// Блог с версии i18n — обычная индексируемая страница, здесь его больше нет.
+// Правовые страницы: реквизиты заполнены, noindex снят, обе в sitemap на
+// всех трёх языках. Проверяем, что текст не откатился к плейсхолдерам и что
+// адрес поддержки на месте — правовой документ без контакта бесполезен.
 for (const path of ['privacy', 'terms', 'en/privacy', 'en/terms', 'uk/privacy', 'uk/terms']) {
   const url = `${origin}/${path}/`;
-  assert(!urls.includes(url), 'Draft in sitemap: ' + url);
-  const html = await (await request(url)).text();
-  assert(/noindex/i.test(metadata(html, 'robots') ?? ''), 'Draft missing noindex: ' + url);
-  pages.set(url, html);
+  assert(urls.includes(url), 'Legal page missing from sitemap: ' + url);
+  const html = pages.get(url);
+  assert(html, 'Legal page was not fetched from the sitemap: ' + url);
+  assert(!html.includes('{{'), 'Legal page still has a placeholder: ' + url);
+  assert(html.includes('mailto:admin@movemailbox.com'), 'Legal page has no contact address: ' + url);
 }
 // Без бекенда форма не должна принимать пароли. С версии i18n предпросмотр
 // не гасит fieldset целиком — интерфейс живой, — поэтому проверяем сами поля:
