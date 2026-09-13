@@ -38,6 +38,10 @@ not a KMS or protection against a compromised root account.
   browser acceptance testing.
 - Separate non-root, read-only containers, dropped capabilities, bounded CPU,
   RAM, PIDs and logs; one migration at a time; decimal 5 GB mailbox quota.
+- The closed-pilot admission profile is pinned to one concurrent migration,
+  one active migration per guest, 32 queued/retained API jobs, 60 requests per
+  guest session per minute and 240 requests per direct client IP per minute.
+  These application caps are not a replacement for reverse-proxy limits.
 - `inet movemailbox_staging` filters only the dedicated bridge. Its priority -10
   hook runs before Docker filtering. It is replaced atomically without flushing
   unrelated rules. Do not disable Docker's firewall management.

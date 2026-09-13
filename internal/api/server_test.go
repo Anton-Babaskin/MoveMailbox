@@ -174,6 +174,39 @@ func TestPublicModeRejectsMissingCSRFAndRateLimitsSessions(t *testing.T) {
 	}
 }
 
+func TestPublicModeRateLimitsDirectClientIP(t *testing.T) {
+	handler, _ := newPublicTestHandler(t, migrator.DemoEngine{}, Config{
+		SessionRequestsPerMinute: 100,
+		IPRequestsPerMinute:      2,
+	})
+
+	first := httptest.NewRequest(http.MethodGet, "/api/session", nil)
+	first.RemoteAddr = "198.51.100.7:40123"
+	firstResponse := httptest.NewRecorder()
+	handler.ServeHTTP(firstResponse, first)
+	if firstResponse.Code != http.StatusOK {
+		t.Fatalf("session status=%d body=%s", firstResponse.Code, firstResponse.Body.String())
+	}
+	cookies := firstResponse.Result().Cookies()
+	if len(cookies) != 1 {
+		t.Fatalf("session cookies=%d, want 1", len(cookies))
+	}
+
+	for attempt := 1; attempt <= 2; attempt++ {
+		request := httptest.NewRequest(http.MethodGet, "/api/jobs", nil)
+		request.RemoteAddr = "198.51.100.7:40123"
+		request.AddCookie(cookies[0])
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if attempt == 1 && response.Code != http.StatusOK {
+			t.Fatalf("allowed IP request status=%d body=%s", response.Code, response.Body.String())
+		}
+		if attempt == 2 && (response.Code != http.StatusTooManyRequests || response.Header().Get("Retry-After") == "") {
+			t.Fatalf("rate limit status=%d retry=%q body=%s", response.Code, response.Header().Get("Retry-After"), response.Body.String())
+		}
+	}
+}
+
 func TestPublicModeRequiresStrongSessionSecret(t *testing.T) {
 	if err := (Config{PublicMode: true, SessionSecret: "too-short"}).Validate(); err == nil {
 		t.Fatal("public config accepted a weak session secret")

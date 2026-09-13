@@ -13,11 +13,9 @@
   scripts were removed from `/home/nomak`; synthetic test folders/messages remain
   for the owner to remove after rotating the disposable accounts. No credentials,
   message content or job IDs are recorded here.
-- This is not an acceptance pass. Selected-folder counters, repeat-without-
-  duplicates, cancellation and worker-restart recovery still need a rerun using
-  a no-echo secret channel (for example, a root-owned one-shot FIFO or an
-  operator-provided secret manager). PR #27 remains open until that pilot is
-  completed as requested; no public exposure was changed.
+- This was not an acceptance pass. Selected-folder counters, repeat-without-
+  duplicates, cancellation and worker-restart recovery were rerun successfully
+  below through a no-echo secret channel; no public exposure was changed.
 
 The incident was closed by rotating both disposable mailbox passwords and
 rerunning through an SSH PTY with echo disabled and a shell trap restoring echo.
@@ -44,10 +42,43 @@ or Git.
   backup. The earlier PTY echo incident is documented above; no mailbox password
   should be reused.
 
-Next two technical steps: (1) merge PR #27 now that the documented pilot and
-CI are complete; (2) define closed-pilot admission/rate limits and schedule the
-first encrypted off-site metadata backup/restore drill. Keep website/frontend
-changes with Claude.
+PR #27 is now merged into `main` as `eebc6659bb9bd5d9605b634fd047f56584d4d5a3`.
+
+Next two technical steps: (1) define and verify closed-pilot admission/rate
+limits with bounded API-abuse checks; (2) schedule the first encrypted off-site
+metadata backup/restore drill. Keep website/frontend changes with Claude.
+
+## Closed-pilot admission profile (ops/pilot-gates)
+
+- The staging Compose override now pins one concurrent migration, one active
+  migration per guest, 32 queued/retained API jobs, 60 requests per guest
+  session per minute and 240 requests per direct client IP per minute.
+- The API already enforced these independent session and IP windows; a focused
+  regression test now proves the direct-IP window returns `429` with
+  `Retry-After` after the bounded allowance. This is an application cap, not a
+  substitute for a future reverse-proxy rate limit.
+- The profile is repository-defined and locally checked; the currently running
+  VM remains on the previously deployed image/config until this PR is reviewed
+  and applied through the staging update procedure. No public traffic was
+  enabled.
+
+## Closed-pilot limits and encrypted backup drill (2026-09-14)
+
+- The focused API regression test passed for the direct-IP window, and an
+  isolated demo container returned `429` with `Retry-After` after the bounded
+  guest-session allowance. The WSL Python harness passed 49 tests with one
+  expected age-tool skip; the pinned Docker builder also passed all Go tests
+  including the new API test.
+- The encrypted metadata drill used age 1.3.2 and fresh Docker volumes. It
+  created a paired SQLite snapshot only after draining writers, rejected both
+  truncation and byte corruption, encrypted and committed the pair, downloaded
+  and decrypted it, validated hashes/integrity, restored empty volumes, proved
+  owner isolation and confirmed that a terminal job was not replayed.
+- The drill retained only synthetic stopped labs and temporary backup material
+  outside Git; no mailbox credentials or message content were used. Its local
+  object store models the upload/commit/download protocol and is **not** an
+  off-site provider upload. Provider selection, retention and an actual
+  off-site restore remain deployment gates.
 
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
