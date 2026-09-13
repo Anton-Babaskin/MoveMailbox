@@ -4,7 +4,7 @@
 
 import { createGuestClient } from '../../sdk/guest-client.mjs';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
-import type { Lang } from '@/i18n/config';
+import { href, type Lang } from '@/i18n/config';
 
 /**
  * В исходном макете это была глобальная переменная одного большого
@@ -81,6 +81,38 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     };
   }
 
+  /* ==================================================================
+     Проверка полей до отправки запроса.
+
+     Пустая форма не должна доходить до сети: запрос уйдёт, сервер вернёт
+     страницу вместо JSON, и человек увидит «Unexpected token '<'». Поэтому
+     всё, что можно проверить в браузере, проверяется здесь.
+     ================================================================== */
+  function sideName(side){ return side === 'source' ? T.sideSource : T.sideDestination; }
+
+  function invalid(side){
+    var ep = endpoint(side), name = sideName(side);
+    if(!ep.host || !ep.username || !ep.password) return T.errNeedFields.replace('{side}', name);
+    /* Частая ошибка: в поле сервера вставляют ссылку из браузера. */
+    if(/\s/.test(ep.host) || /^[a-z]+:\/\//i.test(ep.host) || ep.host.indexOf('/') >= 0)
+      return T.errHostFormat.replace('{side}', name);
+    if(!(ep.port >= 1 && ep.port <= 65535)) return T.errPortRange.replace('{side}', name);
+    return null;
+  }
+
+  function formError(text, link){
+    var box = $('#wsErr'); if(!box) return;
+    if(!text){ box.hidden = true; box.textContent = ''; return; }
+    box.textContent = text;
+    if(link){
+      box.appendChild(document.createTextNode(' '));
+      var a = document.createElement('a');
+      a.href = link.href; a.textContent = link.text;
+      box.appendChild(a);
+    }
+    box.hidden = false;
+  }
+
   /* ---- перевод ошибок API в человеческие строки ----
      APIError несёт status и code; сетевой обрыв приходит обычным TypeError.
      403 значит «сессия не подтверждена», а не «повторить запрос молча». */
@@ -90,6 +122,9 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     if(e.status === 503) return T.errUnavailable;
     if(e.status === 403) return T.errForbidden;
     if(e.name === 'TypeError') return T.errNetwork;
+    /* Ответ не разобрался как JSON: по адресу отвечает сайт, а не API.
+       Человеку нельзя показывать «Unexpected token '<'». */
+    if(e.name === 'SyntaxError') return T.errNotJson;
     return e.message || String(e);
   }
 
@@ -193,8 +228,9 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     var btn = $('#floadBtn'); if(!btn) return;
     btn.addEventListener('click', function(){
       if(!ONLINE) return;
+      var problem = invalid('source');
+      if(problem){ hint(problem, true); return; }
       var ep = endpoint('source');
-      if(!ep.host || !ep.username || !ep.password){ hint(T.foldersNeedCreds, true); return; }
       btn.disabled = true;
       hint(T.foldersLoading, false);
       client.folders(ep).then(function(data){
@@ -229,6 +265,16 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     btn.addEventListener('click',function(){
       if(!ONLINE) return;
       var pills=$$('.st[data-st]');
+      var problems=['source','destination'].map(invalid);
+      if(problems[0] || problems[1]){
+        /* Ни одного запроса: показываем, что именно не заполнено. */
+        formError(problems.filter(Boolean).join(' · '));
+        problems.forEach(function(problem, i){
+          if(problem) fill(pills[i], problem, 'fail');
+        });
+        return;
+      }
+      formError(null);
       btn.disabled=true;
       pills.forEach(function(p){ fill(p, T.checking, 'checking'); });
       Promise.all(['source','destination'].map(function(side,i){
@@ -627,10 +673,14 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
 
   if(bStart) bStart.addEventListener('click', function(){
     if(!ONLINE || running) return;
+    var problems = ['source','destination'].map(invalid).filter(Boolean);
+    if(problems.length){ formError(problems.join(' · ')); return; }
     if(folders !== null && chosen().length === 0){
       hint(T.startNeedsFolders, true);
+      formError(T.startNeedsFolders);
       return;
     }
+    formError(null);
     running=true; stopping=false; lost=false;
     if(log) log.textContent='';
     progress(0, false);
@@ -715,13 +765,31 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     requestAnimationFrame(loop);
   })();
 
-  /* В статической сборке сетевые кнопки остаются выключенными: интерфейс
-     живой — гаснет только то, что ушло бы в сеть. */
-  if (!ONLINE) {
+  /* ---- есть ли по этому адресу вообще API переноса ----
+     Копию сайта можно открыть где угодно: с GitHub Pages, из архива, с чужого
+     хостинга. Там /api/session отдаёт HTML, и любая кнопка кончалась бы
+     технической ошибкой разбора JSON. Один запрос при инициализации — и
+     кнопки честно выключены с объяснением. Сетевой сбой так не трактуем:
+     гасим только когда ответ заведомо не от API. */
+  if(ONLINE){
+    client.session().catch(function(e){
+      var noApi = e && (e.name === 'SyntaxError' || e.status === 404 || e.status === 405);
+      if(!noApi){ formError(message(e)); return; }
+      ONLINE = false;
+      offline();
+      formError(T.errNoApi, { href: href(lang, '/download'), text: T.errNoApiLink });
+    });
+  }
+
+  function offline(){
     ['#start', '#stop', '#checkBoth', '#floadBtn'].forEach(function (sel) {
       var el = $(sel) as HTMLButtonElement | null;
       if (el) el.disabled = true;
     });
   }
+
+  /* В статической сборке сетевые кнопки остаются выключенными: интерфейс
+     живой — гаснет только то, что ушло бы в сеть. */
+  if (!ONLINE) offline();
 
 }

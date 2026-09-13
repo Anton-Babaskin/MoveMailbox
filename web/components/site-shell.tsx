@@ -57,9 +57,11 @@ export function SiteShell({
         <div className="aura" aria-hidden="true" />
         <PageEffects />
         <SiteHeader lang={lang} notFound={notFound} />
+        {/* Предложение языка — полосой в потоке под шапкой, а не карточкой в
+            углу: в углу оно перекрывало поля формы переноса. */}
+        <LangSuggest lang={lang} />
         {children}
         <SiteFooter lang={lang} />
-        <LangSuggest lang={lang} />
       </body>
     </html>
   );

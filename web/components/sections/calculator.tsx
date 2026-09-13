@@ -22,7 +22,10 @@ export function Calculator({ lang }: { lang: Lang }) {
           <div className="calc-in">
             <div className="ctrl">
               <label htmlFor="cSize">{t.sizeLabel} <span className="val" id="cSizeV">{t.sizeValue}</span></label>
-              <input type="range" id="cSize" min="1" max="120" value="12" step="1" />
+              {/* defaultValue, а не value: ползунком управляет императивный код в
+                  lib/calculator.ts. С value React считает поле контролируемым,
+                  предупреждает об отсутствии onChange и откатывает значение. */}
+              <input type="range" id="cSize" min="1" max="120" defaultValue="12" step="1" />
             </div>
             <div className="ctrl">
               <label>{t.srcLabel}</label>

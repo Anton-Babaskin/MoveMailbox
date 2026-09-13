@@ -115,6 +115,10 @@ export function Workspace({ lang }: { lang: Lang }) {
               <button className="btn btn-g" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
             </div>
             <p id="modeHint" style={{ display: 'none', width: '100%', margin: '0', fontFamily: 'var(--mono)', fontSize: '11.5px', color: 'var(--amb)' }}></p>
+            {/* Сюда попадают ошибки до отправки запроса: незаполненные поля,
+                неверный порт, недоступный API. role="alert" — чтобы screen reader
+                прочитал причину, а не оставил человека с мёртвой кнопкой. */}
+            <p id="wsErr" className="ws-err" role="alert" hidden></p>
           </div>
 
           <div className="opts">

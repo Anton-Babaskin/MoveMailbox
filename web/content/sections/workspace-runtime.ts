@@ -82,6 +82,15 @@ export const workspaceRuntime = {
     perSecond: '/с',
     messagesShort: 'пис',
     minuteShort: 'мин',
+    /* --- проверка полей до отправки запроса --- */
+    sideSource: 'Источник',
+    sideDestination: 'Назначение',
+    errNeedFields: '{side}: заполните адрес сервера, логин и пароль',
+    errHostFormat: '{side}: адрес сервера — это имя вида imap.example.com или IP, без http:// и пробелов',
+    errPortRange: '{side}: порт должен быть числом от 1 до 65535',
+    errNotJson: 'По этому адресу отвечает сайт, а не API переноса. Онлайн-перенос здесь не запущен.',
+    errNoApi: 'Онлайн-перенос по этому адресу пока не запущен, поэтому кнопки отключены. Перенести почту сейчас можно локальным клиентом.',
+    errNoApiLink: 'Скачать клиент',
     measured: 'измерено',
 
     /* --- поток событий и восстановление --- */
@@ -179,6 +188,15 @@ export const workspaceRuntime = {
     perSecond: '/s',
     messagesShort: 'msg',
     minuteShort: 'min',
+    /* --- field checks before a request is sent --- */
+    sideSource: 'Source',
+    sideDestination: 'Destination',
+    errNeedFields: '{side}: fill in the server address, the login and the password',
+    errHostFormat: '{side}: the server address is a hostname like imap.example.com or an IP, with no http:// and no spaces',
+    errPortRange: '{side}: the port must be a number between 1 and 65535',
+    errNotJson: 'This address answers with a web page, not with the transfer API. The online transfer is not running here.',
+    errNoApi: 'The online transfer is not running at this address, so the buttons are disabled. You can move the mail right now with the local client.',
+    errNoApiLink: 'Download the client',
     measured: 'measured',
 
     /* --- event stream and recovery --- */
@@ -276,6 +294,15 @@ export const workspaceRuntime = {
     perSecond: '/с',
     messagesShort: 'лист',
     minuteShort: 'хв',
+    /* --- перевірка полів до відправлення запиту --- */
+    sideSource: 'Джерело',
+    sideDestination: 'Призначення',
+    errNeedFields: '{side}: заповніть адресу сервера, логін і пароль',
+    errHostFormat: '{side}: адреса сервера — це ім’я на кшталт imap.example.com або IP, без http:// і пробілів',
+    errPortRange: '{side}: порт має бути числом від 1 до 65535',
+    errNotJson: 'За цією адресою відповідає сайт, а не API перенесення. Онлайн-перенесення тут не запущене.',
+    errNoApi: 'Онлайн-перенесення за цією адресою ще не запущене, тому кнопки вимкнено. Перенести пошту зараз можна локальним клієнтом.',
+    errNoApiLink: 'Завантажити клієнт',
     measured: 'виміряно',
 
     /* --- потік подій і відновлення --- */
