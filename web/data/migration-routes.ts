@@ -142,6 +142,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с Outlook на Gmail проще обратного: у Microsoft нет ярлыков, поэтому дубли не возникают. Основных сложностей две — пароль приложения при включённой двухшаговой проверке и разные названия служебных папок.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Папка «Нежелательная почта» у Microsoft называется Junk, а у Gmail — [Gmail]/Spam. Без сопоставления имён создастся лишняя папка.',
         'При включённой двухшаговой проверке нужен пароль приложения из «Дополнительных параметров безопасности» учётной записи Microsoft.',
         'Gmail считает объём вместе с Google Диском. Если места мало, перенос встанет на середине — проверьте квоту заранее.',
@@ -166,6 +167,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Migrating Outlook to Gmail is the easier direction: Microsoft has no labels, so nothing duplicates. Two things still need attention — an app password when 2-step verification is on, and the different names Microsoft and Google use for junk mail.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'Microsoft calls it Junk, Gmail calls it [Gmail]/Spam. Without folder mapping you end up with a stray extra folder.',
         'With two-step verification enabled you need an app password from Microsoft account security settings.',
         'Gmail storage is shared with Google Drive and Photos. Check free space before moving 15 GB or the run stops with quota exceeded.',
@@ -190,6 +192,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з Outlook до Gmail простіше за зворотне: у Microsoft немає ярликів, тож дублі не виникають. Основні складнощі — пароль застосунку та різні назви службових папок.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Папка небажаної пошти в Microsoft називається Junk, а в Gmail — [Gmail]/Spam. Без зіставлення назв створиться зайва папка.',
         'За увімкненої двоетапної перевірки потрібен пароль застосунку з додаткових параметрів безпеки облікового запису Microsoft.',
         'Gmail рахує обсяг разом із Google Диском. Якщо місця мало, перенесення стане на середині — перевірте квоту заздалегідь.',
@@ -315,8 +318,9 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с Microsoft 365 на Gmail требует OAuth на стороне источника: Exchange Online больше не принимает обычный пароль. На стороне Google нужен пароль приложения или тоже OAuth — и запас места в квоте.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Источник Microsoft 365 требует OAuth 2.0. Пароль приложения доступен не во всех тенантах и Microsoft постепенно его сворачивает.',
-        'Exchange Online душит чтение при больших объёмах — реальная скорость около 0.5 ГБ в час, и это не настраивается.',
+        'Exchange Online душит чтение при больших объёмах. Своих порогов Microsoft не публикует; по нашим замерам выходит около 0.5 ГБ в час, и настройками это не меняется.',
         'Квота Google Workspace общая на почту, Диск и Фото. При переносе 30 ГБ проверьте, что тариф это выдержит.',
         'Conversation History и Notes переносятся как обычные папки, но в Gmail будут выглядеть иначе, чем в Outlook.',
       ],
@@ -339,8 +343,9 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Migrating Microsoft 365 to Gmail needs OAuth on the source side, because Exchange Online no longer accepts a plain password. On the Google side you need an app password or OAuth as well — plus enough storage quota to land in.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'Microsoft 365 as a source requires OAuth 2.0. App passwords exist in some tenants but Microsoft is phasing them out.',
-        'Exchange Online throttles bulk reads to roughly 0.5 GB per hour. This is not configurable.',
+        'Exchange Online throttles bulk reads. Microsoft publishes no figures; our own runs land around 0.5 GB per hour, and no setting changes that.',
         'Google Workspace quota is shared across Mail, Drive and Photos. Confirm the plan can hold 30 GB before you start.',
         'Conversation History and Notes move as ordinary folders but will look different in Gmail than they did in Outlook.',
       ],
@@ -363,8 +368,9 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з Microsoft 365 до Gmail потребує OAuth на боці джерела: Exchange Online більше не приймає звичайний пароль.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Джерело Microsoft 365 вимагає OAuth 2.0. Пароль застосунку доступний не в усіх тенантах, і Microsoft поступово його згортає.',
-        'Exchange Online душить читання на великих обсягах — реальна швидкість близько 0.5 ГБ на годину, і це не налаштовується.',
+        'Exchange Online душить читання на великих обсягах. Своїх порогів Microsoft не публікує; за нашими замірами виходить близько 0.5 ГБ на годину, і налаштуваннями це не змінюється.',
         'Квота Google Workspace спільна для пошти, Диска та Фото. Під час перенесення 30 ГБ перевірте, що тариф це витримає.',
         'Conversation History і Notes переносяться як звичайні папки, але в Gmail виглядатимуть інакше, ніж в Outlook.',
       ],
@@ -394,6 +400,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с Яндекса на Gmail требует двух отдельных действий на стороне Яндекса, и пропуск любого из них даёт одну и ту же ошибку авторизации. Именно поэтому люди часами проверяют пароль, хотя дело в выключенном IMAP.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Нужно и включить IMAP (Почта → Настройки → Почтовые программы), и создать пароль приложения (Яндекс ID → Безопасность). Без любого из них — AUTHENTICATIONFAILED.',
         'Логин для обычного ящика — без домена: для anna@yandex.ru это просто anna. Для Яндекс 360 на своём домене — полный адрес.',
         'Яндекс закрывает соединение при частых запросах. Один поток с паузами работает стабильнее пяти параллельных.',
@@ -418,6 +425,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Migrating Yandex Mail to Gmail needs two separate steps on the Yandex side, and skipping either produces the same authentication error. That is why people spend hours re-checking a password when the real problem is that IMAP was never switched on.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'You must both enable IMAP in mail settings and create an app password in Yandex ID. Missing either gives AUTHENTICATIONFAILED.',
         'For a standard mailbox the login is the local part only — anna, not anna@yandex.ru. Yandex 360 custom domains use the full address.',
         'Yandex drops connections under frequent requests. One thread with pauses beats five parallel ones.',
@@ -442,6 +450,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з Яндекса до Gmail потребує двох окремих дій на боці Яндекса, і пропуск будь-якої з них дає ту саму помилку авторизації.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Потрібно і увімкнути IMAP (Пошта → Налаштування → Поштові програми), і створити пароль застосунку (Яндекс ID → Безпека). Без будь-чого з цього — AUTHENTICATIONFAILED.',
         'Логін для звичайної скриньки — без домену: для anna@yandex.ru це просто anna. Для Яндекс 360 на власному домені — повна адреса.',
         'Яндекс закриває з’єднання за частих запитів. Один потік із паузами працює стабільніше за п’ять паралельних.',
@@ -552,6 +561,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с iCloud на Gmail отличается двумя вещами: Apple никогда не принимает обычный пароль Apple ID по IMAP, а логин указывается без домена. Для anna@icloud.com логин — это просто anna.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Пароль для приложения обязателен всегда, даже без двухфакторной аутентификации её придётся сначала включить на appleid.apple.com.',
         'Дефисы в пароле вида abcd-efgh-ijkl-mnop нужно сохранять — Apple их учитывает.',
         'Логин — только часть до собаки. Полный адрес Apple не примет.',
@@ -577,6 +587,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'iCloud to Gmail differs in two ways: Apple never accepts a plain Apple ID password over IMAP, and the username is the local part only. For anna@icloud.com the login is simply anna.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'An app-specific password is always required. If two-factor authentication is off, you must enable it first at appleid.apple.com.',
         'Keep the hyphens in passwords shaped like abcd-efgh-ijkl-mnop — Apple counts them.',
         'The login is the local part only; a full address is rejected.',
@@ -602,6 +613,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з iCloud до Gmail має дві особливості: Apple ніколи не приймає звичайний пароль Apple ID, а логін вказується без домену.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Пароль для застосунку обов’язковий завжди; без двофакторної автентифікації її доведеться спершу увімкнути на appleid.apple.com.',
         'Дефіси в паролі вигляду abcd-efgh-ijkl-mnop потрібно зберігати — Apple їх враховує.',
         'Логін — лише частина до равлика. Повну адресу Apple не прийме.',
@@ -634,6 +646,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с Yahoo на Gmail — один из самых простых маршрутов. Yahoo давно требует пароль приложения для сторонних клиентов, и это единственная настройка, которую нужно сделать заранее.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Yahoo не принимает пароль аккаунта: нужен пароль приложения из раздела безопасности учётной записи.',
         'Спам у Yahoo называется Bulk Mail — при ручном сопоставлении папок это часто упускают.',
         'Неактивные ящики Yahoo может отключить: если аккаунтом не пользовались год, сначала войдите через веб-интерфейс.',
@@ -653,6 +666,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Yahoo to Gmail is one of the simplest routes. Yahoo has required app passwords for third-party clients for years, and that is the single setting you need to prepare in advance.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'Yahoo rejects account passwords — generate an app password in account security settings.',
         'Yahoo calls its spam folder Bulk Mail, which is easy to miss when mapping folders by hand.',
         'Dormant Yahoo mailboxes get disabled. If the account has been idle for a year, sign in via the web first.',
@@ -672,6 +686,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з Yahoo до Gmail — один із найпростіших маршрутів. Yahoo давно вимагає пароль застосунку для сторонніх клієнтів.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Yahoo не приймає пароль облікового запису: потрібен пароль застосунку з розділу безпеки облікового запису.',
         'Спам у Yahoo називається Bulk Mail — під час ручного зіставлення папок це часто пропускають.',
         'Неактивні скриньки Yahoo може вимкнути: якщо обліковим записом не користувалися рік, спершу увійдіть через вебінтерфейс.',
@@ -953,6 +968,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенос почты с хостинга в Gmail часто делают при переходе на Google Workspace. На стороне хостинга главная проблема — сертификат, на стороне Google — пароль приложения и общая квота с Диском.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'Сертификат shared-хостинга обычно выписан на имя сервера: включите приём непроверенного сертификата.',
         'Логин на cPanel — полный адрес почтового ящика.',
         'Квота Gmail общая с Google Диском и Фото. Проверьте свободное место до переноса большого архива.',
@@ -973,6 +989,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Hosting to Gmail is a common move when a company adopts Google Workspace. On the hosting side the certificate is the usual blocker; on the Google side it is app passwords and storage shared with Drive.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'Shared hosting certificates are normally issued for the server name — enable accepting unverified certificates.',
         'cPanel logins are the full mailbox address.',
         'Gmail storage is shared with Drive and Photos. Check free space before moving a large archive.',
@@ -993,6 +1010,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Перенесення пошти з хостингу до Gmail часто роблять під час переходу на Google Workspace. Головна проблема — сертифікат shared-хостингу.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'Сертифікат shared-хостингу зазвичай виписаний на ім’я сервера: увімкніть приймання неперевіреного сертифіката.',
         'Логін на cPanel — повна адреса поштової скриньки.',
         'Квота Gmail спільна з Google Диском і Фото. Перевірте вільне місце до перенесення великого архіву.',
@@ -1087,6 +1105,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Миграция с локального Exchange на Google Workspace выполняется по IMAP, и это накладывает ограничение: переедут письма и папки, но не календари, задачи и публичные папки — они живут вне протокола.',
       pitfalls: [
+        'Gmail принимает по IMAP 500 МБ в сутки — это задокументированный лимит, и он строже, чем на выгрузку. Ящик на 10 ГБ будет приезжать около трёх недель; закладывайте срок заранее.',
         'IMAP в Exchange Server по умолчанию выключен: службу Microsoft Exchange IMAP4 нужно запустить и настроить.',
         'Сертификат внутреннего Exchange часто выписан на внутреннее имя — включите приём непроверенного сертификата.',
         'Публичные папки по IMAP недоступны — для них нужен отдельный инструмент миграции.',
@@ -1112,6 +1131,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'On-premise Exchange to Google Workspace runs over IMAP, which sets the boundary up front: messages and folders move, calendars, tasks and public folders do not — they live outside the protocol.',
       pitfalls: [
+        'Gmail accepts 500 MB a day over IMAP — a documented cap, and a stricter one than its export limit. A 10 GB mailbox takes about three weeks to arrive; plan the timeline up front.',
         'IMAP is disabled by default on Exchange Server; the Microsoft Exchange IMAP4 service must be started and configured.',
         'Internal Exchange certificates are often issued for an internal name — enable accepting unverified certificates.',
         'Public folders are not reachable over IMAP and need a dedicated migration tool.',
@@ -1137,6 +1157,7 @@ export const migrationRoutes: MigrationRoute[] = [
       intro:
         'Міграція з локального Exchange на Google Workspace виконується через IMAP: переїдуть листи й папки, але не календарі, завдання та публічні папки.',
       pitfalls: [
+        'Gmail приймає по IMAP 500 МБ на добу — це задокументований ліміт, суворіший за вивантаження. Скринька на 10 ГБ приїжджатиме близько трьох тижнів; закладайте строк заздалегідь.',
         'IMAP в Exchange Server за замовчуванням вимкнений: службу Microsoft Exchange IMAP4 потрібно запустити й налаштувати.',
         'Сертифікат внутрішнього Exchange часто виписаний на внутрішнє ім’я — увімкніть приймання неперевіреного сертифіката.',
         'Публічні папки через IMAP недоступні — для них потрібен окремий інструмент міграції.',
