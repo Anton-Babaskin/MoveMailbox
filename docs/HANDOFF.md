@@ -1,4 +1,46 @@
-# Engineering handoff — 2026-09-12
+# Engineering handoff — 2026-09-13
+
+## Live transactional update to current main
+
+- PR #17 was merged and post-merge CI passed. Current main
+  `b7f765a16a0b5b419d96a5931ad0fb68874758d2` also passed both push workflows.
+  An exact `git archive` was hashed before transfer and built on the closed VM;
+  Go tests and the real imapsync TLS/STARTTLS matrix passed during the image
+  build. The resulting `staging-b7f765a` image is pinned as
+  `sha256:6f937d90133c94d8c1fc5639c4a6b0c31f385272b036d143fff68ab2b24801de`.
+- The merged transactional updater was used for the first live update. Its
+  initial attempt refused before downtime because `/var/backups/movemailbox`
+  was mode 0755. The verified root-owned directory was restricted to 0700; the
+  service and old image remained untouched until that precondition passed.
+- The successful run stopped both writers, created and validated root-only
+  snapshot `pre-b7f765a16a0b-20260913T123729Z`, atomically changed the image
+  pin and required both exact-image health checks plus readiness. The former
+  digest and earlier validated snapshot remain available for rollback.
+- Post-update health reports version `staging-b7f765a`, remote-worker execution,
+  healthy SQLite and HTTP 200/no-store readiness. The private verifier passed
+  isolation/resources, guest/CSRF/Host/SSRF, all egress denials and verified TLS
+  to both authorized IMAP servers without credentials or jobs. State remains
+  24 completed, 2 cancelled, zero active jobs and zero envelopes; API retention
+  has independently reduced retained snapshots to 13, which is permitted.
+- Windows `git archive` exposed a packaging edge: executable Python files with
+  `text=auto` were exported with CRLF and failed direct shebang execution even
+  though `python3 file.py` worked. This branch pins Python and shell files to LF
+  in `.gitattributes`, and snapshot creation now normalizes backup databases to
+  DELETE journal mode so validated backups contain no misleading empty WAL/SHM
+  sidecars. The installed updater was replaced with an LF-identical executable
+  and its direct `--help` invocation passed.
+- No real-mail login, message mutation, strict mirror, public exposure,
+  production deployment or off-site upload was performed. Website source was
+  not edited; the deployed image merely contains the already-merged current
+  main website maintained by Claude.
+
+### Next two technical steps
+
+1. Obtain exact-head CI and review/merge this packaging/snapshot correction;
+   then install that exact merged updater on the closed VM.
+2. Select an off-site object store and provide scoped write/read credentials so
+   the age-sealed pair can be uploaded, retrieved and restored into isolated
+   empty storage with measured RPO/RTO and retention/versioning evidence.
 
 ## WAL-safe updater and full reboot acceptance
 

@@ -1,5 +1,22 @@
 # Real-mailbox MVP acceptance test
 
+### September 13: transactional current-main update
+
+The merged updater performed its first live closed-stage update from
+`staging-bc80040` to exact current main `staging-b7f765a`. A permissions gate
+first rejected the mode-0755 backup root before service downtime; after the
+verified root-owned directory was restricted to 0700, the updater produced a
+WAL-aware validated pair, changed the immutable image pin and observed both
+exact-image health checks and API readiness.
+
+Post-update private verification passed all container, browser-session,
+Host/SSRF and real egress-denial checks plus certificate-verified TLS to both
+authorized IMAP servers. No credentials were used and no job/message was
+created. Worker history remained 24 completed and 2 cancelled, with zero active
+jobs and envelopes; API retention had removed older snapshots independently.
+The old image and both rollback snapshots remain retained. This is update and
+rollback-readiness evidence, not a forced live rollback or off-site restore.
+
 ### September 12: full VM reboot acceptance
 
 The dedicated closed staging VM completed a full reboot. The boot ID changed,

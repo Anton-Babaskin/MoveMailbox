@@ -47,6 +47,8 @@ class StagingUpdateTests(unittest.TestCase):
                 with sqlite3.connect(backup / "worker.db") as db:
                     self.assertEqual(db.execute("SELECT status FROM worker_jobs").fetchone()[0], "completed")
                 self.assertEqual(set(manifest["files"]), {"api", "worker"})
+                self.assertEqual({path.name for path in backup.iterdir()},
+                                 {"api.db", "worker.db", "manifest.json"})
             finally:
                 writer.close()
 
