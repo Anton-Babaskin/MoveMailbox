@@ -13,11 +13,9 @@
   scripts were removed from `/home/nomak`; synthetic test folders/messages remain
   for the owner to remove after rotating the disposable accounts. No credentials,
   message content or job IDs are recorded here.
-- This is not an acceptance pass. Selected-folder counters, repeat-without-
-  duplicates, cancellation and worker-restart recovery still need a rerun using
-  a no-echo secret channel (for example, a root-owned one-shot FIFO or an
-  operator-provided secret manager). PR #27 remains open until that pilot is
-  completed as requested; no public exposure was changed.
+- This was not an acceptance pass. Selected-folder counters, repeat-without-
+  duplicates, cancellation and worker-restart recovery were rerun successfully
+  below through a no-echo secret channel; no public exposure was changed.
 
 The incident was closed by rotating both disposable mailbox passwords and
 rerunning through an SSH PTY with echo disabled and a shell trap restoring echo.
@@ -44,10 +42,11 @@ or Git.
   backup. The earlier PTY echo incident is documented above; no mailbox password
   should be reused.
 
-Next two technical steps: (1) merge PR #27 now that the documented pilot and
-CI are complete; (2) define closed-pilot admission/rate limits and schedule the
-first encrypted off-site metadata backup/restore drill. Keep website/frontend
-changes with Claude.
+PR #27 is now merged into `main` as `eebc6659bb9bd5d9605b634fd047f56584d4d5a3`.
+
+Next two technical steps: (1) define and verify closed-pilot admission/rate
+limits with bounded API-abuse checks; (2) schedule the first encrypted off-site
+metadata backup/restore drill. Keep website/frontend changes with Claude.
 
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
