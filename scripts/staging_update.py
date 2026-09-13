@@ -109,6 +109,12 @@ def sqlite_backup(source, target):
     with closing(sqlite3.connect(source.resolve().as_uri() + "?mode=ro", uri=True)) as incoming:
         with closing(sqlite3.connect(target)) as outgoing:
             incoming.backup(outgoing)
+            # A backup is one self-contained file, not a WAL triplet. Normalize
+            # its persistent journal mode before hashing and packaging so later
+            # read-only validation cannot leave misleading empty sidecars.
+            mode = outgoing.execute("PRAGMA journal_mode=DELETE").fetchone()[0]
+            if mode.lower() != "delete":
+                raise RuntimeError("could not normalize backup journal mode")
     os.chmod(target, 0o600)
 
 

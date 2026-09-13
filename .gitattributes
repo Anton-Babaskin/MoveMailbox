@@ -6,3 +6,5 @@
 *.html text eol=lf
 *.md text eol=lf
 *.yml text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
