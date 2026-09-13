@@ -1,5 +1,33 @@
 # Engineering handoff — 2026-09-13
 
+## Closed VM update after native progress counters (ops/progress-stage-load)
+
+- PR #26 was merged as `3ab2b71bf3d42ae0573c25b4c82e6f146d29a19c`; the exact
+  source archive was transferred to the closed Ubuntu VM and its SHA-256 matched
+  on both machines. The image `staging-3ab2b71` built successfully, including
+  the real imapsync TLS verification stage.
+- The staging updater created and validated paired snapshot
+  `pre-3ab2b71bf3d4-20260913T211250Z`, atomically switched the immutable pin from
+  the previous image to `sha256:bb696a8a2cc9f3b89d1690842f6d75d45e7bc2620729e5a59d64039a62df2805`,
+  and reported healthy readiness. Both API and worker remain on the new image;
+  the previous digest remains the rollback target.
+- Closed-stage verifier passed: non-root/read-only/capability/resource limits,
+  private worker and API exposure, remote-worker health, secure guest session,
+  CSRF, Host/SSRF checks, egress denials for metadata/bridge/NAT/arbitrary HTTPS,
+  and certificate-verified TLS to `box.cekomcelik.com` and `box.arc-trading.com`.
+  No mailbox credentials, jobs or messages were used in this verification.
+- Owner requested teaching mode. `AGENTS.md` now instructs the agent to explain
+  changes and evidence in plain Russian for an administrator, keep MVP stages
+  explicit, and retain only risk-driven bounded load checks. Website/frontend
+  remains Claude's scope.
+
+Next two technical steps: (1) use the deployed image for one explicitly supplied
+  secret-mechanism real-mail acceptance (selected folders, counters, repeat,
+  cancel and worker restart), without storing credentials in chat or shell
+  history; (2) decide the closed-pilot admission/rate limits from that evidence,
+  then schedule a reversible off-site encrypted metadata backup drill. Public
+  access, production DNS and website work remain outside this agent's scope.
+
 ## Backend native progress counters (feature/backend-progress-counters)
 
 - Safely fast-forwarded main to `8701fed`; PRs #22/#23/#24 are merged, no open
