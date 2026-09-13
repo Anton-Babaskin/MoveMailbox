@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ProviderGuides } from '@/components/sections/provider-guides';
 import { FaqFull } from '@/components/sections/faq-full';
+import { GuideList } from '@/components/sections/guide-list';
 import { FinalCta } from '@/components/sections/final-cta';
 import { pages } from '@/content/pages';
 import { buildMetadata } from '@/lib/seo';
@@ -36,6 +37,7 @@ export default async function Page({
   return (
     <main>
       <ProviderGuides lang={l} pageTitle />
+      <GuideList lang={l} />
       <FaqFull lang={l} />
       <FinalCta lang={l} />
     </main>

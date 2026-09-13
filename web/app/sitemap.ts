@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
 import { providerHubSlugs } from '@/data/provider-hubs';
+import { guideArticleSlugs } from '@/data/guide-articles';
 import { imapErrorSlugs } from '@/data/imap-errors';
 import { blogPosts } from '@/data/blog-posts';
 import { LANGS, href } from '@/i18n/config';
@@ -67,6 +68,15 @@ const hubPages: Entry[] = providerHubSlugs.map((slug) => ({
   lastModified: CONTENT_UPDATED,
 }));
 
+/* Отдельные гайды: разбор одной технической темы. Спрос ниже, чем у
+   страниц провайдеров, но запросы точные — «imap 993 или 143». */
+const guidePages: Entry[] = guideArticleSlugs.map((slug) => ({
+  path: `/guides/${slug}`,
+  changeFrequency: 'monthly' as ChangeFrequency,
+  priority: 0.72,
+  lastModified: CONTENT_UPDATED,
+}));
+
 const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
   path: `/docs/errors/${slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
@@ -87,7 +97,14 @@ const blogPages: Entry[] = blogPosts.map((post) => ({
 }));
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const all = [...pages, ...routePages, ...hubPages, ...errorPages, ...blogPages];
+  const all = [
+    ...pages,
+    ...routePages,
+    ...hubPages,
+    ...guidePages,
+    ...errorPages,
+    ...blogPages,
+  ];
 
   return all.flatMap((page) => {
     const languages: Record<string, string> = {
