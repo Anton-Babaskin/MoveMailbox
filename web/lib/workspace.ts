@@ -362,14 +362,25 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
 
      Единственный источник правды — представление задания с сервера
      (snapshot). События потока только уточняют его между снимками:
-     отсутствующее поле события значит «не изменилось». Полей скорости и
-     оставшегося времени в API нет, и мы их не выдумываем.
+     отсутствующее поле события значит «не изменилось».
+
+     Полей скорости, прошедшего и оставшегося времени в API нет. Мы их не
+     выдумываем, а считаем из того, что известно точно: время старта задания
+     (startedAt с сервера) и счётчики перенесённого. Такие величины помечены
+     знаком ≈ и цветом — это расчёт, а не данные сервера. Как только бекенд
+     начнёт отдавать остаток и общий объём (imapsync их печатает, воркер уже
+     разбирает — см. internal/migrator/progress.go), их можно показывать без
+     приставки «примерно».
      ================================================================== */
   var bar=$('#mbar'), track=bar && bar.parentElement, mp=$('#mp'), mt=$('#mt'),
-      msk=$('#msk'), mv=$('#mv'), mph=$('#mphase'), stt=$('#stt'), log=$('#log'),
-      bStart=$('#start'), bStop=$('#stop');
+      msk=$('#msk'), mv=$('#mv'), mel=$('#mel'), me=$('#me'), mph=$('#mphase'),
+      stt=$('#stt'), log=$('#log'), bStart=$('#start'), bStop=$('#stop');
   var jobId = null, jobStatus = null, stopping = false, running = false,
       lost = false, disconnect = null;
+  /* Измерения по часам браузера: начало задания, последние счётчики и
+     последний известный процент. Ничего из этого не подменяет данные сервера. */
+  var startedAt = 0, elapsedFrozen = 0, lastBytes = 0, lastTransferred = 0,
+      lastPercent = 0, indeterminate = false, ticker = null;
 
   function clock(stamp){
     var d = stamp ? new Date(stamp) : new Date();
@@ -402,9 +413,10 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     stt.appendChild(document.createTextNode(text));
   }
 
-  function progress(value, indeterminate){
+  function progress(value, waiting){
     if(!track) return;
-    if(indeterminate){
+    indeterminate = !!waiting;
+    if(waiting){
       track.classList.add('wait');
       if(mp) mp.textContent='…';
       return;
@@ -412,19 +424,79 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     if(!hasNumber(value)) return;
     track.classList.remove('wait');
     var p=Math.max(0, Math.min(100, Math.round(value)));
+    lastPercent = p;
     bar.style.width=p+'%';
     if(mp) mp.textContent=p+'%';
   }
 
-  function metrics(data){
-    if('transferred' in data && mt) mt.textContent=count(data.transferred);
-    if('skipped' in data && msk) msk.textContent=count(data.skipped);
-    if('bytes' in data && mv) mv.textContent=bytes(data.bytes);
-    if(mph && (data.phase || data.currentFolder)){
-      var parts=[phaseLabel(data.phase)];
-      if(data.currentFolder) parts.push(T.folderLabel + ': ' + data.currentFolder);
-      mph.textContent=parts.filter(Boolean).join(' · ');
+  /* мм:сс до часа, дальше ч:мм:сс — как в выводе imapsync */
+  function duration(seconds){
+    if(!hasNumber(seconds) || seconds < 0) return T.noValue;
+    var s=Math.round(seconds), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+    var two=function(v){ return String(v).padStart(2,'0'); };
+    return (h ? h + ':' + two(m) : two(m)) + ':' + two(sec);
+  }
+
+  /* Значение-расчёт: тот же формат, но с ≈ и другим цветом. */
+  function estimate(el, text){
+    if(!el) return;
+    el.textContent = text === null ? T.noValue : '≈ ' + text;
+    el.classList.toggle('est', text !== null);
+  }
+
+  function elapsedSeconds(){
+    if(!startedAt) return 0;
+    return elapsedFrozen || (Date.now() - startedAt) / 1000;
+  }
+
+  /* Скорость и остаток считаются от реально перенесённого за реально
+     прошедшее время. Ни одного числа «из воздуха»: пока перенос не начал
+     двигаться, в плитках стоит прочерк. */
+  function derived(){
+    var seconds = elapsedSeconds();
+    if(mel) mel.textContent = startedAt ? duration(seconds) : '00:00';
+    var speed = seconds > 2 && lastBytes > 0 ? lastBytes / seconds : 0;
+    if(mph){
+      var parts=[mph.dataset.phase || ''];
+      if(mph.dataset.folder) parts.push(T.folderLabel + ': ' + mph.dataset.folder);
+      if(speed > 0) parts.push('≈ ' + bytes(speed) + T.perSecond +
+        (lastTransferred > 0 ? ' · ' + Math.round(lastTransferred / seconds * 60).toLocaleString(T.numberLocale) +
+          ' ' + T.messagesShort + '/' + T.minuteShort : ''));
+      mph.textContent = parts.filter(Boolean).join(' · ');
     }
+    if(!me) return;
+    if(!running && jobStatus){ estimate(me, null); return; }
+    if(indeterminate || lastPercent < 3 || lastPercent >= 100 || seconds < 5){
+      estimate(me, null);
+      return;
+    }
+    estimate(me, duration(seconds * (100 - lastPercent) / lastPercent));
+  }
+
+  function startTicker(){
+    if(ticker) return;
+    ticker = setInterval(derived, 1000);
+  }
+  function stopTicker(){
+    if(!ticker) return;
+    clearInterval(ticker); ticker = null;
+  }
+
+  function metrics(data){
+    if('transferred' in data){
+      lastTransferred = data.transferred;
+      if(mt) mt.textContent=count(data.transferred);
+    }
+    if('skipped' in data && msk) msk.textContent=count(data.skipped);
+    if('bytes' in data){
+      lastBytes = data.bytes;
+      if(mv) mv.textContent=bytes(data.bytes);
+    }
+    if(mph && (data.phase || data.currentFolder)){
+      if(data.phase) mph.dataset.phase = phaseLabel(data.phase);
+      if(data.currentFolder) mph.dataset.folder = data.currentFolder;
+    }
+    derived();
   }
 
   var STATUS_TEXT = {
@@ -441,6 +513,12 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     running = TERMINAL.indexOf(view.status) < 0;
     var style = STATUS_TEXT[view.status] || ['statusRunning','run'];
     status(stopping && running ? T.statusCancelling : T[style[0]], style[1]);
+    /* Часы задания берём с сервера: после перезагрузки страницы «прошло»
+       считается от настоящего старта, а не от момента открытия вкладки. */
+    var began = Date.parse(view.startedAt || view.createdAt || '');
+    startedAt = isNaN(began) ? startedAt || Date.now() : began;
+    var ended = Date.parse(view.finishedAt || '');
+    elapsedFrozen = !isNaN(ended) && startedAt ? Math.max(0, (ended - startedAt) / 1000) : 0;
     progress(view.progress, false);
     metrics(view);
     if(log){
@@ -453,8 +531,13 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     if(!running){
       stopping=false;
       forget();
+      stopTicker();
       if(disconnect){ disconnect(); disconnect=null; }
-      if(mph) mph.textContent=phaseLabel(view.phase) || T.phaseIdle;
+      if(mph){ mph.dataset.folder=''; mph.textContent=phaseLabel(view.phase) || T.phaseIdle; }
+      if(mel) mel.textContent=duration(elapsedSeconds());
+      estimate(me, null);
+    } else {
+      startTicker();
     }
     controls();
   }
@@ -490,7 +573,7 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
       },
       error: function(e){
         if(e && (e.status === 404 || e.status === 403)){
-          forget(); running=false; stopping=false;
+          forget(); running=false; stopping=false; stopTicker();
           push(T.jobGone, 2); status(T.statusError, ''); controls();
           return;
         }
@@ -551,9 +634,14 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     running=true; stopping=false; lost=false;
     if(log) log.textContent='';
     progress(0, false);
+    startedAt=Date.now(); elapsedFrozen=0; lastBytes=0; lastTransferred=0; lastPercent=0;
     if(mt) mt.textContent=T.noValue;
     if(msk) msk.textContent=T.noValue;
     if(mv) mv.textContent=T.noValue;
+    if(mel) mel.textContent='00:00';
+    estimate(me, null);
+    if(mph){ mph.dataset.phase=''; mph.dataset.folder=''; }
+    startTicker();
     status(T.statusQueued, 'run');
     controls();
     client.start({
@@ -567,7 +655,7 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
       observe(job.id);
     }).catch(function(e){
       /* Повторной отправки нет и быть не должно: задание могло быть принято. */
-      running=false; controls();
+      running=false; stopTicker(); controls();
       status(T.statusError, '');
       push(message(e) || T.transferFailed, 2);
     });

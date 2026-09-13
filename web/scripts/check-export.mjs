@@ -4,6 +4,7 @@
  * поймать это в CI, чем через неделю в отчёте «Страницы».
  */
 import { readFile, access } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -79,4 +80,23 @@ if (!/<html[^>]*\blang=/.test(htmlTags[0])) {
   process.exit(1);
 }
 
-console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый`);
+/**
+ * Фавиконка.
+ *
+ * Робот Яндекса ищет /favicon.ico по корню и без него пишет в диагностике
+ * «Файл фавиконки не найден», даже когда SVG-иконка отдаётся и браузер её
+ * показывает. Файл лежит в public/ и легко теряется при чистке, поэтому
+ * инвариант закреплён здесь: и сам файл, и ссылка на него с главной.
+ */
+const icon = join(out, 'favicon.ico');
+if (!existsSync(icon)) {
+  console.error('нет out/favicon.ico: Яндекс сочтёт, что фавиконки у сайта нет');
+  process.exit(1);
+}
+const home = await readFile(join(out, 'index.html'), 'utf8');
+if (!home.includes('/favicon.ico')) {
+  console.error('главная не ссылается на /favicon.ico');
+  process.exit(1);
+}
+
+console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый; favicon.ico на месте`);

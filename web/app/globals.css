@@ -366,11 +366,19 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .mon-h .stt.run{color:var(--term-a);border-color:rgba(229,167,94,.4)}
 .mon-h .stt.run i{animation:pulse .8s infinite}
 .mon-h .stt.done{color:var(--term-g);border-color:rgba(79,214,172,.4)}
-.mon-s{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.07)}
-@media (max-width:720px){.mon-s{grid-template-columns:repeat(2,1fr)}}
+.mon-s{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:rgba(255,255,255,.07)}
+.mon-s div{min-width:0}
+.mon-s strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:980px){.mon-s{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.mon-s{grid-template-columns:repeat(2,1fr)}}
 .mon-s div{background:var(--term);padding:15px 24px}
 .mon-s small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5E7284;display:block}
-.mon-s strong{font-size:1.45rem;color:var(--term-hi);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mon-s strong{font-size:1.25rem;color:var(--term-hi);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mon-s strong small{display:inline;font-size:.62em;letter-spacing:.04em;color:#5E7284;text-transform:none}
+/* Оценка отличается от измеренного значения знаком ≈ и приглушённым цветом:
+   пользователь должен видеть, где число, а где расчёт. */
+.mon-s strong.est{color:var(--term-a)}
+.mon-est{margin:0;padding:6px 24px 0;font-size:.72rem;color:#5E7284;line-height:1.5}
 .mon-ph{margin:0;padding:11px 24px 0;font-family:var(--mono);font-size:11.5px;color:#6E8494;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Неопределённый прогресс: сервер сообщил indeterminate — показываем движение,
