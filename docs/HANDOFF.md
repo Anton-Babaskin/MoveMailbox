@@ -62,6 +62,24 @@ metadata backup/restore drill. Keep website/frontend changes with Claude.
   and applied through the staging update procedure. No public traffic was
   enabled.
 
+## Closed-pilot limits and encrypted backup drill (2026-09-14)
+
+- The focused API regression test passed for the direct-IP window, and an
+  isolated demo container returned `429` with `Retry-After` after the bounded
+  guest-session allowance. The WSL Python harness passed 49 tests with one
+  expected age-tool skip; the pinned Docker builder also passed all Go tests
+  including the new API test.
+- The encrypted metadata drill used age 1.3.2 and fresh Docker volumes. It
+  created a paired SQLite snapshot only after draining writers, rejected both
+  truncation and byte corruption, encrypted and committed the pair, downloaded
+  and decrypted it, validated hashes/integrity, restored empty volumes, proved
+  owner isolation and confirmed that a terminal job was not replayed.
+- The drill retained only synthetic stopped labs and temporary backup material
+  outside Git; no mailbox credentials or message content were used. Its local
+  object store models the upload/commit/download protocol and is **not** an
+  off-site provider upload. Provider selection, retention and an actual
+  off-site restore remain deployment gates.
+
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
 - PR #26 was merged as `3ab2b71bf3d42ae0573c25b4c82e6f146d29a19c`; the exact
