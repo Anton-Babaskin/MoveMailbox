@@ -48,6 +48,20 @@ Next two technical steps: (1) define and verify closed-pilot admission/rate
 limits with bounded API-abuse checks; (2) schedule the first encrypted off-site
 metadata backup/restore drill. Keep website/frontend changes with Claude.
 
+## Closed-pilot admission profile (ops/pilot-gates)
+
+- The staging Compose override now pins one concurrent migration, one active
+  migration per guest, 32 queued/retained API jobs, 60 requests per guest
+  session per minute and 240 requests per direct client IP per minute.
+- The API already enforced these independent session and IP windows; a focused
+  regression test now proves the direct-IP window returns `429` with
+  `Retry-After` after the bounded allowance. This is an application cap, not a
+  substitute for a future reverse-proxy rate limit.
+- The profile is repository-defined and locally checked; the currently running
+  VM remains on the previously deployed image/config until this PR is reviewed
+  and applied through the staging update procedure. No public traffic was
+  enabled.
+
 ## Closed VM update after native progress counters (ops/progress-stage-load)
 
 - PR #26 was merged as `3ab2b71bf3d42ae0573c25b4c82e6f146d29a19c`; the exact

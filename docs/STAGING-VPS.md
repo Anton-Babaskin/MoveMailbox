@@ -24,6 +24,12 @@ separation, secret generation, private-network egress restrictions, resource
 limits, metadata backup/restore, log retention and monitoring. Do not open the
 demo form to public real-credential submissions as a substitute for these gates.
 
+The closed-pilot application profile is intentionally conservative: one
+concurrent migration, one active migration per guest session, 32 queued/retained
+API jobs, 60 requests per session per minute and 240 requests per direct client
+IP per minute. A future public reverse proxy must enforce its own IP and burst
+limits because the application does not trust forwarded client-IP headers.
+
 Next verification stages:
 
 Local WSL status (September 8): quota image rebuilt; real hosted quota denial/

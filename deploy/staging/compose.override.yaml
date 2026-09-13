@@ -7,7 +7,12 @@ services:
     dns: [1.1.1.1, 1.0.0.1]
     environment:
       MOVEMAILBOX_MAX_CONCURRENT: "1"
+      # Closed-pilot admission profile. Keep the reverse proxy stricter when
+      # this stage is ever put behind HTTPS; these are application-side caps.
+      MOVEMAILBOX_MAX_JOBS: "32"
       MOVEMAILBOX_MAX_ACTIVE_PER_SESSION: "1"
+      MOVEMAILBOX_SESSION_REQUESTS_PER_MINUTE: "60"
+      MOVEMAILBOX_IP_REQUESTS_PER_MINUTE: "240"
     networks:
       default:
         ipv4_address: 172.30.80.2
