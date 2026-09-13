@@ -4,6 +4,7 @@ import { Workspace } from '@/components/sections/workspace';
 import { TrustRow } from '@/components/sections/trust-row';
 import { Security } from '@/components/sections/security';
 import { Brief } from '@/components/sections/brief';
+import { Quickstart } from '@/components/sections/quickstart';
 import { Modes } from '@/components/sections/modes';
 import { FaqShort } from '@/components/sections/faq-short';
 import { FinalCta } from '@/components/sections/final-cta';
@@ -43,6 +44,9 @@ export default async function Page({
       <Hero lang={l} />
       <Workspace lang={l} />
       <TrustRow lang={l} />
+      {/* Плитки провайдеров сразу после формы: человек, который пришёл по
+          запросу «перенести Gmail», получает свою страницу в один клик. */}
+      <Quickstart lang={l} />
       <Security lang={l} />
       <Brief lang={l} />
       <Modes lang={l} />
