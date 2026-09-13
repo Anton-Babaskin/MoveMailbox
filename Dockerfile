@@ -8,6 +8,9 @@ FROM ${NODE_IMAGE} AS web
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --ignore-scripts
+# Клиент гостевого API лежит вне web/ и импортируется как ../../sdk:
+# он общий для сайта и других потребителей, копии в web/ быть не должно.
+COPY sdk/ /src/sdk/
 COPY web/ ./
 RUN npm run build
 
