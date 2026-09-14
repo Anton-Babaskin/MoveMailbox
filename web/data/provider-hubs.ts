@@ -396,7 +396,7 @@ export const providerHubs: ProviderHub[] = [
       ],
     },
     uk: {
-      title: 'Перенесення пошти за IMAP між будь-якими серверами — MoveMailbox',
+      title: 'Перенесення пошти за IMAP між серверами — MoveMailbox',
       description:
         'Як перенести скриньку за IMAP: де взяти адресу сервера, порти 993 і 143, SSL/TLS проти STARTTLS і що робити під час переїзду домену.',
       h1: 'Перенесення пошти за IMAP',

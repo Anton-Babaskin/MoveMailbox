@@ -46,6 +46,24 @@ After that, verify the deployed admission limits under bounded concurrent API
 requests and record latency, rejection counts and recovery. Older sections
 below are historical evidence, not a request to repeat completed stages.
 
+## VM SSH hardening applied (2026-09-14)
+
+Owner requested practical server hardening with mentoring. Installed the
+reviewed SSH profile after an independent key login and sudo check, with a
+three-minute rollback timer. Syntax/effective policy, reload and a fresh key
+login succeeded; the timer was cancelled. Password login and direct root SSH
+are disabled; agent/X11/reverse forwarding disabled; local forwarding restricted
+to the loopback API. Real allowed/denied forwarding checks and container health
+passed. Existing SSH keys, socket port and application image were preserved.
+
+See [VM security report](VM-SECURITY.md) for evidence, rollback and residual
+risks. Full passwordless sudo on the deployment identity remains a root-equivalent
+access path. Automatic Ubuntu security updates were already enabled. Off-site
+backup remains deferred by the owner.
+
+Next: separate privileged deployment from routine operator access; then add
+reviewed VM input filtering and a chosen destination for security alerts.
+
 ## Real-mail pilot interruption (2026-09-14)
 
 - The updated image `staging-3ab2b71` was tested against the two owner-supplied

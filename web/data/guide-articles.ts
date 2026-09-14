@@ -38,7 +38,7 @@ export const guideArticles: GuideArticle[] = [
     ru: {
       title: 'Перенос ящика, пока домен переезжает — MoveMailbox',
       description:
-        'Как подключиться к почте, когда DNS ещё показывает на старый сервер: имя хостинга вместо своего, когда работает IP и почему проверку сертификата нельзя выключать.',
+        'Как подключиться к почте, когда DNS ещё показывает на старый сервер: имя хостинга вместо своего и почему проверку сертификата нельзя выключать.',
       h1: 'Перенос почты, пока домен ещё не переехал',
       intro:
         'Классическая ситуация переезда: ящик на новом сервере уже создан, домен ещё указывает на старый, и mail.вашдомен открывает не то, что нужно. Подключиться к обоим ящикам можно и так — но не через IP, как советуют в половине инструкций. Ниже разбор, почему IP чаще всего не сработает и что использовать вместо него.',
@@ -238,7 +238,7 @@ export const guideArticles: GuideArticle[] = [
   {
     slug: 'imap-ports-and-encryption',
     ru: {
-      title: 'Порты IMAP и шифрование: 993, 143, SSL/TLS и STARTTLS — MoveMailbox',
+      title: 'Порты IMAP: 993, 143, SSL/TLS и STARTTLS — MoveMailbox',
       description:
         'Какой порт выбрать для IMAP, чем SSL/TLS отличается от STARTTLS, почему 143 без шифрования недопустим и что означают типичные ошибки подключения.',
       h1: 'Порты IMAP и шифрование',
@@ -298,7 +298,7 @@ export const guideArticles: GuideArticle[] = [
       ],
     },
     en: {
-      title: 'IMAP ports and encryption: 993, 143, SSL/TLS and STARTTLS — MoveMailbox',
+      title: 'IMAP ports: 993, 143, SSL/TLS and STARTTLS — MoveMailbox',
       description:
         'Which IMAP port to pick, how SSL/TLS differs from STARTTLS, why plain 143 is not an option, and what the usual connection errors actually mean.',
       h1: 'IMAP ports and encryption',
@@ -358,7 +358,7 @@ export const guideArticles: GuideArticle[] = [
       ],
     },
     uk: {
-      title: 'Порти IMAP і шифрування: 993, 143, SSL/TLS та STARTTLS — MoveMailbox',
+      title: 'Порти IMAP: 993, 143, SSL/TLS і STARTTLS — MoveMailbox',
       description:
         'Який порт обрати для IMAP, чим SSL/TLS відрізняється від STARTTLS, чому 143 без шифрування неприпустимий і що означають типові помилки підключення.',
       h1: 'Порти IMAP і шифрування',
@@ -414,6 +414,508 @@ export const guideArticles: GuideArticle[] = [
         [
           'Чому з’єднання рветься одразу після початку?',
           'Найчастіше порт і режим шифрування не збігаються: 993 чекає TLS з першого байта, а 143 — команду STARTTLS. Змініть режим і повторіть перевірку.',
+        ],
+      ],
+    },
+  },
+  {
+    slug: 'hosting-change-mail-migration',
+    ru: {
+      title: 'Смена хостинга: перенос почты и переключение MX — MoveMailbox',
+      description:
+        'Порядок переезда почты при смене хостинга: где взять настройки IMAP в cPanel, Plesk и DirectAdmin, когда переключать MX и что не переносится по IMAP.',
+      h1: 'Смена хостинга: как перенести почту',
+      intro:
+        'При переезде сайта на новый хостинг почта — самая болезненная часть: файлы можно перелить ночью и никто не заметит, а письма приходят круглосуточно, и любая пауза означает потерянное письмо клиента. Правильный порядок снимает проблему полностью: почта переносится ДО переключения домена, пока оба сервера работают, а после переключения запускается повторно и добирает хвост.',
+      sections: [
+        {
+          h: 'Что собрать до начала',
+          p: [
+            'Перенос идёт по каждому ящику отдельно, поэтому сначала нужен список: адреса, объёмы и доступы. Пароли со старого хостинга не «переезжают» — ящики на новом создаются заново, и пароль там будет свой.',
+          ],
+          list: [
+            'Список всех ящиков домена и их объём — в панели старого хостинга, раздел почты.',
+            'Место на новом тарифе: суммарный объём ящиков должен помещаться с запасом.',
+            'Ящики, созданные на новом хостинге заранее, с паролями, которые вы знаете.',
+            'Текущее значение TTL у MX-записей: от него зависит, сколько будет длиться переключение.',
+          ],
+        },
+        {
+          h: 'Где взять настройки IMAP в панелях',
+          p: [
+            'Адрес сервера и порт панель показывает сама — угадывать не нужно. Пути по трём самым частым панелям:',
+          ],
+          list: [
+            'cPanel: «Email → Set Up Mail Client» (кнопка «Connect Devices» в списке почтовых аккаунтов).',
+            'Plesk: «Сайты и домены → нужный домен → Почтовые аккаунты → Настройка почтового клиента». По умолчанию IMAP на 143, защищённый — на 993 с SSL, логин — полный адрес.',
+            'DirectAdmin: сервер mail.вашдомен, IMAP 993 по SSL, логин — полный адрес почты.',
+            'Остальные панели: ищите раздел с названием вроде «настройка почтового клиента» — он есть почти везде.',
+          ],
+        },
+        {
+          h: 'Порядок, при котором ничего не теряется',
+          p: [
+            'Ключевой момент: перенос не трогает источник и не требует остановки почты, поэтому его делают заранее, а не в ночь переключения.',
+          ],
+          list: [
+            'За сутки-двое до переезда уменьшите TTL у MX-записей — переключение пройдёт быстрее.',
+            'Перенесите почту на новый хостинг, пока домен ещё работает по-старому. Пользователи продолжают работать в старых ящиках.',
+            'Переключите MX на нового провайдера.',
+            'Через сутки запустите перенос повторно: он заберёт письма, пришедшие на старый сервер за время смены DNS. Уже перенесённое пропускается, дубликатов не будет.',
+            'Старый хостинг не отключайте ещё неделю: письма могут приходить туда по кэшированным записям.',
+          ],
+        },
+        {
+          h: 'Что IMAP не переносит',
+          p: [
+            'Протокол работает с письмами и папками. Всё остальное настраивается на новом хостинге руками — и лучше знать об этом заранее, а не в день переезда.',
+          ],
+          list: [
+            'Пароли ящиков, автоответчики, правила фильтрации и пересылки.',
+            'Catch-all и почтовые алиасы.',
+            'Контакты и календари — это не почта и по IMAP не передаются.',
+            'Настройки спам-фильтра и его обучение.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'Сколько ящиков можно перенести за раз?',
+          'Сейчас перенос идёт по одному ящику за задание: указываете источник и назначение и запускаете. Для домена на десяток ящиков это десяток запусков — не быстро, но предсказуемо. Массовый перенос списком в планах.',
+        ],
+        [
+          'Пользователи заметят переезд?',
+          'Нет, если переносить заранее. Источник не изменяется, старые ящики работают как работали. Заметным станет только момент, когда вы смените пароли и настройки в их почтовых программах.',
+        ],
+        [
+          'Что делать, если на новом хостинге ящик уже с письмами?',
+          'Ничего страшного: одинаковые письма пропускаются, а не дублируются. Именно поэтому повторный запуск после смены MX безопасен.',
+        ],
+        [
+          'Нужно ли что-то просить у старого хостера?',
+          'Обычно нет — достаточно паролей от ящиков. Если IMAP на тарифе отключён или закрыт фаерволом, это единственное, о чём придётся просить в поддержке.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Changing hosting: migrating mail and switching MX — MoveMailbox',
+      description:
+        'The order of a mail migration during a hosting change: where cPanel, Plesk and DirectAdmin show IMAP settings, when to switch MX, and what IMAP does not carry over.',
+      h1: 'Changing hosting: how to migrate the mail',
+      intro:
+        'When a site moves to a new host, mail is the painful part: files can be copied overnight and nobody notices, but messages arrive around the clock and every pause means a lost customer email. The right order removes the problem entirely: mail is migrated BEFORE the domain is switched, while both servers still work, and a second run after the switch collects the tail.',
+      sections: [
+        {
+          h: 'What to collect first',
+          p: [
+            'Migration runs per mailbox, so start with a list: addresses, volumes, credentials. Passwords do not travel from the old host — mailboxes on the new one are created from scratch with passwords of their own.',
+          ],
+          list: [
+            'Every mailbox on the domain and its size — from the old host’s mail section.',
+            'Free space on the new plan: the total volume has to fit with room to spare.',
+            'Mailboxes created on the new host in advance, with passwords you know.',
+            'The current TTL on the MX records: it decides how long the switch will take.',
+          ],
+        },
+        {
+          h: 'Where the panels show IMAP settings',
+          p: [
+            'The panel tells you the server name and port — there is nothing to guess. Paths for the three most common ones:',
+          ],
+          list: [
+            'cPanel: Email → Set Up Mail Client (the "Connect Devices" button in the email account list).',
+            'Plesk: Websites & Domains → the domain → Mail Accounts → Mail Client Setup. IMAP is 143 by default and 993 with SSL; the username is the full email address.',
+            'DirectAdmin: server mail.yourdomain, IMAP 993 over SSL, username is the full email address.',
+            'Other panels: look for a section named something like "mail client configuration" — nearly all of them have one.',
+          ],
+        },
+        {
+          h: 'The order that loses nothing',
+          p: [
+            'The key point: a migration never modifies the source and needs no downtime, so it happens ahead of time, not on the night of the switch.',
+          ],
+          list: [
+            'A day or two before the move, lower the TTL on the MX records so the switch propagates faster.',
+            'Migrate the mail to the new host while the domain still works the old way. People keep using the old mailboxes.',
+            'Switch the MX records to the new provider.',
+            'A day later, run the migration again: it collects whatever reached the old server while DNS was changing. Already transferred messages are skipped, so no duplicates.',
+            'Keep the old hosting alive for another week: mail can still arrive there through cached records.',
+          ],
+        },
+        {
+          h: 'What IMAP does not carry over',
+          p: [
+            'The protocol deals with messages and folders. Everything else is set up on the new host by hand — better known in advance than on moving day.',
+          ],
+          list: [
+            'Mailbox passwords, auto-responders, filtering and forwarding rules.',
+            'Catch-all addresses and mail aliases.',
+            'Contacts and calendars — not mail, not carried by IMAP.',
+            'Spam filter settings and everything it has learned.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'How many mailboxes can be migrated at once?',
+          'Today one mailbox per job: you enter the source and the destination and start it. A domain with ten mailboxes means ten runs — not fast, but predictable. Bulk migration from a list is planned.',
+        ],
+        [
+          'Will users notice the move?',
+          'Not if you migrate ahead of time. The source is never modified and the old mailboxes keep working. The only visible moment is when you hand out new passwords and settings for their mail clients.',
+        ],
+        [
+          'What if the mailbox on the new host already has mail in it?',
+          'Not a problem: identical messages are skipped rather than duplicated. That is exactly why re-running after the MX switch is safe.',
+        ],
+        [
+          'Do I need anything from the old host?',
+          'Usually just the mailbox passwords. If IMAP is disabled on the plan or blocked by a firewall, that is the one thing worth asking support about.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Зміна хостингу: перенесення пошти та перемикання MX — MoveMailbox',
+      description:
+        'Порядок переїзду пошти під час зміни хостингу: де взяти налаштування IMAP у cPanel, Plesk і DirectAdmin, коли перемикати MX і що не переноситься за IMAP.',
+      h1: 'Зміна хостингу: як перенести пошту',
+      intro:
+        'Під час переїзду сайту на новий хостинг пошта — найболючіша частина: файли можна перелити вночі і ніхто не помітить, а листи надходять цілодобово, і будь-яка пауза означає загублений лист клієнта. Правильний порядок знімає проблему повністю: пошта переноситься ДО перемикання домену, поки обидва сервери працюють, а після перемикання запускається повторно і добирає хвіст.',
+      sections: [
+        {
+          h: 'Що зібрати до початку',
+          p: [
+            'Перенесення йде для кожної скриньки окремо, тому спершу потрібен список: адреси, обсяги та доступи. Паролі зі старого хостингу не «переїжджають» — скриньки на новому створюються заново, і пароль там буде свій.',
+          ],
+          list: [
+            'Список усіх скриньок домену та їхній обсяг — у панелі старого хостингу, розділ пошти.',
+            'Місце на новому тарифі: сумарний обсяг скриньок має вміщатися із запасом.',
+            'Скриньки, створені на новому хостингу заздалегідь, із паролями, які ви знаєте.',
+            'Поточне значення TTL у MX-записів: від нього залежить, скільки триватиме перемикання.',
+          ],
+        },
+        {
+          h: 'Де взяти налаштування IMAP у панелях',
+          p: [
+            'Адресу сервера й порт панель показує сама — угадувати не треба. Шляхи для трьох найчастіших панелей:',
+          ],
+          list: [
+            'cPanel: «Email → Set Up Mail Client» (кнопка «Connect Devices» у списку поштових акаунтів).',
+            'Plesk: «Сайти та домени → потрібний домен → Поштові акаунти → Налаштування поштового клієнта». За замовчуванням IMAP на 143, захищений — на 993 із SSL, логін — повна адреса.',
+            'DirectAdmin: сервер mail.вашдомен, IMAP 993 за SSL, логін — повна адреса пошти.',
+            'Інші панелі: шукайте розділ на кшталт «налаштування поштового клієнта» — він є майже скрізь.',
+          ],
+        },
+        {
+          h: 'Порядок, за якого нічого не губиться',
+          p: [
+            'Ключовий момент: перенесення не чіпає джерело й не потребує зупиняти пошту, тому його роблять заздалегідь, а не в ніч перемикання.',
+          ],
+          list: [
+            'За добу-дві до переїзду зменште TTL у MX-записів — перемикання пройде швидше.',
+            'Перенесіть пошту на новий хостинг, поки домен ще працює по-старому. Користувачі продовжують працювати у старих скриньках.',
+            'Перемкніть MX на нового провайдера.',
+            'Через добу запустіть перенесення повторно: воно забере листи, що надійшли на старий сервер за час зміни DNS. Уже перенесене пропускається, дублікатів не буде.',
+            'Старий хостинг не вимикайте ще тиждень: листи можуть надходити туди за кешованими записами.',
+          ],
+        },
+        {
+          h: 'Що IMAP не переносить',
+          p: [
+            'Протокол працює з листами й теками. Усе інше налаштовується на новому хостингу руками — і краще знати про це заздалегідь, а не в день переїзду.',
+          ],
+          list: [
+            'Паролі скриньок, автовідповідачі, правила фільтрації та пересилання.',
+            'Catch-all і поштові аліаси.',
+            'Контакти й календарі — це не пошта і за IMAP не передаються.',
+            'Налаштування спам-фільтра та його навчання.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'Скільки скриньок можна перенести за раз?',
+          'Зараз перенесення йде по одній скриньці за завдання: вказуєте джерело й призначення та запускаєте. Для домену з десятком скриньок це десяток запусків — не швидко, але передбачувано. Масове перенесення списком у планах.',
+        ],
+        [
+          'Чи помітять користувачі переїзд?',
+          'Ні, якщо переносити заздалегідь. Джерело не змінюється, старі скриньки працюють як працювали. Помітним стане лише момент, коли ви зміните паролі та налаштування в їхніх поштових програмах.',
+        ],
+        [
+          'Що робити, якщо на новому хостингу скринька вже з листами?',
+          'Нічого страшного: однакові листи пропускаються, а не дублюються. Саме тому повторний запуск після зміни MX безпечний.',
+        ],
+        [
+          'Чи треба щось просити у старого хостера?',
+          'Зазвичай ні — достатньо паролів від скриньок. Якщо IMAP на тарифі вимкнено або закрито фаєрволом, це єдине, про що доведеться просити підтримку.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'corporate-mail-migration',
+    ru: {
+      title: 'Корпоративный переезд почты: план миграции — MoveMailbox',
+      description:
+        'Как перевести почту компании на другой сервер: инвентаризация ящиков, пилот, доступы в Microsoft 365 и Google Workspace, волны переноса и сверка.',
+      h1: 'Корпоративный переезд почты',
+      intro:
+        'Переезд почты компании отличается от переноса одного ящика не технически, а организационно: тридцать ящиков — это тридцать паролей, тридцать владельцев и один вечер, когда всё должно заработать. Ниже план, который снимает главные риски: пилот до массового запуска, волны вместо «все сразу» и сверка, по которой видно, что ничего не потерялось.',
+      sections: [
+        {
+          h: 'Инвентаризация: без неё план не строится',
+          p: [
+            'Первое, что нужно, — таблица ящиков. Не «примерно сорок», а точный список с объёмами: от него зависят и сроки, и тариф на новой стороне.',
+          ],
+          list: [
+            'Адрес, владелец, объём и число писем по каждому ящику.',
+            'Общие и функциональные ящики (info@, sales@) — у них отдельные доступы и часто отдельный владелец.',
+            'Ящики уволившихся: обычно их переносят в архив, а не на новую платформу.',
+            'Суммарный объём — по нему считается время переноса и место на новом тарифе.',
+          ],
+        },
+        {
+          h: 'Доступы: где обычно застревает подготовка',
+          p: [
+            'В облачных сервисах обычный пароль по IMAP чаще всего не работает, и это выясняется в самый неподходящий момент.',
+          ],
+          list: [
+            'Microsoft 365: базовая аутентификация для IMAP по умолчанию отключена. Рабочий путь — пароли приложений при включённой многофакторной проверке; если политика арендатора их запрещает, доступ открывает администратор.',
+            'Google Workspace: IMAP включается в настройках, пароль приложения выдаётся только при включённой двухэтапной аутентификации.',
+            'Свой сервер или хостинг: обычно достаточно паролей от ящиков, но стоит заранее проверить, что IMAP не закрыт фаерволом.',
+            'Пароли на время переноса лучше выдавать одноразовые и отзывать сразу после — пароль приложения отзывается одним нажатием.',
+          ],
+        },
+        {
+          h: 'Пилот, потом волны',
+          p: [
+            'Массовый запуск без пилота — самая дорогая ошибка: если что-то не так с доступами или папками, вы узнаете это тридцать раз подряд.',
+          ],
+          list: [
+            'Возьмите один средний ящик и перенесите его целиком. Замерьте время — по нему масштабируется весь план.',
+            'Сверьте результат по папкам: счётчики писем с обеих сторон должны совпасть.',
+            'Разбейте остальные ящики на волны по 5–10 и переносите волнами, а не все сразу: провайдеры ограничивают число одновременных IMAP-сессий.',
+            'Первыми переносите ящики, которые меньше всего используются, последними — руководство и продажи.',
+          ],
+        },
+        {
+          h: 'Переключение и сверка',
+          p: [
+            'Перенос не требует останавливать почту, поэтому переключение MX происходит после того, как основной объём уже на новой стороне.',
+          ],
+          list: [
+            'Переключите MX, когда все волны прошли.',
+            'Через сутки запустите перенос повторно по всем ящикам: он доберёт письма, пришедшие за время переключения, и не создаст дубликатов.',
+            'Сверьте счётчики по папкам ещё раз и только потом отключайте старые ящики.',
+            'Старую систему держите доступной хотя бы неделю — это дешевле, чем восстанавливать одно потерянное письмо.',
+          ],
+        },
+        {
+          h: 'Что переносом по IMAP не решается',
+          p: [
+            'Об этом стоит сказать руководству заранее, чтобы не выяснять в день переезда.',
+          ],
+          list: [
+            'Календари, контакты и задачи — переносятся средствами самой платформы.',
+            'Права делегирования («секретарь видит календарь директора») настраиваются заново.',
+            'Публичные папки Exchange — отдельное хранилище, IMAP их не видит.',
+            'Правила Outlook, подписи и автоответы — настраиваются на новой стороне.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'Сколько времени занимает переезд компании на 30 ящиков?',
+          'Считайте по объёму, а не по числу ящиков: узкое место — скорость выгрузки у провайдера. Пилотный ящик покажет реальную скорость, дальше время масштабируется линейно. Ориентир для Microsoft 365 по нашим замерам — около половины гигабайта в час на ящик.',
+        ],
+        [
+          'Можно ли переносить, пока люди работают?',
+          'Да. Источник не изменяется, письма только читаются. Единственное, что нужно согласовать, — момент смены настроек в почтовых программах.',
+        ],
+        [
+          'Что делать с ящиками уволившихся сотрудников?',
+          'Обычно их переносят в отдельный архивный ящик на новой стороне, а не заводят лицензии. По IMAP это такой же перенос, только назначение — архив.',
+        ],
+        [
+          'Нужен ли доступ администратора?',
+          'Не всегда. Если у каждого ящика есть пароль (или пароль приложения), администратор не нужен. Он потребуется там, где политика арендатора запрещает пароли приложений.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Corporate email migration plan — MoveMailbox',
+      description:
+        'How to move a company’s mail to another server: mailbox inventory, a pilot run, access in Microsoft 365 and Google Workspace, migration waves and reconciliation.',
+      h1: 'Corporate email migration',
+      intro:
+        'Moving a company’s mail differs from moving one mailbox organisationally, not technically: thirty mailboxes mean thirty passwords, thirty owners and one evening when everything has to work. Below is the plan that removes the main risks: a pilot before the bulk, waves instead of "all at once", and a reconciliation that proves nothing was lost.',
+      sections: [
+        {
+          h: 'Inventory: no plan without it',
+          p: [
+            'The first thing you need is a table of mailboxes. Not "about forty" — an exact list with volumes, because both the schedule and the plan on the receiving side depend on it.',
+          ],
+          list: [
+            'Address, owner, size and message count for every mailbox.',
+            'Shared and functional mailboxes (info@, sales@) — separate credentials, often a separate owner.',
+            'Mailboxes of people who left: usually archived rather than moved onto the new platform.',
+            'The total volume — it decides the migration time and the space needed on the new plan.',
+          ],
+        },
+        {
+          h: 'Access: where preparation usually stalls',
+          p: [
+            'In cloud services the ordinary password rarely works over IMAP, and that tends to surface at the worst possible moment.',
+          ],
+          list: [
+            'Microsoft 365: basic authentication for IMAP is off by default. The working route is app passwords with MFA enabled; if tenant policy forbids them, an administrator opens access.',
+            'Google Workspace: IMAP is enabled in the settings, and app passwords are issued only when 2-step verification is on.',
+            'Own server or hosting: mailbox passwords are usually enough, but check in advance that IMAP is not blocked by a firewall.',
+            'Issue single-purpose passwords for the migration and revoke them right after — an app password is revoked in one click.',
+          ],
+        },
+        {
+          h: 'A pilot, then waves',
+          p: [
+            'Going bulk without a pilot is the expensive mistake: if something is wrong with access or folders, you will learn it thirty times in a row.',
+          ],
+          list: [
+            'Take one average mailbox and migrate it end to end. Measure the time — the whole plan scales from it.',
+            'Reconcile by folder: message counts on both sides have to match.',
+            'Split the rest into waves of five to ten rather than all at once: providers cap concurrent IMAP sessions.',
+            'Migrate the least active mailboxes first and management and sales last.',
+          ],
+        },
+        {
+          h: 'Cutover and reconciliation',
+          p: [
+            'A migration needs no downtime, so the MX switch happens after the bulk is already on the new side.',
+          ],
+          list: [
+            'Switch MX once every wave is done.',
+            'A day later, re-run the migration across all mailboxes: it collects what arrived during the switch and creates no duplicates.',
+            'Reconcile folder counts once more, and only then retire the old mailboxes.',
+            'Keep the old system reachable for at least a week — cheaper than recovering a single lost message.',
+          ],
+        },
+        {
+          h: 'What an IMAP migration does not solve',
+          p: [
+            'Worth telling management up front rather than discovering on moving day.',
+          ],
+          list: [
+            'Calendars, contacts and tasks — moved with the platform’s own tools.',
+            'Delegation rights ("the assistant sees the director’s calendar") are configured again.',
+            'Exchange public folders — a separate store that IMAP cannot see.',
+            'Outlook rules, signatures and auto-replies — set up on the new side.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'How long does a 30-mailbox company migration take?',
+          'Count by volume, not by mailbox count: the bottleneck is the provider’s export speed. The pilot mailbox shows the real rate and the rest scales linearly from it. For Microsoft 365 our measurements land around half a gigabyte per hour per mailbox.',
+        ],
+        [
+          'Can we migrate while people are working?',
+          'Yes. The source is never modified, messages are only read. The only thing to schedule is the moment their mail clients get the new settings.',
+        ],
+        [
+          'What about mailboxes of former employees?',
+          'They usually go into a single archive mailbox on the new side instead of consuming licences. Over IMAP it is the same migration, only the destination is the archive.',
+        ],
+        [
+          'Do we need administrator access?',
+          'Not always. If every mailbox has a password (or an app password), no administrator is involved. One is needed where tenant policy forbids app passwords.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Корпоративний переїзд пошти: план міграції — MoveMailbox',
+      description:
+        'Як перевести пошту компанії на інший сервер: інвентаризація скриньок, пілот, доступи в Microsoft 365 і Google Workspace, хвилі перенесення та звірка.',
+      h1: 'Корпоративний переїзд пошти',
+      intro:
+        'Переїзд пошти компанії відрізняється від перенесення однієї скриньки не технічно, а організаційно: тридцять скриньок — це тридцять паролів, тридцять власників і один вечір, коли все має запрацювати. Нижче план, який знімає головні ризики: пілот до масового запуску, хвилі замість «усі одразу» і звірка, за якою видно, що нічого не загубилося.',
+      sections: [
+        {
+          h: 'Інвентаризація: без неї план не будується',
+          p: [
+            'Перше, що потрібно, — таблиця скриньок. Не «приблизно сорок», а точний список з обсягами: від нього залежать і строки, і тариф на новому боці.',
+          ],
+          list: [
+            'Адреса, власник, обсяг і кількість листів для кожної скриньки.',
+            'Спільні та функційні скриньки (info@, sales@) — окремі доступи й часто окремий власник.',
+            'Скриньки звільнених: зазвичай їх переносять в архів, а не на нову платформу.',
+            'Сумарний обсяг — за ним рахується час перенесення й місце на новому тарифі.',
+          ],
+        },
+        {
+          h: 'Доступи: де зазвичай застрягає підготовка',
+          p: [
+            'У хмарних сервісах звичайний пароль за IMAP найчастіше не працює, і це з’ясовується в найменш слушний момент.',
+          ],
+          list: [
+            'Microsoft 365: базову автентифікацію для IMAP за замовчуванням вимкнено. Робочий шлях — паролі застосунків за увімкненої багатофакторної перевірки; якщо політика орендаря їх забороняє, доступ відкриває адміністратор.',
+            'Google Workspace: IMAP вмикається в налаштуваннях, пароль застосунку видають лише за увімкненої двоетапної перевірки.',
+            'Власний сервер або хостинг: зазвичай достатньо паролів від скриньок, але варто заздалегідь перевірити, що IMAP не закрито фаєрволом.',
+            'Паролі на час перенесення краще видавати одноразові й відкликати одразу після — пароль застосунку відкликається одним натисканням.',
+          ],
+        },
+        {
+          h: 'Пілот, потім хвилі',
+          p: [
+            'Масовий запуск без пілота — найдорожча помилка: якщо щось не так із доступами чи теками, ви дізнаєтеся про це тридцять разів поспіль.',
+          ],
+          list: [
+            'Візьміть одну середню скриньку й перенесіть її повністю. Заміряйте час — за ним масштабується весь план.',
+            'Звірте результат за теками: лічильники листів з обох боків мають збігтися.',
+            'Розбийте решту скриньок на хвилі по 5–10 і переносьте хвилями, а не всі одразу: провайдери обмежують кількість одночасних IMAP-сесій.',
+            'Першими переносьте скриньки, які найменше використовуються, останніми — керівництво та продажі.',
+          ],
+        },
+        {
+          h: 'Перемикання і звірка',
+          p: [
+            'Перенесення не потребує зупиняти пошту, тому перемикання MX відбувається після того, як основний обсяг уже на новому боці.',
+          ],
+          list: [
+            'Перемкніть MX, коли всі хвилі пройшли.',
+            'Через добу запустіть перенесення повторно для всіх скриньок: воно добере листи, що надійшли за час перемикання, і не створить дублікатів.',
+            'Звірте лічильники за теками ще раз і лише потім вимикайте старі скриньки.',
+            'Стару систему тримайте доступною щонайменше тиждень — це дешевше, ніж відновлювати один загублений лист.',
+          ],
+        },
+        {
+          h: 'Що перенесенням за IMAP не вирішується',
+          p: [
+            'Про це варто сказати керівництву заздалегідь, щоб не з’ясовувати в день переїзду.',
+          ],
+          list: [
+            'Календарі, контакти та завдання — переносяться засобами самої платформи.',
+            'Права делегування («секретар бачить календар директора») налаштовуються заново.',
+            'Публічні теки Exchange — окреме сховище, IMAP їх не бачить.',
+            'Правила Outlook, підписи та автовідповіді — налаштовуються на новому боці.',
+          ],
+        },
+      ],
+      faq: [
+        [
+          'Скільки часу займає переїзд компанії на 30 скриньок?',
+          'Рахуйте за обсягом, а не за кількістю скриньок: вузьке місце — швидкість вивантаження у провайдера. Пілотна скринька покаже реальну швидкість, далі час масштабується лінійно. Орієнтир для Microsoft 365 за нашими замірами — близько половини гігабайта на годину на скриньку.',
+        ],
+        [
+          'Чи можна переносити, поки люди працюють?',
+          'Так. Джерело не змінюється, листи лише читаються. Єдине, що треба узгодити, — момент зміни налаштувань у поштових програмах.',
+        ],
+        [
+          'Що робити зі скриньками звільнених працівників?',
+          'Зазвичай їх переносять в окрему архівну скриньку на новому боці, а не заводять ліцензії. За IMAP це таке саме перенесення, лише призначення — архів.',
+        ],
+        [
+          'Чи потрібен доступ адміністратора?',
+          'Не завжди. Якщо в кожної скриньки є пароль (або пароль застосунку), адміністратор не потрібен. Він знадобиться там, де політика орендаря забороняє паролі застосунків.',
         ],
       ],
     },

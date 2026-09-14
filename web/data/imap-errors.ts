@@ -464,7 +464,7 @@ export const imapErrors: ImapError[] = [
       ],
     },
     en: {
-      title: 'Connection reset by peer during email migration — MoveMailbox',
+      title: 'Connection reset by peer during migration — MoveMailbox',
       description:
         'The server drops the connection mid-transfer. This is provider throttling: why it triggers and how to resume the migration safely.',
       h1: 'Connection reset by peer: the server closed the session silently',
