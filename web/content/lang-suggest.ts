@@ -8,19 +8,19 @@ export const langSuggest = {
   en: {
     title: 'This page is available in English',
     action: 'Switch to English',
-    dismiss: 'Stay in Russian',
+    dismiss: 'Stay on this page',
     close: 'Close',
   },
   uk: {
     title: 'Ця сторінка є українською',
     action: 'Перейти на українську',
-    dismiss: 'Залишитись російською',
+    dismiss: 'Залишитись на цій сторінці',
     close: 'Закрити',
   },
   ru: {
     title: 'Эта страница есть на русском',
     action: 'Перейти на русский',
-    dismiss: 'Остаться как есть',
+    dismiss: 'Остаться на этой странице',
     close: 'Закрыть',
   },
 } as const;

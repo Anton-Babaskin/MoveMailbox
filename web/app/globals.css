@@ -16,10 +16,16 @@
 
 :root{
   --bg:#F1F5F5; --bg-2:#E8EEEE; --surf:#FFFFFF; --surf-2:#F7FAFA;
-  --ink:#0D1B26; --ink-2:#42586B; --ink-3:#7A8D9C;
+  --ink:#0D1B26; --ink-2:#42586B;
+  /* #7A8D9C давал 3.43:1 на белом и 3.13:1 на фоне — ниже порога AA 4.5:1.
+     Текущее значение: 5.05:1 и 4.60:1. Тон тот же, просто темнее. */
+  --ink-3:#5E7182;
   --line:#DCE5E7; --line-2:#EDF2F3;
-  --acc:#0C8A67; --acc-ink:#FFFFFF; --acc-soft:#E1F2EC; --acc-glow:12,138,103;
-  --amb:#B0722A; --amb-soft:#FAF0E3;
+  /* #0C8A67 давал 3.94:1 на фоне и 4.33:1 на белом — мелкий текст и белый
+     на кнопке не проходили AA. Сейчас 4.72:1 и 5.18:1. */
+  --acc:#0A7C5C; --acc-ink:#FFFFFF; --acc-soft:#E6F4EF; --acc-glow:10,124,92;
+  /* #B0722A на своей подложке давал 3.53:1. Сейчас 4.50:1. */
+  --amb:#8E591D; --amb-soft:#FAF0E3;
   --warn:#B33B2C; --warn-soft:#FBEBE9;
   --term:#08131C; --term-ink:#9FB6C4; --term-hi:#E6F0F5; --term-g:#4FD6AC; --term-a:#E5A75E;
   --sh:0 1px 2px rgba(13,27,38,.04),0 14px 34px -20px rgba(13,27,38,.30);
@@ -367,7 +373,7 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .mon-h{display:flex;align-items:center;gap:11px;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,.07)}
 .mon-h svg{width:17px;height:17px;color:var(--term-g)}
 .mon-h strong{color:var(--term-hi);font-size:.9rem;display:block}
-.mon-h small{font-size:.76rem;color:#6E8494}
+.mon-h small{font-size:.76rem;color:#7A8FA1}
 .mon-h .stt{margin-left:auto;font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:20px;
   border:1px solid rgba(255,255,255,.12);display:inline-flex;gap:7px;align-items:center}
 .mon-h .stt i{width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -380,14 +386,14 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 @media (max-width:980px){.mon-s{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:560px){.mon-s{grid-template-columns:repeat(2,1fr)}}
 .mon-s div{background:var(--term);padding:15px 24px}
-.mon-s small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5E7284;display:block}
+.mon-s small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#74899B;display:block}
 .mon-s strong{font-size:1.25rem;color:var(--term-hi);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.mon-s strong small{display:inline;font-size:.62em;letter-spacing:.04em;color:#5E7284;text-transform:none}
+.mon-s strong small{display:inline;font-size:.62em;letter-spacing:.04em;color:#74899B;text-transform:none}
 /* Оценка отличается от измеренного значения знаком ≈ и приглушённым цветом:
    пользователь должен видеть, где число, а где расчёт. */
 .mon-s strong.est{color:var(--term-a)}
-.mon-est{margin:0;padding:6px 24px 0;font-size:.72rem;color:#5E7284;line-height:1.5}
-.mon-ph{margin:0;padding:11px 24px 0;font-family:var(--mono);font-size:11.5px;color:#6E8494;
+.mon-est{margin:0;padding:6px 24px 0;font-size:.72rem;color:#74899B;line-height:1.5}
+.mon-ph{margin:0;padding:11px 24px 0;font-family:var(--mono);font-size:11.5px;color:#7A8FA1;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Неопределённый прогресс: сервер сообщил indeterminate — показываем движение,
    а не проценты, которых он не давал. */
@@ -401,11 +407,11 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 @keyframes march{to{background-position:26px 0}}
 .log{font-family:var(--mono);font-size:12px;line-height:1.95;padding:14px 24px;height:150px;overflow:auto}
 .log>div{display:flex;gap:14px;animation:fu .3s both}
-.log time{color:#4E6274;flex:none}
+.log time{color:#6B8092;flex:none}
 .log b{font-weight:400;color:var(--term-hi)}
 .log b.g{color:var(--term-g)}
 .log b.a{color:var(--term-a)}
-.log-foot{padding:0 24px 16px;font-size:.8rem;color:#5E7284}
+.log-foot{padding:0 24px 16px;font-size:.8rem;color:#74899B}
 
 /* trust row */
 .trust{border-block:1px solid var(--line);background:var(--surf)}
@@ -524,7 +530,7 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px solid var(--line);
   border-radius:6px;padding:1.5px 6px;white-space:nowrap}
 .pv-body .cmd{margin-top:24px;background:var(--term);border-radius:13px;padding:16px 18px;overflow-x:auto}
-.cmd small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5E7284;display:block;margin-bottom:9px}
+.cmd small{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#74899B;display:block;margin-bottom:9px}
 .cmd pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--term-hi);white-space:pre}
 .cmd .fl{color:var(--term-g)}
 .cmd .vl{color:var(--term-a)}
@@ -571,7 +577,7 @@ code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px
   animation:live 2.4s cubic-bezier(.2,.6,.3,1) infinite}
 @keyframes live{0%{transform:scale(.55);opacity:.75}70%,100%{transform:scale(1.5);opacity:0}}
 .upd{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;
-  text-transform:uppercase;color:#5E7284}
+  text-transform:uppercase;color:#74899B}
 .board ul{display:flex;flex-direction:column}
 .board li{display:grid;grid-template-columns:auto 1fr 10px;gap:18px;align-items:start;
   padding:20px;border-bottom:1px solid rgba(255,255,255,.07);transition:background .3s}
@@ -756,7 +762,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .calc-out::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(30rem 18rem at 110% -10%,rgba(79,214,172,.2),transparent 70%)}
 .calc-out>*{position:relative;z-index:1}
-.calc-out .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5E7284}
+.calc-out .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#74899B}
 .calc-big{font-size:clamp(2.1rem,4.4vw,2.9rem);font-weight:800;letter-spacing:-.045em;line-height:1.05;
   color:var(--term-hi);font-variant-numeric:tabular-nums}
 .calc-big em{font-style:normal;color:var(--term-g)}
@@ -766,7 +772,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .calc-rows div b{color:var(--term-hi);font-family:var(--mono);font-size:12.5px;font-weight:500;
   font-variant-numeric:tabular-nums;text-align:right}
 .calc-rows div b.hi{color:var(--term-g)}
-.calc-note{font-size:.79rem;color:#6E8494;line-height:1.6}
+.calc-note{font-size:.79rem;color:#7A8FA1;line-height:1.6}
 
 /* ---- errors ---- */
 .errs{display:flex;flex-direction:column;gap:10px;margin-top:32px}
@@ -1217,8 +1223,14 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 /* Подсказка про язык. Всплывает снизу слева, не перекрывая ни шапку, ни
    основное действие страницы, и уезжает с той же стороны. Это предложение,
    а не перехват: страница под ней остаётся той, что человек открыл. */
-.lang-suggest{position:relative;background:color-mix(in srgb,var(--surf) 70%,transparent);
+/* По умолчанию плашки нет в раскладке вообще: display:none, а не hidden с
+   последующим показом из React. Нужный блок открывает атрибут на <html>,
+   который выставляет public/theme.js до первой отрисовки — без сдвига. */
+.lang-suggest{display:none;position:relative;background:color-mix(in srgb,var(--surf) 70%,transparent);
   border-bottom:1px solid var(--line);animation:lang-in .42s cubic-bezier(.2,.7,.3,1) both}
+:root[data-lang-suggest="en"] .lang-suggest[data-suggest="en"],
+:root[data-lang-suggest="uk"] .lang-suggest[data-suggest="uk"],
+:root[data-lang-suggest="ru"] .lang-suggest[data-suggest="ru"]{display:block}
 .lang-suggest-in{max-width:1240px;margin:0 auto;padding:12px 52px 12px clamp(16px,4vw,32px);
   display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .lang-suggest.out{animation:lang-out .22s ease-in both}
@@ -1243,7 +1255,7 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .calc-bars{display:flex;flex-direction:column;gap:10px;margin-top:2px}
 .calc-bar{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:12px;
   font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase}
-.calc-bar-l{color:#6E8494}
+.calc-bar-l{color:#7A8FA1}
 .calc-bar i{display:block;height:6px;border-radius:6px;background:rgba(255,255,255,.09);overflow:hidden}
 .calc-bar u{display:block;height:100%;border-radius:6px;text-decoration:none;
   background:rgba(255,255,255,.26);transition:width .45s cubic-bezier(.2,.7,.3,1),background .3s}
