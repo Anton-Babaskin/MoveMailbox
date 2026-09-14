@@ -1,5 +1,29 @@
 # Engineering handoff — 2026-09-13
 
+## Current state: pilot limits deployed (2026-09-14)
+
+- PR #31 was reviewed and merged after all seven CI checks succeeded.
+- Applied the merged pilot limits to the private VM as a configuration-only
+  update, retaining the tested `staging-3ab2b71` image and existing secrets.
+  Checked the idle queue, stopped both writers, validated a paired SQLite
+  snapshot, retained the old Compose override, replaced the profile and
+  restarted with rollback on failure. Runtime environment values confirmed:
+  concurrency 1, active jobs per guest 1, retained/queued API jobs 32,
+  requests per minute 60 per session and 240 per direct peer IP.
+- Both containers became healthy. The deployed verifier passed guest cookie,
+  CSRF, Host/SSRF, container restrictions, outbound deny rules and verified TLS
+  to both authorized IMAP hosts. It performed no mailbox login or migration.
+- Snapshot `limits-20260914T083214Z` is retained on the VM along with the old
+  configuration. No public access or website change was made by this operation.
+- Off-site upload is still pending: no provider/bucket/access has been supplied.
+  The earlier local encrypted drill does not close this gate.
+
+Next: obtain the owner's off-site bucket and restricted access, then perform
+one encrypted upload/download/restore using an operator-held decryption key.
+After that, verify the deployed admission limits under bounded concurrent API
+requests and record latency, rejection counts and recovery. Older sections
+below are historical evidence, not a request to repeat completed stages.
+
 ## Real-mail pilot interruption (2026-09-14)
 
 - The updated image `staging-3ab2b71` was tested against the two owner-supplied
