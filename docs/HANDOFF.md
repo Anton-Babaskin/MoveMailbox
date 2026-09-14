@@ -20,6 +20,70 @@
 
 Next: merge the green pending PRs, then build/deploy this worker fix as a new
 staging image and repeat only the bounded HTTP cancellation smoke check.
+## Backend audit: bounded rate limiter (2026-09-14)
+
+Owner deferred off-site backup. Continue backend correctness and security work;
+do not keep requesting a bucket as a prerequisite for unrelated development.
+
+Confirmed availability defect in `internal/api/identity.go`: active IP/session
+counters were unbounded; after 4096 entries every accepted request scanned the
+entire table under its shared mutex. Distinct clients within a minute could
+increase both memory and CPU work. The overflow regression failed before the
+fix. No exploitation on the VM has been established.
+
+The table now holds at most 8192 combined counters, rejects new identities at
+capacity with the existing retry response, retains existing quotas, and clears
+expired counters once per minute. Delayed timestamps cannot roll the window
+backward. Tests cover capacity/recovery, quota preservation, delayed requests,
+and 256 concurrent calls admitting exactly 32 requests. Full Go race tests and
+vet are the validation gate. This is a focused audit, not a claim that all
+backend code is free of defects. The fix is not yet deployed to the VM.
+
+Next: review/merge the fix after CI and deploy it to the private VM; then audit
+worker transient-operation concurrency and cancellation under contention.
+
+
+## Current state: pilot limits deployed (2026-09-14)
+
+- PR #31 was reviewed and merged after all seven CI checks succeeded.
+- Applied the merged pilot limits to the private VM as a configuration-only
+  update, retaining the tested `staging-3ab2b71` image and existing secrets.
+  Checked the idle queue, stopped both writers, validated a paired SQLite
+  snapshot, retained the old Compose override, replaced the profile and
+  restarted with rollback on failure. Runtime environment values confirmed:
+  concurrency 1, active jobs per guest 1, retained/queued API jobs 32,
+  requests per minute 60 per session and 240 per direct peer IP.
+- Both containers became healthy. The deployed verifier passed guest cookie,
+  CSRF, Host/SSRF, container restrictions, outbound deny rules and verified TLS
+  to both authorized IMAP hosts. It performed no mailbox login or migration.
+- Snapshot `limits-20260914T083214Z` is retained on the VM along with the old
+  configuration. No public access or website change was made by this operation.
+- Off-site upload is still pending: no provider/bucket/access has been supplied.
+  The earlier local encrypted drill does not close this gate.
+
+Next: obtain the owner's off-site bucket and restricted access, then perform
+one encrypted upload/download/restore using an operator-held decryption key.
+After that, verify the deployed admission limits under bounded concurrent API
+requests and record latency, rejection counts and recovery. Older sections
+below are historical evidence, not a request to repeat completed stages.
+
+## VM SSH hardening applied (2026-09-14)
+
+Owner requested practical server hardening with mentoring. Installed the
+reviewed SSH profile after an independent key login and sudo check, with a
+three-minute rollback timer. Syntax/effective policy, reload and a fresh key
+login succeeded; the timer was cancelled. Password login and direct root SSH
+are disabled; agent/X11/reverse forwarding disabled; local forwarding restricted
+to the loopback API. Real allowed/denied forwarding checks and container health
+passed. Existing SSH keys, socket port and application image were preserved.
+
+See [VM security report](VM-SECURITY.md) for evidence, rollback and residual
+risks. Full passwordless sudo on the deployment identity remains a root-equivalent
+access path. Automatic Ubuntu security updates were already enabled. Off-site
+backup remains deferred by the owner.
+
+Next: separate privileged deployment from routine operator access; then add
+reviewed VM input filtering and a chosen destination for security alerts.
 
 ## Real-mail pilot interruption (2026-09-14)
 

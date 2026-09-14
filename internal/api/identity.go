@@ -245,7 +245,12 @@ type rateWindow struct {
 type requestLimiter struct {
 	mu      sync.Mutex
 	windows map[string]rateWindow
+	period  time.Time
 }
+
+// Shared bound for direct-peer and session counters. Reject new identities at
+// capacity rather than evicting existing counters and resetting their quotas.
+const maxRateWindows = 8192
 
 func newRequestLimiter() *requestLimiter {
 	return &requestLimiter{windows: make(map[string]rateWindow)}
@@ -258,6 +263,18 @@ func (limiter *requestLimiter) allow(key string, limit int, now time.Time) (bool
 	limiter.mu.Lock()
 	defer limiter.mu.Unlock()
 	started := now.Truncate(time.Minute)
+	if limiter.period.IsZero() || started.After(limiter.period) {
+		clear(limiter.windows)
+		limiter.period = started
+	}
+	// A request can wait for the mutex across a minute boundary. Its earlier
+	// timestamp must not reset counters that newer requests have already used.
+	if started.Before(limiter.period) {
+		started = limiter.period
+	}
+	if _, exists := limiter.windows[key]; !exists && len(limiter.windows) >= maxRateWindows {
+		return false, started.Add(time.Minute).Sub(now)
+	}
 	window := limiter.windows[key]
 	if !window.started.Equal(started) {
 		window = rateWindow{started: started}
@@ -267,12 +284,5 @@ func (limiter *requestLimiter) allow(key string, limit int, now time.Time) (bool
 	}
 	window.count++
 	limiter.windows[key] = window
-	if len(limiter.windows) > 4096 {
-		for candidate, value := range limiter.windows {
-			if value.started.Before(started) {
-				delete(limiter.windows, candidate)
-			}
-		}
-	}
 	return true, 0
 }
