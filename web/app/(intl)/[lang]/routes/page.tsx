@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { ProtocolLimits } from '@/components/sections/protocol-limits';
 import { PopularRoutes } from '@/components/sections/popular-routes';
@@ -38,6 +39,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/routes" kind="collection" />
       <HowItWorks lang={l} pageTitle />
       <ProtocolLimits lang={l} />
       <PopularRoutes lang={l} />

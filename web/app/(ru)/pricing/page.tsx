@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { UseCases } from '@/components/sections/use-cases';
 import { Calculator } from '@/components/sections/calculator';
 import { Pricing } from '@/components/sections/pricing';
@@ -16,6 +17,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={"/pricing"} kind="app" />
       <UseCases lang={'ru'} pageTitle />
       <Calculator lang={'ru'} />
       <Pricing lang={'ru'} />

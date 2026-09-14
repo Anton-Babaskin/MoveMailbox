@@ -84,7 +84,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
     },
     en: {
       meta: {
-        title: 'Privacy Policy — MoveMailbox',
+        title: 'Privacy Policy: what MoveMailbox stores — MoveMailbox',
         description:
           'What data MoveMailbox receives during a mail transfer, where it is stored, how long it is kept and what is removed once the job is over.',
       },
@@ -250,7 +250,7 @@ export const legal: Record<LegalDocId, Record<Lang, LegalDocContent>> = {
     },
     en: {
       meta: {
-        title: 'Terms of Use — MoveMailbox',
+        title: 'Terms of Use for the mailbox migration service — MoveMailbox',
         description:
           'Terms of use for the MoveMailbox email transfer service: what the free size covers, the limits, and who is responsible for what.',
       },

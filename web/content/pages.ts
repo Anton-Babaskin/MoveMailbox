@@ -80,46 +80,46 @@ export const pages: Record<string, Record<Lang, PageMeta>> = {
   },
   '/security': {
     ru: {
-      title: 'Безопасность — MoveMailbox',
+      title: 'Безопасность: что мы делаем с вашими паролями — MoveMailbox',
       description:
         'Что происходит с учётными данными на каждом шаге переноса: шифрование, расшифровка в памяти воркера, отсутствие архива писем.',
     },
     en: {
-      title: 'Security — MoveMailbox',
+      title: 'Security: how we handle your IMAP credentials — MoveMailbox',
       description:
         'What happens to your credentials at every step: encryption before queueing, decryption in worker memory, and no archive of your mail.',
     },
     uk: {
-      title: 'Безпека — MoveMailbox',
+      title: 'Безпека перенесення пошти: що ми робимо з паролями — MoveMailbox',
       description:
         'Що відбувається з обліковими даними на кожному кроці перенесення: шифрування, розшифрування в пам’яті воркера, відсутність архіву листів.',
     },
   },
   '/download': {
     ru: {
-      title: 'Скачать клиент — MoveMailbox',
+      title: 'Скачать клиент переноса почты для Windows и Linux — MoveMailbox',
       description:
         'Настольный клиент для Windows и Linux, Docker-сборка для своего сервера. Без лимита по объёму, почта идёт напрямую между вашими серверами.',
     },
     en: {
-      title: 'Download the client — MoveMailbox',
+      title: 'Download the migration client for Windows and Linux — MoveMailbox',
       description:
         'Desktop client for Windows and Linux, plus a Docker image for your own server. No size cap, and mail goes straight between your servers.',
     },
     uk: {
-      title: 'Завантажити клієнт — MoveMailbox',
+      title: 'Клієнт перенесення пошти для Windows і Linux — MoveMailbox',
       description:
         'Настільний клієнт для Windows і Linux, Docker-збірка для власного сервера. Без обмеження обсягу, пошта йде напряму між вашими серверами.',
     },
   },
   '/blog': {
     ru: {
-      title: 'Блог — MoveMailbox',
+      title: 'Блог о переносе почты по IMAP — MoveMailbox',
       description:
         'Разборы миграций, изменения у провайдеров и грабли, на которые наступают при переносе почты.',
     },
     en: {
-      title: 'Blog — MoveMailbox',
+      title: 'Blog about IMAP mailbox migration — MoveMailbox',
       description:
         'Migration write-ups, provider changes, and the rakes people keep stepping on when moving email.',
     },

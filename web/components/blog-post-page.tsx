@@ -20,6 +20,7 @@ export function blogPostMetadata(lang: Lang, slug: string): Metadata {
     path: `/blog/${slug}`,
     title: copy.title,
     description: copy.description,
+    ogType: 'article',
   });
 }
 

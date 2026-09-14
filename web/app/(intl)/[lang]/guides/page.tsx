@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { ProviderGuides } from '@/components/sections/provider-guides';
 import { FaqFull } from '@/components/sections/faq-full';
 import { GuideList } from '@/components/sections/guide-list';
@@ -36,6 +37,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/guides" kind="collection" />
       <ProviderGuides lang={l} pageTitle />
       <GuideList lang={l} />
       <FaqFull lang={l} />

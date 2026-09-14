@@ -8,6 +8,15 @@ export type Language = Lang;
 export const SITE = 'https://movemailbox.com';
 export const SITE_NAME = 'MoveMailbox';
 
+/**
+ * Дата публикации сайта.
+ *
+ * Настоящая: именно тогда страницы впервые уехали в индекс. Выдумывать
+ * разные даты записям, чтобы блог выглядел «живее», нельзя — это ровно тот
+ * сигнал свежести, ради доверия к которому дата и ставится.
+ */
+export const SITE_PUBLISHED = '2026-09-12';
+
 /** Префикс языка в URL. Русский живёт в корне. */
 export function langPrefix(language: Language): string {
   return language === 'ru' ? '' : `/${language}`;
@@ -27,6 +36,7 @@ export function buildMetadata({
   description,
   image = '/og.png',
   index = true,
+  ogType = 'website',
 }: {
   language: Language;
   /** Путь без языкового префикса, например /migrate/gmail-to-outlook */
@@ -35,6 +45,9 @@ export function buildMetadata({
   description: string;
   image?: string;
   index?: boolean;
+  /** og:type. По умолчанию website: статьёй страница является редко, а
+   *  article на витрине раздела вводит в заблуждение агрегаторы ссылок. */
+  ogType?: 'website' | 'article';
 }): Metadata {
   const prefix = langPrefix(language);
   const canonical = `${prefix}${path}` || '/';
@@ -61,7 +74,7 @@ export function buildMetadata({
       ? { index: true, follow: true }
       : { index: false, follow: true },
     openGraph: {
-      type: 'article',
+      type: ogType,
       locale,
       url: canonical,
       siteName: SITE_NAME,
@@ -183,10 +196,13 @@ export function techArticleLd({
   headline,
   description,
   path,
+  datePublished = SITE_PUBLISHED,
 }: {
   headline: string;
   description: string;
   path: string;
+  /** ISO-дата. По умолчанию — дата публикации справочника. */
+  datePublished?: string;
 }): Json {
   return {
     '@context': 'https://schema.org',
@@ -194,11 +210,73 @@ export function techArticleLd({
     headline,
     description,
     url: `${SITE}${path}`,
+    /* Без даты поисковик подставляет свою — обычно дату обхода, и статья
+       годами выглядит свежей. Лучше честная дата, чем выдуманная. */
+    datePublished,
+    dateModified: datePublished,
+    inLanguage: path.startsWith('/en/') ? 'en' : path.startsWith('/uk/') ? 'uk' : 'ru',
+    author: { '@type': 'Organization', name: SITE_NAME, url: SITE },
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
       url: SITE,
     },
+  };
+}
+
+/** Organization — кто издаёт сайт. Ставится на главной, одного раза хватает. */
+export function organizationLd(): Json {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE,
+    logo: `${SITE}/brand/logo-mark.svg`,
+    email: 'admin@movemailbox.com',
+    sameAs: ['https://github.com/Anton-Babaskin/MoveMailbox'],
+  };
+}
+
+/** WebSite — имя сайта в выдаче вместо домена. */
+export function webSiteLd(language: Language): Json {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: `${SITE}${langPrefix(language)}/`,
+    inLanguage: language,
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE },
+  };
+}
+
+/**
+ * WebPage или CollectionPage.
+ *
+ * CollectionPage — для витрин раздела: это не статья, а список ссылок, и
+ * называть его article значит врать агрегаторам.
+ */
+export function webPageLd({
+  name,
+  description,
+  path,
+  lang,
+  collection = false,
+}: {
+  name: string;
+  description: string;
+  path: string;
+  lang: Language;
+  collection?: boolean;
+}): Json {
+  return {
+    '@context': 'https://schema.org',
+    '@type': collection ? 'CollectionPage' : 'WebPage',
+    name,
+    description,
+    url: `${SITE}${path}`,
+    inLanguage: lang,
+    isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE },
   };
 }
 

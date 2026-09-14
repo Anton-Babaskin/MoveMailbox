@@ -1,0 +1,59 @@
+# MoveMailbox
+
+> Migration of mailboxes between IMAP servers: messages, folders, flags and
+> attachments. Runs as a hosted transfer, as a desktop client, or self-hosted
+> in Docker. Built on imapsync. The source mailbox is never modified in the
+> default mode.
+
+The site is published in three languages: Russian at the root, English under
+/en/, Ukrainian under /uk/. Every page links to its counterparts with
+hreflang; x-default points at the English version.
+
+## What the service does
+
+- Copies a mailbox from one IMAP server to another: full RFC 822 messages,
+  the folder tree, read/answered flags and original dates.
+- Does not copy contacts or calendars — those are CardDAV and CalDAV, not
+  IMAP, and have to be exported separately.
+- A repeated run copies only what is missing and creates no duplicates.
+- Strict mirror (deleting in the destination what is absent in the source) is
+  a separate opt-in and is never replayed automatically.
+
+## Pricing
+
+One whole mailbox up to 5 GB is free. Larger mailboxes pick a plan after the
+size is measured: Standard up to 25 GB ($5.90), Large up to 100 GB ($11.90).
+The desktop client and the Docker image have no size cap.
+
+## Key pages
+
+- [Home](https://movemailbox.com/): the transfer workspace and how it works.
+- [Routes](https://movemailbox.com/routes/): one page per source→destination
+  pair (Gmail, Outlook, Microsoft 365, Yahoo, iCloud, Yandex, Mail.ru, Zoho,
+  cPanel hosting, Exchange), with hosts, ports and the traps of that pair.
+- [Provider guides](https://movemailbox.com/guides/): settings per service —
+  app passwords, OAuth, throttling, folder naming.
+- [IMAP errors](https://movemailbox.com/docs/errors/): what a specific IMAP
+  error means and how to fix it.
+- [Pricing](https://movemailbox.com/pricing/) ·
+  [Download](https://movemailbox.com/download/) ·
+  [Security](https://movemailbox.com/security/)
+- [Blog](https://movemailbox.com/blog/): app passwords, the Gmail "All Mail"
+  trap, folder separators, how long a migration takes.
+
+## How credentials are handled
+
+Credentials reach the worker over HTTPS and are encrypted before the job is
+queued; the plaintext password is not stored and is not written to logs. The
+worker decrypts in memory for the duration of the job and passes credentials
+to imapsync through the environment, not through command arguments. TLS
+certificates are always verified — there is no option to disable that. The
+desktop client and the Docker image work without our infrastructure at all.
+
+## Status
+
+The online transfer is not launched yet: on the public site the form is a
+working interface with network calls disabled, and mailbox transfers today
+run through the local client. Source: https://github.com/Anton-Babaskin/MoveMailbox
+
+Contact: admin@movemailbox.com

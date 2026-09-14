@@ -15,6 +15,7 @@ export function imapErrorMetadata(lang: Lang, slug: string): Metadata {
     path: `/docs/errors/${slug}`,
     title: copy.title,
     description: copy.description,
+    ogType: 'article',
   });
 }
 

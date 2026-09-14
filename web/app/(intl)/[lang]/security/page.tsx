@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Security } from '@/components/sections/security';
 import { FinalCta } from '@/components/sections/final-cta';
 import { pages } from '@/content/pages';
@@ -34,6 +35,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/security" kind="page" />
       <Security lang={l} pageTitle />
       <FinalCta lang={l} />
     </main>

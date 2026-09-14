@@ -51,6 +51,7 @@ export function migrationRouteMetadata(lang: Lang, slug: string): Metadata {
     path: `/migrate/${slug}`,
     title: copy.title,
     description: copy.description,
+    ogType: 'article',
   });
 }
 

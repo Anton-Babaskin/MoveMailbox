@@ -1482,3 +1482,11 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .rt .pvi{width:24px;height:24px;border-radius:7px}
 .rt .pvi i{font-size:10.5px}
 .rt .pvi img{width:14px;height:14px}
+
+/* Заголовок, который нужен структуре, но не нужен глазу: на странице
+   гайдов за h1 сразу шёл h3 панели провайдера — пропуск уровня. Видимого
+   заголовка там ставить некуда, подпись выше и так объясняет, что делать,
+   поэтому h2 есть в разметке и скрыт визуально. Не display:none и не
+   visibility:hidden — их скринридер тоже не читает. */
+.h-struct{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}

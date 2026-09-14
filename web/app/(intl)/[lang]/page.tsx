@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Hero } from '@/components/sections/hero';
 import { Workspace } from '@/components/sections/workspace';
 import { TrustRow } from '@/components/sections/trust-row';
@@ -41,6 +42,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="" kind="home" />
       <Hero lang={l} />
       <Workspace lang={l} />
       <TrustRow lang={l} />

@@ -21,6 +21,9 @@ export function ProviderGuides({ lang, pageTitle = false }: { lang: Lang; pageTi
         </div>
 
         <div className="pv">
+          {/* Уровень заголовка считается от уровня секции: на странице гайдов
+              она открывается h1, и панель провайдера с h3 давала пропуск. */}
+          {pageTitle && <h2 className="h-struct">{t.navLabel}</h2>}
           <div className="pv-nav" role="tablist" aria-label={t.navLabel}>
             <button role="tab" aria-selected="true" data-pv="gmail" style={{ '--b1': '#F2685A', '--b2': '#C42D20' } as React.CSSProperties}>
               <span className="pvi"><i>{t.tabs.gmail.letter}</i></span><span className="txt"><b>{t.tabs.gmail.name}</b><small>imap.gmail.com</small></span></button>
