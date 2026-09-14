@@ -1450,6 +1450,7 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .rmk{display:inline-flex;align-items:center;gap:7px;flex:none}
 .rmk .pvi{width:34px;height:34px;border-radius:10px;opacity:1}
 .rmk .pvi i{font-size:13px}
+.rmk .pvi img{width:19px;height:19px}
 .rmk-a{width:13px;height:13px;color:var(--ink-3);flex:none}
 .route-row:hover .rmk .pvi{border-color:color-mix(in srgb,var(--b2) 45%,var(--line))}
 @media (max-width:560px){
@@ -1457,6 +1458,7 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
   .route-ar{display:none}
   .rmk .pvi{width:30px;height:30px;border-radius:9px}
   .rmk .pvi i{font-size:12px}
+  .rmk .pvi img{width:17px;height:17px}
 }
 
 /* Значки в плитках популярных маршрутов: там значок стоит перед каждым
@@ -1473,3 +1475,4 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .rt .go{flex:1 0 100%;margin-left:0;text-align:right}
 .rt .pvi{width:24px;height:24px;border-radius:7px}
 .rt .pvi i{font-size:10.5px}
+.rt .pvi img{width:14px;height:14px}

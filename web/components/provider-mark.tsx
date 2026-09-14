@@ -24,7 +24,13 @@ export function ProviderMark({
       aria-hidden="true"
       style={{ ['--b1' as string]: m.b1, ['--b2' as string]: m.b2 }}
     >
-      <i>{m.letter}</i>
+      {/* alt пустой намеренно: значок уже помечен aria-hidden, а название
+          сервиса стоит рядом текстом. Обычный <img>, а не next/image: сборка
+          статическая, оптимизатор всё равно выключен, а лишний слой на
+          восьми значках в строке ничего не даёт.
+          Размеры заданы в CSS у .pvi img — картинка не двигает раскладку,
+          даже если файл придёт позже разметки. */}
+      {m.logo ? <img src={m.logo} alt="" loading="lazy" decoding="async" /> : <i>{m.letter}</i>}
     </span>
   );
 }
