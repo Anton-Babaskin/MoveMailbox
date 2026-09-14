@@ -1,5 +1,26 @@
 # Engineering handoff — 2026-09-13
 
+## HTTPS certificate and VM gateway staged (2026-09-14)
+
+- DNS-01 certificate `staging.movemailbox.com` is present on the VM and valid
+  through 2026-12-13. Certbot is installed; manual DNS validation is not an
+  automatic renewal strategy.
+- VM API was recreated with the existing immutable image digest and the approved
+  external authority `staging.movemailbox.com:8443`; worker and data volumes were
+  not restarted or changed. Both containers are healthy.
+- A rootless-worker nginx gateway is running on VM `:443`, using the certificate,
+  Basic Auth pilot gate, request limits and no-cache proxy settings. It keeps API
+  `Authorization` private and proxies only to loopback.
+- External verification is currently blocked: direct public `:8443` returns a
+  Fastly certificate, not this VM certificate. The Proxmox DNAT rule was not
+  observable on the VM and must be confirmed/added at the hypervisor. Existing
+  Proxmox services and ports were not changed by this agent.
+- No permanent tester credential was issued or printed. The gateway remains a
+  closed pilot and is not considered externally reachable until certificate and
+  Host checks pass from outside.
+- Next: confirm the exact Proxmox DNAT rule, then run external TLS/Basic Auth and
+  browser-origin checks. After pilot acceptance, automate certificate renewal.
+
 ## External-port Origin compatibility (2026-09-14)
 
 - Found a pilot configuration defect: nginx stripped external `:8443` from
