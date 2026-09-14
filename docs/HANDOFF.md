@@ -20,6 +20,85 @@
   recovery; (2) invite-based HTTPS access once its exposure/certificate model is
   approved. No additional backup work is scheduled.
 
+## Website security pass and a request for observability (2026-09-14)
+
+Website side, merged in PRs #37 and #39. Nothing under `internal/` was touched.
+
+### Shipped
+
+- **CSP on the Pages build.** The published site was served with no security
+  headers at all: GitHub Pages serves bare static files and does not let us set
+  any. The same site behind our Go server does have a policy —
+  `securityHeaders` in `internal/api` sets it and `internal/web/static.go` adds
+  per-page inline-script hashes — but none of that reached Pages.
+  `web/scripts/add-csp.mjs` now does the same thing for the export: it hashes
+  every inline script and style from the built file and writes the policy into
+  `<meta http-equiv>` right after `charset`, before the first script. The policy
+  text mirrors `securityHeaders` so the two ways of serving the site cannot
+  drift. The step runs only for the static build, so it never stacks on top of
+  the server header.
+  Verified on the published site, not just locally: every inline script on
+  `https://movemailbox.com/` is covered by a hash and no hash is stale, and the
+  published page really enforces — an injected inline script and a script from
+  `cdn.jsdelivr.net` are both blocked.
+- **Dependency freshness.** Dependabot watched `gomod`, `docker` and
+  `github-actions` but not npm, so the site's packages had quietly fallen a
+  major behind while the Go side stayed current. Added an `npm` entry for
+  `/web`, then updated: next 15.5.24 → 16.3.5, react/react-dom 19.1.1 → 19.3.0,
+  typescript 5.8.3 → 7.0.2, `@types/*` to current. No known advisory existed on
+  the old versions — `npm audit` was clean before and after — this removed the
+  drift, it did not close a specific hole.
+  Next 16 defaults to Turbopack, which roots itself at the nearest
+  `package.json` and refused the `../../sdk` import of the shared guest client.
+  The root is now set explicitly to the repository directory; this was verified
+  in the container layout (`/src/web` beside `/src/sdk`), because that exact
+  import broke the image build once before.
+- **Workflow actions.** `actions/setup-node` was pinned to v4.4.0, which targets
+  the node20 runtime GitHub is deprecating; that is what the warning on every
+  run was about. Bumped setup-node to v7.0.0, upload-pages-artifact to v5.0.0,
+  deploy-pages to v5.0.1 and the build's Node to 24.21.0, and gave every pin a
+  version comment. `ci.yml` needed nothing: checkout and setup-go are already v7
+  on node24.
+
+### Still open on the website side, and not fixable in this repository
+
+HSTS and `frame-ancestors` cannot be set on GitHub Pages: browsers ignore both
+directives inside `<meta>`, and Pages sends no headers. Putting the domain
+behind a proxy or our own server is the only fix. That is an owner decision, not
+a code change.
+
+### Request to the backend: something to put on a dashboard
+
+The owner wants a Grafana dashboard showing site traffic and who used the
+transfer. The second half is entirely backend data and there is currently
+nothing to read: `grep` over `internal/` and `cmd/` finds no Prometheus
+registry, no `/metrics` endpoint, no expvar and no structured logging. Job state
+exists only inside `jobs.Manager` and disappears with the process.
+
+Useful without committing to any particular dashboard, and small next to what
+`jobs.Manager` already tracks:
+
+- a counter of jobs by terminal status (completed / failed / cancelled), and by
+  failure reason where the migrator already classifies one;
+- a histogram of job duration, and of messages and bytes transferred;
+- a gauge of jobs currently running and of queue depth against
+  `Config.MaxConcurrent`;
+- a counter of rejected admissions by cause (rate limit, quota, session cap) —
+  these are the numbers that say whether the limits are set sensibly;
+- anything that lets an operator tell "nobody is migrating" from "everybody is
+  failing", which a raw request count cannot.
+
+Please expose them on a separate listener or a path that the public site cannot
+reach, and keep mailbox addresses, hostnames and job IDs out of label values —
+labels end up in the metric store and in every dashboard screenshot.
+
+The site half of the same dashboard (visits, pages, referrers) is blocked on the
+hosting decision above: on Pages there is no origin to receive a beacon, and
+sending it to a third party would mean loosening `connect-src 'self'` and
+putting foreign JavaScript on the page where people type mailbox passwords.
+Once the site is behind a real origin, a self-hosted collector on the same
+domain solves it without touching the policy.
+
 ## Worker cancellation fix deployed to closed staging (2026-09-14)
 
 - Built `staging-5b55549` from main commit
