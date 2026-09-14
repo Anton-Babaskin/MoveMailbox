@@ -1,7 +1,4 @@
-'use client';
-
-import { useEffect } from 'react';
-import { initWorkspace } from '@/lib/workspace';
+import { WorkspaceInit } from '@/components/section-init';
 import { workspace } from '@/content/sections/workspace';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
@@ -37,21 +34,36 @@ export function Workspace({ lang }: { lang: Lang }) {
   // первое обновление в браузере не расходились.
   const rt = workspaceRuntime[lang];
 
-  // Интерфейс инициализируется всегда: без этого не работают ни схема
-  // соединения, ни расширенные настройки, ни дерево папок — страница
-  // выглядит сломанной. В статической сборке гасятся только сетевые вызовы.
-  useEffect(() => { initWorkspace(lang, !STATIC_SITE); }, [lang]);
-
   return (
     <>
+      {/* Секция серверная: её разметка статична. Клиентским остаётся только
+          запускатель — он и вешает обработчики. Интерфейс инициализируется
+          всегда, даже в статической сборке: без этого не работают ни схема
+          соединения, ни расширенные настройки, ни дерево папок. Гаснут там
+          только сетевые вызовы. */}
+      <WorkspaceInit lang={lang} strings={rt} online={!STATIC_SITE} />
       <section className="wide-shell" id="workspace" style={{ paddingTop: '0' }}>
 
         <div className="ws">
           <div className="ws-bar">
-            <span className="dots"><i></i><i></i><i></i></span>
+            <span className="ws-ico"><svg aria-hidden="true"><use href="#sw" /></svg></span>
             <h2>{t.title}</h2>
             <span className="tail"><span className="chip">{t.chip}</span></span>
           </div>
+
+          {/* Предупреждение стоит до полей, а не после них. Ниже формы его
+              читали уже после того, как ввели адрес сервера и логин — то есть
+              ровно тогда, когда оно бесполезно. */}
+          {STATIC_SITE && (
+            <p className="ws-preview" role="status">
+              <svg aria-hidden="true"><use href="#al" /></svg>
+              <span>
+                {t.previewNoticeA}
+                <a href={href(lang, '/download')}>{t.previewNoticeLink}</a>
+                {t.previewNoticeB}
+              </span>
+            </p>
+          )}
 
           <div className="panes">
             <div className="mbx">
@@ -67,7 +79,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword} disabled={STATIC_SITE}>
+                    <svg aria-hidden="true"><use href="#ey" /></svg><b data-pw-label>{t.pwShow}</b>
+                  </button></span></label>
               <details className="adv">
                 <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
@@ -107,7 +121,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword} disabled={STATIC_SITE}>
+                    <svg aria-hidden="true"><use href="#ey" /></svg><b data-pw-label>{t.pwShow}</b>
+                  </button></span></label>
               <details className="adv">
                 <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
@@ -121,22 +137,18 @@ export function Workspace({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          {STATIC_SITE && (
-            <p className="keep" role="status" style={{ padding: '18px', display: 'block' }}>
-              {t.previewNoticeA}
-              <a href={href(lang, '/download')}>{t.previewNoticeLink}</a>
-              {t.previewNoticeB}
-            </p>
-          )}
-
+          {/* Запуск и остановка — главное действие страницы, поэтому они по
+              центру и в цвете: зелёная ведёт вперёд, красная останавливает.
+              Гарантии ушли под кнопки: это сноска к действию, а не соседний
+              по важности блок, каким они выглядели, стоя с ним в один ряд. */}
           <div className="launch">
+            <div className="acts">
+              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg aria-hidden="true" style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
+              <button className="btn btn-stop" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
+            </div>
             <div className="assure">
               <span><svg aria-hidden="true"><use href="#ky" /></svg>{t.assureSource}</span>
               <span><svg aria-hidden="true"><use href="#sv" /></svg>{t.assureSize}</span>
-            </div>
-            <div className="acts">
-              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg aria-hidden="true" style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
-              <button className="btn btn-g" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
             </div>
             <p id="modeHint" style={{ display: 'none', width: '100%', margin: '0', fontFamily: 'var(--mono)', fontSize: '11.5px', color: 'var(--amb)' }}></p>
             {/* Сюда попадают ошибки до отправки запроса: незаполненные поля,

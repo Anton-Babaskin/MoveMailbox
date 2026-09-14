@@ -3,7 +3,7 @@
 // Разметка секции статична, поэтому обработчики вешаются императивно один раз.
 
 import { createGuestClient } from '../../sdk/guest-client.mjs';
-import { workspaceRuntime } from '@/content/sections/workspace-runtime';
+import type { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
 import { providers, providerByEmail } from '@/data/providers';
 
@@ -41,14 +41,20 @@ const TERMINAL = ['completed', 'failed', 'cancelled'];
  * гостевого API (docs/GUEST-INTEGRATION.md). Он же владеет сессией, CSRF,
  * потоком событий и переподключением; здесь остаётся только отрисовка.
  *
- * @param lang   язык строк интерфейса
- * @param online false — статическая сборка без бекенда: интерфейс живёт
- *               полностью (переключатели, схема соединения, модалки),
- *               но ни один сетевой вызов не выполняется.
+ * @param strings словарь уже выбранного языка — приходит пропом от серверного
+ *                компонента, чтобы в клиентский бандл не уезжали все три языка
+ * @param lang    язык (нужен для locale-зависимого форматирования чисел и ссылок)
+ * @param online  false — статическая сборка без бекенда: интерфейс живёт
+ *                полностью (переключатели, схема соединения, модалки),
+ *                но ни один сетевой вызов не выполняется.
  */
-export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
+export function initWorkspace(
+  strings: (typeof workspaceRuntime)[Lang],
+  lang: Lang = 'ru',
+  online: boolean = true,
+) {
   /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
-  var T = workspaceRuntime[lang] || workspaceRuntime.ru;
+  var T = strings;
   var ONLINE = online;
   /* Клиент создаётся один раз на инициализацию: он держит промис сессии. */
   var client = ONLINE ? createGuestClient() : null;
@@ -57,7 +63,12 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
   $$('[data-pw]').forEach(function(b){b.addEventListener('click',function(){
     var i=b.parentElement.querySelector('input');
     i.type = i.type==='password'?'text':'password';
-    b.setAttribute('aria-label', i.type==='password'?T.showPassword:T.hidePassword);});});
+    var hidden = i.type==='password';
+    /* Полная фраза остаётся в aria-label для скринридера, а на кнопке
+       короткая — «Показать пароль» в поле высотой 40px не помещается. */
+    b.setAttribute('aria-label', hidden?T.showPassword:T.hidePassword);
+    var lab = b.querySelector('[data-pw-label]');
+    if(lab) lab.textContent = hidden?T.pwShow:T.pwHide;});});
 
   /* ==================================================================
      Реквизиты подключения и параметры задания.
@@ -525,6 +536,9 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     body.textContent=text;
     line.appendChild(time); line.appendChild(body);
     log.appendChild(line);
+    /* Со второй строки журнал переходит в рабочую высоту и дальше
+       прокручивается, а не растягивает карточку до бесконечности. */
+    if(log.children.length > 1) log.classList.add('log-live');
     while(log.children.length > 400) log.removeChild(log.firstChild);
     log.scrollTop=log.scrollHeight;
   }
@@ -647,6 +661,7 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     metrics(view);
     if(log){
       log.textContent='';
+      log.classList.remove('log-live');
       (view.recentEvents || []).forEach(function(ev){ logEvent(ev); });
     }
     if(view.error) push(view.error, 2, view.finishedAt);
@@ -761,6 +776,7 @@ export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
     formError(null);
     running=true; stopping=false; lost=false;
     if(log) log.textContent='';
+    if(log) log.classList.remove('log-live');
     progress(0, false);
     startedAt=Date.now(); elapsedFrozen=0; lastBytes=0; lastTransferred=0; lastPercent=0;
     if(mt) mt.textContent=T.noValue;

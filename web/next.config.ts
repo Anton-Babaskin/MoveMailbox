@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
    * при гидратации видит не своё дерево и ругается. global-not-found.tsx
    * рендерит документ сам и этой двойной обёртки не создаёт.
    */
+  /* experimental.optimizeCss здесь не включён намеренно: с output: 'export'
+     critters до статических страниц не доходит — проверено, инлайна не
+     появляется, а зависимость тянется deprecated. */
   experimental: { globalNotFound: true },
   images: { unoptimized: true },
 };

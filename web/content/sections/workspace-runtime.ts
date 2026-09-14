@@ -8,6 +8,9 @@ export const workspaceRuntime = {
 
     showPassword: 'Показать пароль',
     hidePassword: 'Скрыть пароль',
+    /* Короткие подписи для кнопки внутри поля: «Показать пароль» в неё не влезает. */
+    pwShow: 'Показать',
+    pwHide: 'Скрыть',
 
     allFolders: 'Все папки',
     selectedOf: 'Выбрано {n} из {total}',
@@ -120,6 +123,8 @@ export const workspaceRuntime = {
 
     showPassword: 'Show password',
     hidePassword: 'Hide password',
+    pwShow: 'Show',
+    pwHide: 'Hide',
 
     allFolders: 'All folders',
     selectedOf: 'Selected {n} of {total}',
@@ -232,6 +237,8 @@ export const workspaceRuntime = {
 
     showPassword: 'Показати пароль',
     hidePassword: 'Сховати пароль',
+    pwShow: 'Показати',
+    pwHide: 'Сховати',
 
     allFolders: 'Усі папки',
     selectedOf: 'Вибрано {n} з {total}',

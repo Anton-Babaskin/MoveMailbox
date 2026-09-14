@@ -1,17 +1,22 @@
 // @ts-nocheck — imperative bundle ported from the static mockup
 /* eslint-disable */
 
-import { guidesRuntime } from '@/content/sections/guides-runtime';
+import type { guidesRuntime } from '@/content/sections/guides-runtime';
 import type { Lang } from '@/i18n/config';
 
 const $ = (s: string, r: ParentNode = document) => r.querySelector(s) as HTMLElement | null;
 const $$ = (s: string, r: ParentNode = document) =>
   Array.prototype.slice.call(r.querySelectorAll(s)) as HTMLElement[];
 
-/** Справочник провайдеров: данные и переключение вкладок. */
-export function initProviderGuides(lang: Lang = 'ru') {
+/** Справочник провайдеров: данные и переключение вкладок.
+ *  Словарь аргументом: он самый тяжёлый из трёх (карточки всех провайдеров),
+ *  и трёх языков сразу в бандле быть не должно. */
+export function initProviderGuides(
+  strings: (typeof guidesRuntime)[Lang],
+  lang: Lang = 'ru',
+) {
   /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
-  var T = guidesRuntime[lang] || guidesRuntime.ru;
+  var T = strings;
 
   (function(){
   /* ---- provider guides ---- */
@@ -38,6 +43,9 @@ export function initProviderGuides(lang: Lang = 'ru') {
   $$('.pv-nav button').forEach(function(b){ b.addEventListener('click',function(){
     $$('.pv-nav button').forEach(function(o){o.setAttribute('aria-selected','false')});
     b.setAttribute('aria-selected','true'); render(b.dataset.pv); });});
-  render('gmail');
+  /* Первая вкладка уже пришла с сервера — перерисовывать её нечем и незачем:
+     повторный innerHTML дал бы тот же сдвиг раскладки, ради устранения
+     которого её и вынесли в разметку. */
+  if (!$('#pvBody .pv-panel')) render('gmail');
   })();
 }
