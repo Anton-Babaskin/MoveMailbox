@@ -30,6 +30,7 @@ export const workspace = {
     passwordLabel: 'Пароль или пароль приложения',
     passwordPlaceholder: 'Введите пароль',
     showPassword: 'Показать пароль',
+    pwShow: 'Показать',
 
     connSettings: 'Настройки подключения',
     connSettingsHint: 'Автоматически — рекомендуется',
@@ -115,6 +116,7 @@ export const workspace = {
     passwordLabel: 'Password or app password',
     passwordPlaceholder: 'Enter the password',
     showPassword: 'Show password',
+    pwShow: 'Show',
 
     connSettings: 'Connection settings',
     connSettingsHint: 'Automatic — recommended',
@@ -200,6 +202,7 @@ export const workspace = {
     passwordLabel: 'Пароль або пароль застосунку',
     passwordPlaceholder: 'Введіть пароль',
     showPassword: 'Показати пароль',
+    pwShow: 'Показати',
 
     connSettings: 'Налаштування підключення',
     connSettingsHint: 'Автоматично — рекомендовано',

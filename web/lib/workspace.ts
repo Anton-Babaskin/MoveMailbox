@@ -63,7 +63,12 @@ export function initWorkspace(
   $$('[data-pw]').forEach(function(b){b.addEventListener('click',function(){
     var i=b.parentElement.querySelector('input');
     i.type = i.type==='password'?'text':'password';
-    b.setAttribute('aria-label', i.type==='password'?T.showPassword:T.hidePassword);});});
+    var hidden = i.type==='password';
+    /* Полная фраза остаётся в aria-label для скринридера, а на кнопке
+       короткая — «Показать пароль» в поле высотой 40px не помещается. */
+    b.setAttribute('aria-label', hidden?T.showPassword:T.hidePassword);
+    var lab = b.querySelector('[data-pw-label]');
+    if(lab) lab.textContent = hidden?T.pwShow:T.pwHide;});});
 
   /* ==================================================================
      Реквизиты подключения и параметры задания.

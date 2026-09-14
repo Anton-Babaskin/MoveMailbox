@@ -46,7 +46,7 @@ export function Workspace({ lang }: { lang: Lang }) {
 
         <div className="ws">
           <div className="ws-bar">
-            <span className="dots"><i></i><i></i><i></i></span>
+            <span className="ws-ico"><svg aria-hidden="true"><use href="#sw" /></svg></span>
             <h2>{t.title}</h2>
             <span className="tail"><span className="chip">{t.chip}</span></span>
           </div>
@@ -79,7 +79,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword} disabled={STATIC_SITE}>
+                    <svg aria-hidden="true"><use href="#ey" /></svg><b data-pw-label>{t.pwShow}</b>
+                  </button></span></label>
               <details className="adv">
                 <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
@@ -119,7 +121,9 @@ export function Workspace({ lang }: { lang: Lang }) {
                 <input placeholder={t.loginPlaceholder} spellCheck="false" autoCapitalize="none" /></label>
               <label className="f"><span>{t.passwordLabel}</span>
                 <span className="pw"><input type="password" placeholder={STATIC_SITE ? t.staticPasswordPlaceholder : t.passwordPlaceholder} disabled={STATIC_SITE} autoComplete="off" />
-                  <button type="button" data-pw aria-label={t.showPassword}><svg aria-hidden="true"><use href="#ey" /></svg></button></span></label>
+                  <button type="button" data-pw aria-label={t.showPassword} disabled={STATIC_SITE}>
+                    <svg aria-hidden="true"><use href="#ey" /></svg><b data-pw-label>{t.pwShow}</b>
+                  </button></span></label>
               <details className="adv">
                 <summary><svg aria-hidden="true" className="gear"><use href="#gr" /></svg><span>{t.connSettings}</span><small>{t.connSettingsHint}</small><svg aria-hidden="true" className="chev"><use href="#cv" /></svg></summary>
                 <div className="adv-in">
@@ -133,14 +137,18 @@ export function Workspace({ lang }: { lang: Lang }) {
             </div>
           </div>
 
+          {/* Запуск и остановка — главное действие страницы, поэтому они по
+              центру и в цвете: зелёная ведёт вперёд, красная останавливает.
+              Гарантии ушли под кнопки: это сноска к действию, а не соседний
+              по важности блок, каким они выглядели, стоя с ним в один ряд. */}
           <div className="launch">
+            <div className="acts">
+              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg aria-hidden="true" style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
+              <button className="btn btn-stop" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
+            </div>
             <div className="assure">
               <span><svg aria-hidden="true"><use href="#ky" /></svg>{t.assureSource}</span>
               <span><svg aria-hidden="true"><use href="#sv" /></svg>{t.assureSize}</span>
-            </div>
-            <div className="acts">
-              <button className="btn btn-p btn-lg" id="start" disabled={STATIC_SITE}><svg aria-hidden="true" style={{ width: '17px', height: '17px' }}><use href="#pl" /></svg>{t.start}</button>
-              <button className="btn btn-g" id="stop" disabled><svg aria-hidden="true" style={{ width: '15px', height: '15px' }}><use href="#sq" /></svg>{t.stop}</button>
             </div>
             <p id="modeHint" style={{ display: 'none', width: '100%', margin: '0', fontFamily: 'var(--mono)', fontSize: '11.5px', color: 'var(--amb)' }}></p>
             {/* Сюда попадают ошибки до отправки запроса: незаполненные поля,
