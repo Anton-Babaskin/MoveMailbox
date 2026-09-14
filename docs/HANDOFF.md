@@ -1,5 +1,25 @@
 # Engineering handoff — 2026-09-13
 
+## Bounded HTTPS load and invitation gate (2026-09-14)
+
+- Continued technical PR #41 on `ops/recovery-https-pilot`. Main advanced with
+  website handoff notes; preserved both sections when resolving the docs-only
+  merge conflict. No Claude PR was merged or website file edited.
+- HTTPS readiness load: 80 requests / 4 clients, 22 HTTP 200 and 58 expected
+  HTTP 429; p95 222.91 ms, max 224.48 ms. After 12 seconds, three probes returned
+  200. Total 13.88 seconds. This measures gate throttling/recovery, not mailbox
+  transfer capacity. nginx constrained to 0.5 CPU / 128 MiB; after-run memory
+  was 4.305 MiB (not a peak measurement).
+- Separate invited-pilot nginx config passed anonymous/wrong-password rejection,
+  authorized readiness/session and revocation-on-next-request checks using a
+  disposable secret. No jobs submitted, no real tester credentials issued.
+- External invitation delivery remains blocked on the owner's access-route
+  choice: private network/tunnel versus public endpoint and trusted certificate.
+  Do not expose the loopback gateway by changing its bind address blindly.
+- Next: agree the tester access route and provision it; then conduct one actual
+  invited-user acceptance run. Backend observability requested below is a
+  separate useful implementation step, not part of website work.
+
 ## Worker recovery and operator-local HTTPS (2026-09-14)
 
 - Branch `ops/recovery-https-pilot`; backend operational scripts only. Website

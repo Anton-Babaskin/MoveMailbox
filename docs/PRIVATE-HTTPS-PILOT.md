@@ -33,7 +33,46 @@ Stop the named proxy with `docker stop mm-https-pilot`, then remove that contain
 with `docker rm mm-https-pilot`; interrupt the SSH terminal. Inspect the printed
 temporary directory before removing its two certificate files. Never commit keys.
 
-## Recovery drill on the VM
+## Bounded load and invitation gate
+
+With the operator gateway running, execute:
+
+```sh
+sudo timeout 60 python3 scripts/load-https-tunnel.py --ca "$pilot_dir/pilot.crt"
+```
+
+This sends 80 readiness requests with four clients, expects both success and
+rate rejection, then checks recovery after 12 seconds. It creates no jobs and
+does not measure IMAP performance. Gateway limits remain 0.5 CPU / 128 MiB.
+
+For an invitation-gate rehearsal, stop/remove the operator gateway first (same
+port), prepare a disposable account with
+`sudo python3 scripts/smoke-invited-https.py --fixture-dir "$pilot_dir" --prepare`,
+then launch the same Docker command using `nginx-invited.conf` instead of
+`nginx-tunnel.conf`. The fixture directory must be `/tmp/mm-load-pilot.*`.
+Run the script again without `--prepare`: anonymous/wrong-password requests
+must return 401, valid requests 200, and revocation must deny the next request.
+The script intentionally revokes its disposable account. Never use it on real
+invitation data. Do not run with Python `-O`.
+
+For a real closed pilot, use one random password per tester and a root-managed
+`invited.htpasswd` file outside Git, readable by nginx UID 101 only. Use a
+supported salted crypt hash, such as SHA-512 crypt from `openssl passwd -6`
+(interactive input, never a password command-line argument). Deliver credentials
+privately, not in URLs, Git or chat logs. Maintain an operator roster with an
+expiry date; this simple gate does NOT automate invitation delivery or expiry.
+Revoke by atomically replacing the user file in the mounted directory without
+that user. Existing HTTP/SSE requests are not disconnected by file revocation;
+terminate the gateway's active connections if immediate revocation is required.
+Never reuse mailbox passwords. Authorization is stripped before proxying to API.
+
+The gate uses [nginx Basic Authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html)
+over TLS; it is a temporary pilot boundary, not the product's paid account system.
+Real external testers still need an approved private-network/tunnel route, or a
+separately approved public TLS endpoint with a browser-trusted certificate.
+No such endpoint or permanent tester credentials have been provisioned.
+
+## Recovery drill on the VM (idle maintenance)
 
 Use an exclusive idle maintenance window: the script's idle check is not a lock
 against concurrent submissions. Run the reviewed script alongside
