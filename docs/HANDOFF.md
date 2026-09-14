@@ -1,5 +1,22 @@
 # Engineering handoff — 2026-09-13
 
+## External-port Origin compatibility (2026-09-14)
+
+- Found a pilot configuration defect: nginx stripped external `:8443` from
+  Host, while browser Origin retains it; requestGuard correctly rejected the
+  mismatch. Both pilot configs now preserve the fixed external authority.
+- Added guard regression cases for matching port, stripped port and wrong-port
+  Origin; HTTPS smoke now includes actual browser Origin/Sec-Fetch-Site headers.
+- VM still requires adding `staging.movemailbox.com:8443` to AllowedHosts and
+  recreating the idle API container before the corrected gateway can be used.
+  No runtime protection has been relaxed; configs are not deployed yet.
+- Owner reported external 8443 NAT configured. DNS A resolves correctly. First
+  DNS-01 validation failed because TXT was not published yet. TXT subsequently
+  appeared; a new manual challenge is pending replacement TXT. Certificate not
+  issued, HTTPS not publicly active. Certbot installed on VM, containers unchanged.
+- Next: complete DNS challenge, then deploy gated HTTPS with external-port
+  authority preserved and test browser-like POST/CSRF from outside.
+
 ## Bounded HTTPS load and invitation gate (2026-09-14)
 
 - Continued technical PR #41 on `ops/recovery-https-pilot`. Main advanced with

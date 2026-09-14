@@ -8,6 +8,13 @@ in the system trust store. Website and external browser acceptance are separate.
 
 ## Run from a Linux/WSL repository checkout
 
+Both gateway configurations preserve the external authority
+`staging.movemailbox.com:8443`. The API's `MOVEMAILBOX_ALLOWED_HOSTS` must include
+that exact authority before using them. Existing VM configuration needs a
+reviewed idle API recreation to apply this addition; changing only the file does
+not update a running container. Do not strip Origin or relax requestGuard.
+Earlier smoke requests omitted the browser Origin header and missed this issue.
+
 Prerequisites: Docker, OpenSSH, OpenSSL, Python 3.10+, verified VM host key and
 the existing operator SSH identity. Replace SSH placeholders with approved
 values. Keep the tunnel in a separate terminal:
