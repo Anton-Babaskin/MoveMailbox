@@ -1,5 +1,25 @@
 # Engineering handoff — 2026-09-13
 
+## Worker recovery and operator-local HTTPS (2026-09-14)
+
+- Branch `ops/recovery-https-pilot`; backend operational scripts only. Website
+  PRs remain Claude's responsibility. Staging image remains `staging-5b55549`.
+- Live idle staging worker stop/start: readiness `200 -> 503 -> 200`, API did
+  not restart, image unchanged; measured drill duration 0.33 seconds. Script
+  requires explicit restart flag and an exclusive maintenance window.
+- Isolated demo drill passed API kill/reconnect, worker kill/retry, cancellation,
+  strict-mirror non-replay, owner isolation and plaintext checks (954 synthetic
+  messages). This is not evidence of real-provider IMAP throughput.
+- Operator-local nginx HTTPS through SSH passed certificate/hostname validation,
+  readiness, Secure/HttpOnly/SameSite cookie, missing-CSRF rejection, valid-CSRF
+  input validation, wrong-Host rejection and 64 KiB request limit. No migration
+  was submitted. No public ports, DNS or website changes were made.
+- See [private HTTPS runbook](PRIVATE-HTTPS-PILOT.md). This prepares a closed
+  operator pilot, not a publicly trusted certificate or public launch.
+- Next: (1) bounded guest API load through this gateway, checking throttling and
+  recovery; (2) invite-based HTTPS access once its exposure/certificate model is
+  approved. No additional backup work is scheduled.
+
 ## Worker cancellation fix deployed to closed staging (2026-09-14)
 
 - Built `staging-5b55549` from main commit
