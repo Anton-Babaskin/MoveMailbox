@@ -546,7 +546,7 @@ func (service *Service) jobsEndpoint(response http.ResponseWriter, request *http
 
 func (service *Service) acceptJob(response http.ResponseWriter, request *http.Request, jobID string) {
 	var envelope credentials.Envelope
-	if err := decodeServiceJSON(request.Body, &envelope); err != nil || envelope.JobID != jobID || envelope.Version != credentials.RecipientEnvelopeVersion {
+	if err := decodeServiceRequest(request.Context(), response, request, &envelope); err != nil || envelope.JobID != jobID || envelope.Version != credentials.RecipientEnvelopeVersion {
 		writeServiceJSON(response, http.StatusBadRequest, map[string]string{"error": "invalid credential envelope"})
 		return
 	}
@@ -604,7 +604,7 @@ func (service *Service) operationEndpoint(response http.ResponseWriter, request 
 	ctx, cancel := context.WithTimeout(request.Context(), service.config.OperationTimeout)
 	defer cancel()
 	var envelope credentials.Envelope
-	if err := decodeServiceJSON(request.Body, &envelope); err != nil || envelope.Version != credentials.RecipientEnvelopeVersion {
+	if err := decodeServiceRequest(ctx, response, request, &envelope); err != nil || envelope.Version != credentials.RecipientEnvelopeVersion {
 		writeServiceJSON(response, http.StatusBadRequest, map[string]string{"error": "invalid credential envelope"})
 		return
 	}
@@ -686,6 +686,36 @@ func parseWorkerToken(value string) ([]byte, error) {
 		return nil, errors.New("MOVEMAILBOX_WORKER_TOKEN must be base64 for 32 to 128 random bytes")
 	}
 	return decoded, nil
+}
+
+// Cancelling a context alone does not interrupt an HTTP request body's Read.
+// Set a socket deadline when the server supports it; this works for the
+// HTTP/1 transport used by the worker and also leaves HTTP/2 implementations
+// free to return ErrNotSupported rather than failing the request.
+func decodeServiceRequest(ctx context.Context, response http.ResponseWriter, request *http.Request, target any) error {
+	controller := http.NewResponseController(response)
+	if deadline, ok := ctx.Deadline(); ok {
+		if err := controller.SetReadDeadline(deadline); err != nil && !errors.Is(err, http.ErrNotSupported) {
+			return err
+		}
+	}
+	done := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		defer close(done)
+		_ = controller.SetReadDeadline(time.Now())
+		_ = request.Body.Close()
+	})
+	defer func() {
+		// Never let the callback change a reused connection after this handler.
+		if !stop() {
+			<-done
+		}
+	}()
+	err := decodeServiceJSON(request.Body, target)
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	return err
 }
 
 func decodeServiceJSON(reader io.Reader, target any) error {

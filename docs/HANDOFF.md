@@ -1,5 +1,26 @@
 # Engineering handoff — 2026-09-13
 
+## Worker request cancellation audit (2026-09-14)
+
+- Repository audit found that the worker's transient operation and job-admission
+  endpoints bounded JSON size but could block while reading an incomplete HTTP
+  body. The operation timeout and service shutdown context did not interrupt
+  that socket read, so a client that sent a partial request could retain the
+  only worker slot and delay graceful shutdown.
+- `decodeServiceRequest` now ties request-body reads to the active context. It
+  applies a read deadline through `http.ResponseController` and closes the body
+  when cancellation fires, with a safe fallback for transports that do not
+  expose a deadline. Both operation and admission paths use the helper.
+- Added a real TCP regression test covering operation timeout, service shutdown
+  during an operation, and shutdown during job admission. No mailbox or VM
+  credentials were used.
+- Verified locally in the pinned Go 1.27 container: `go test -race ./...`,
+  `go vet ./...`, and the Python harness (49 tests, 1 intentional age-tool
+  skip). Deployment is pending PR review; no staging image or VM state changed.
+
+Next: merge the green pending PRs, then build/deploy this worker fix as a new
+staging image and repeat only the bounded HTTP cancellation smoke check.
+
 ## Real-mail pilot interruption (2026-09-14)
 
 - The updated image `staging-3ab2b71` was tested against the two owner-supplied
