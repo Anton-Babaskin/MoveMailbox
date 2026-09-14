@@ -20,6 +20,21 @@ export function initEffects() {
   addEventListener('scroll',onScroll,{passive:true}); addEventListener('resize',onScroll); onScroll();
   toTop.addEventListener('click',function(){ scrollTo({top:0,behavior:'smooth'}); });
 
+  /* Круглая кнопка «наверх» висит поверх страницы и в самом низу
+     перекрывала ссылки подвала. Подвал отодвинут в CSS на её высоту, а
+     здесь она убирается совсем, когда подвал уже на экране: у низа
+     страницы наверх ведёт и обычная прокрутка. */
+  (function(){
+    /* Именно body > footer: тег footer на странице не один — внутри
+       карточек есть свои, и querySelector('footer') брал первый попавшийся
+       где-то в середине страницы. Наблюдатель при этом молча не срабатывал. */
+    var foot=document.querySelector('body > footer');
+    if(!foot || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function(es){
+      toTop.classList.toggle('hide', es[0].isIntersecting);
+    },{rootMargin:'0px 0px -40px 0px'}).observe(foot);
+  })();
+
   /* ---- flow rail progress ---- */
   (function(){
     var wrap=$('#flow4'); if(!wrap) return;
