@@ -38,7 +38,7 @@ export const guideArticles: GuideArticle[] = [
     ru: {
       title: 'Перенос ящика, пока домен переезжает — MoveMailbox',
       description:
-        'Как подключиться к почте, когда DNS ещё показывает на старый сервер: имя хостинга вместо своего, когда работает IP и почему проверку сертификата нельзя выключать.',
+        'Как подключиться к почте, когда DNS ещё показывает на старый сервер: имя хостинга вместо своего и почему проверку сертификата нельзя выключать.',
       h1: 'Перенос почты, пока домен ещё не переехал',
       intro:
         'Классическая ситуация переезда: ящик на новом сервере уже создан, домен ещё указывает на старый, и mail.вашдомен открывает не то, что нужно. Подключиться к обоим ящикам можно и так — но не через IP, как советуют в половине инструкций. Ниже разбор, почему IP чаще всего не сработает и что использовать вместо него.',
@@ -238,7 +238,7 @@ export const guideArticles: GuideArticle[] = [
   {
     slug: 'imap-ports-and-encryption',
     ru: {
-      title: 'Порты IMAP и шифрование: 993, 143, SSL/TLS и STARTTLS — MoveMailbox',
+      title: 'Порты IMAP: 993, 143, SSL/TLS и STARTTLS — MoveMailbox',
       description:
         'Какой порт выбрать для IMAP, чем SSL/TLS отличается от STARTTLS, почему 143 без шифрования недопустим и что означают типичные ошибки подключения.',
       h1: 'Порты IMAP и шифрование',
@@ -298,7 +298,7 @@ export const guideArticles: GuideArticle[] = [
       ],
     },
     en: {
-      title: 'IMAP ports and encryption: 993, 143, SSL/TLS and STARTTLS — MoveMailbox',
+      title: 'IMAP ports: 993, 143, SSL/TLS and STARTTLS — MoveMailbox',
       description:
         'Which IMAP port to pick, how SSL/TLS differs from STARTTLS, why plain 143 is not an option, and what the usual connection errors actually mean.',
       h1: 'IMAP ports and encryption',
@@ -358,7 +358,7 @@ export const guideArticles: GuideArticle[] = [
       ],
     },
     uk: {
-      title: 'Порти IMAP і шифрування: 993, 143, SSL/TLS та STARTTLS — MoveMailbox',
+      title: 'Порти IMAP: 993, 143, SSL/TLS і STARTTLS — MoveMailbox',
       description:
         'Який порт обрати для IMAP, чим SSL/TLS відрізняється від STARTTLS, чому 143 без шифрування неприпустимий і що означають типові помилки підключення.',
       h1: 'Порти IMAP і шифрування',
