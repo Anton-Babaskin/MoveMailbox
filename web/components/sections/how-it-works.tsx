@@ -10,14 +10,14 @@ export function HowItWorks({ lang, pageTitle = false }: { lang: Lang; pageTitle?
   const Step = pageTitle ? 'h2' : 'h3';
   return (
     <>
-      <section className="shell">
-        <div className="head-wide">
+      <section className="shell" data-fx="steps">
+        <div className="head-wide" data-fx-head>
           <p className="eyebrow">{t.eyebrow}</p>
           <Heading style={{ fontSize: 'clamp(1.75rem,3.4vw,2.75rem)' }}>{t.h2a}<span className="ital">{t.h2b}</span></Heading>
         </div>
         <div className="flow" id="flow4">
           <div className="rail" aria-hidden="true"><i id="railFill"></i></div>
-          <div className="flow-grid">
+          <div className="flow-grid" data-fx-items>
             <article className="stn">
               <span className="node"><b>01</b></span>
               <div className="body"><span className="tm">{t.s1.tm}</span><Step className="stn-title">{t.s1.h3}</Step>

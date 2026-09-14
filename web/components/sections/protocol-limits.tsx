@@ -5,13 +5,13 @@ export function ProtocolLimits({ lang }: { lang: Lang }) {
   const t = protocolLimits[lang];
   return (
     <>
-      <section className="shell alt">
-        <div className="head-wide">
+      <section className="shell alt" data-fx="split">
+        <div className="head-wide" data-fx-head>
           <p className="eyebrow">{t.eyebrow}</p>
           <h2>{t.h2a}<span className="ital">{t.h2b}</span></h2>
           <p className="lede" style={{ marginTop: '16px' }}>{t.lede}</p>
         </div>
-        <div className="tx-cols">
+        <div className="tx-cols" data-fx-items>
           <div className="tx-col tx-yes">
             <h3><span className="badge-sm">{t.yesBadge}</span></h3>
             <p>{t.yesNote}</p>
