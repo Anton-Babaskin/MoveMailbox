@@ -61,7 +61,7 @@ export const quickstartMarks: Record<string, { letter: string; b1: string; b2: s
   'microsoft-365': { letter: 'M', b1: '#5A8DE8', b2: '#1B4699' },
   yahoo: { letter: 'Y', b1: '#A98BE8', b2: '#5B2D91' },
   exchange: { letter: 'E', b1: '#6FA8DC', b2: '#1F5FA8' },
-  imap: { letter: '@', b1: '#5AC8A8', b2: '#0C8A67' },
+  imap: { letter: '@', b1: '#5AC8A8', b2: '#0A7C5C' },
 };
 
 /** Порядок плиток. Общая IMAP-плитка последняя: она для тех, кто не нашёл свой. */

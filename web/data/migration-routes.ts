@@ -934,7 +934,7 @@ export const migrationRoutes: MigrationRoute[] = [
       ],
     },
     uk: {
-      title: 'Перенесення пошти з Яндекс 360 на Microsoft 365 — MoveMailbox',
+      title: 'Пошта з Яндекс 360 на Microsoft 365 — MoveMailbox',
       description:
         'Міграція корпоративної пошти з Яндекс 360 на Microsoft 365 через IMAP. Паролі застосунків у джерела та OAuth на боці Microsoft.',
       h1: 'Перенесення пошти з Яндекс 360 на Microsoft 365',

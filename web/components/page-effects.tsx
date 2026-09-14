@@ -2,11 +2,13 @@
 
 import { useEffect } from 'react';
 import { initEffects } from '@/lib/effects';
+import { initLangSuggest } from '@/lib/lang-suggest';
 
 /** Скролл-эффекты и кнопка «наверх». Ничего не рендерит, кроме самой кнопки. */
 export function PageEffects() {
   useEffect(() => {
     initEffects();
+    initLangSuggest();
   }, []);
 
   return (
