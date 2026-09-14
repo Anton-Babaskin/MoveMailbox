@@ -531,6 +531,9 @@ export function initWorkspace(
     body.textContent=text;
     line.appendChild(time); line.appendChild(body);
     log.appendChild(line);
+    /* Со второй строки журнал переходит в рабочую высоту и дальше
+       прокручивается, а не растягивает карточку до бесконечности. */
+    if(log.children.length > 1) log.classList.add('log-live');
     while(log.children.length > 400) log.removeChild(log.firstChild);
     log.scrollTop=log.scrollHeight;
   }
@@ -653,6 +656,7 @@ export function initWorkspace(
     metrics(view);
     if(log){
       log.textContent='';
+      log.classList.remove('log-live');
       (view.recentEvents || []).forEach(function(ev){ logEvent(ev); });
     }
     if(view.error) push(view.error, 2, view.finishedAt);
@@ -767,6 +771,7 @@ export function initWorkspace(
     formError(null);
     running=true; stopping=false; lost=false;
     if(log) log.textContent='';
+    if(log) log.classList.remove('log-live');
     progress(0, false);
     startedAt=Date.now(); elapsedFrozen=0; lastBytes=0; lastTransferred=0; lastPercent=0;
     if(mt) mt.textContent=T.noValue;

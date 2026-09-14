@@ -343,7 +343,31 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
    сетка — гарантии слева, пара кнопок справа единым блоком одной высоты. */
 /* Пресет провайдера и его подсказка: подстановка сервера должна быть видна,
    иначе человек не поймёт, откуда в поле взялся адрес. */
-.f-preset select{width:100%}
+/* Список провайдера — первое, что человек трогает в форме, и до недавнего
+   времени единственное поле, которое браузер рисовал сам: рядом с остальными
+   полями он выглядел чужим. Приводим к той же геометрии, что и .f input.
+   Стрелку рисуем псевдоэлементом, а не картинкой: так она берёт currentColor
+   и не требует второй копии для тёмной темы. */
+.f-preset{position:relative}
+.f-preset select{width:100%;height:40px;padding:0 38px 0 12px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surf-2);color:var(--ink);
+  font-size:13px;cursor:pointer;transition:.18s;
+  -webkit-appearance:none;appearance:none}
+.f-preset select:hover{border-color:color-mix(in srgb,var(--acc) 34%,var(--line))}
+.f-preset select:focus{outline:none;border-color:var(--acc);background:var(--surf);
+  box-shadow:0 0 0 4px rgba(var(--acc-glow),.13)}
+.f-preset::after{content:"";position:absolute;right:15px;bottom:14px;width:7px;height:7px;
+  border-right:1.8px solid var(--ink-3);border-bottom:1.8px solid var(--ink-3);
+  transform:rotate(45deg);pointer-events:none;transition:.18s}
+.f-preset:focus-within::after{border-color:var(--acc)}
+/* Полоса «онлайн-перенос ещё не запущен». Это статус всей формы, а не
+   заметка сбоку, поэтому она идёт во всю ширину карточки над полями и
+   отделена линией — её видно раньше, чем человек начнёт печатать. */
+.ws-preview{display:flex;gap:10px;align-items:flex-start;margin:0;padding:13px 20px;
+  border-bottom:1px solid var(--line);background:var(--acc-soft);
+  font-size:.86rem;line-height:1.5;color:var(--ink-2)}
+.ws-preview svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--acc)}
+.ws-preview a{color:var(--acc);font-weight:700}
 .pv-note{margin:0;padding:0 22px 16px;font-size:.8rem;line-height:1.5;color:var(--ink-3)}
 .pv-note a{color:var(--acc);text-decoration:underline;text-underline-offset:2px}
 .ws-err{width:100%;margin:0;padding:10px 13px;border-radius:10px;font-size:.85rem;line-height:1.5;
@@ -405,7 +429,12 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
   background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(255,255,255,.22) 9px 18px);
   animation:march .7s linear infinite}
 @keyframes march{to{background-position:26px 0}}
-.log{font-family:var(--mono);font-size:12px;line-height:1.95;padding:14px 24px;height:150px;overflow:auto}
+/* До запуска в журнале одна строка, а высота была всё те же 150px: внизу
+   главной висел кусок пустой черноты выше самого журнала. Пока строк мало,
+   блок растёт по содержимому; класс live ставит код, когда строки пошли —
+   с этого момента высота фиксированная и журнал прокручивается сам. */
+.log{font-family:var(--mono);font-size:12px;line-height:1.95;padding:14px 24px;overflow:auto}
+.log.log-live{height:150px}
 .log>div{display:flex;gap:14px;animation:fu .3s both}
 .log time{color:#6B8092;flex:none}
 .log b{font-weight:400;color:var(--term-hi)}

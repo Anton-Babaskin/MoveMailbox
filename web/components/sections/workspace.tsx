@@ -51,6 +51,20 @@ export function Workspace({ lang }: { lang: Lang }) {
             <span className="tail"><span className="chip">{t.chip}</span></span>
           </div>
 
+          {/* Предупреждение стоит до полей, а не после них. Ниже формы его
+              читали уже после того, как ввели адрес сервера и логин — то есть
+              ровно тогда, когда оно бесполезно. */}
+          {STATIC_SITE && (
+            <p className="ws-preview" role="status">
+              <svg aria-hidden="true"><use href="#al" /></svg>
+              <span>
+                {t.previewNoticeA}
+                <a href={href(lang, '/download')}>{t.previewNoticeLink}</a>
+                {t.previewNoticeB}
+              </span>
+            </p>
+          )}
+
           <div className="panes">
             <div className="mbx">
               <div className="mbx-head">
@@ -118,14 +132,6 @@ export function Workspace({ lang }: { lang: Lang }) {
               <p className="pv-note" data-note hidden></p>
             </div>
           </div>
-
-          {STATIC_SITE && (
-            <p className="keep" role="status" style={{ padding: '18px', display: 'block' }}>
-              {t.previewNoticeA}
-              <a href={href(lang, '/download')}>{t.previewNoticeLink}</a>
-              {t.previewNoticeB}
-            </p>
-          )}
 
           <div className="launch">
             <div className="assure">
