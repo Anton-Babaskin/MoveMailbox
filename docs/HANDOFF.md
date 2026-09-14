@@ -1,5 +1,27 @@
 # Engineering handoff — 2026-09-13
 
+## Worker cancellation fix deployed to closed staging (2026-09-14)
+
+- Built `staging-5b55549` from main commit
+  `5b55549e8bc4f40075fb42dce254ac76726c6902` using the pinned Docker base
+  images. The local build completed the Next.js export and Go package tests.
+- The transactional staging updater deployed image digest
+  `sha256:c4abfb457b32a262d8840c2c9254528df9193e998498377b6cbba85dd6b44862`.
+  It created a paired SQLite snapshot and retained the previous digest
+  `sha256:bb696a8a2cc9f3b89d1690842f6d75d45e7bc2620729e5a59d64039a62df2805`
+  as the automatic rollback target. No mailbox data or credentials were used.
+- Both API and worker containers report the exact new digest and `healthy`;
+  `/api/ready` returned `{"ready":true,"status":"ready"}` and the internal
+  worker health endpoint reported the imapsync engine available.
+- Live cancellation smoke check: an authenticated TCP request with a declared
+  but incomplete body returned `400 Bad Request` after the 30-second operation
+  timeout. The worker remained healthy and accepted health checks afterward.
+  This validates the deployed read-cancellation path, not IMAP throughput.
+
+Next: run one bounded API reconnect/cancellation check after a supervised worker
+restart; then prepare the closed HTTPS pilot gate. Off-site backup and public
+exposure remain deferred.
+
 ## Worker request cancellation audit (2026-09-14)
 
 - Repository audit found that the worker's transient operation and job-admission
