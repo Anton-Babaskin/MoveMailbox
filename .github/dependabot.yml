@@ -17,3 +17,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+
+  # Пакеты сайта. Без этой записи за web/ никто не следил: Go, Docker и
+  # Actions обновлялись, а next и react тихо отставали — к моменту, когда
+  # это заметили, next был на мажор позади. Сайт собирает форму, в которую
+  # человек вводит пароль от почты, поэтому отставать ему нельзя.
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -7,6 +8,15 @@ const nextConfig: NextConfig = {
    * когда подключится бекенд — адреса при переезде не меняются.
    */
   output: 'export',
+  /**
+   * Корень для сборщика — каталог репозитория, а не web/.
+   *
+   * lib/workspace.ts берёт общий клиент гостевого API из ../../sdk: он один
+   * на сайт и на встроенный интерфейс, дублировать его в web/ нельзя.
+   * Turbopack (в Next 16 он по умолчанию) ищет корень по ближайшему
+   * package.json, упирается в web/ и такой импорт не разрешает.
+   */
+  turbopack: { root: path.join(import.meta.dirname, '..') },
   /**
    * Обязательно true для GitHub Pages: Pages отдаёт файл только по
    * точному пути, extensionless-адреса он не разрешает. С этим флагом
