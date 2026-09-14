@@ -56,6 +56,30 @@ func TestRequestGuardRejectsUntrustedHost(t *testing.T) {
 	}
 }
 
+func TestRequestGuardExternalPort(t *testing.T) {
+	for _, test := range []struct {
+		host, origin string
+		want         int
+	}{
+		{"staging.movemailbox.com:8443", "https://staging.movemailbox.com:8443", 204},
+		{"staging.movemailbox.com", "https://staging.movemailbox.com:8443", 403},
+		{"staging.movemailbox.com:8443", "https://staging.movemailbox.com:9443", 403},
+	} {
+		t.Run(test.host+"/"+test.origin, func(t *testing.T) {
+			handler := requestGuard([]string{"staging.movemailbox.com", "staging.movemailbox.com:8443"}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) }))
+			r := httptest.NewRequest(http.MethodPost, "/api/jobs", strings.NewReader("{}"))
+			r.Host = test.host
+			r.Header.Set("Origin", test.origin)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, r)
+			if w.Code != test.want {
+				t.Fatalf("status = %d, want %d", w.Code, test.want)
+			}
+		})
+	}
+}
+
 func TestRequestGuardRejectsCrossSiteAndPlainTextPosts(t *testing.T) {
 	tests := []struct {
 		name        string

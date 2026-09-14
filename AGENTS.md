@@ -13,6 +13,7 @@
   backend/API, workers, technical tests and test VM. Do not change website or
   frontend files as part of backend tasks; document API integration changes for
   Claude instead. Shared documentation changes must preserve the other work.
+  Do not merge Claude's website PRs, including when asked to merge technical PRs.
 - Read `docs/HANDOFF.md`, `docs/ROADMAP.md` and relevant test/runbook documentation
   before continuing work. Reply to the owner in Russian.
 

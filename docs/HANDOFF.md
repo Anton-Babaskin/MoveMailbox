@@ -1,5 +1,83 @@
 # Engineering handoff — 2026-09-13
 
+## HTTPS certificate and VM gateway staged (2026-09-14)
+
+- DNS-01 certificate `staging.movemailbox.com` is present on the VM and valid
+  through 2026-12-13. Certbot is installed; manual DNS validation is not an
+  automatic renewal strategy.
+- VM API was recreated with the existing immutable image digest and the approved
+  external authority `staging.movemailbox.com:8443`; worker and data volumes were
+  not restarted or changed. Both containers are healthy.
+- A rootless-worker nginx gateway is running on VM `:443`, using the certificate,
+  Basic Auth pilot gate, request limits and no-cache proxy settings. It keeps API
+  `Authorization` private and proxies only to loopback.
+- External verification is currently blocked: direct public `:8443` returns a
+  Fastly certificate, not this VM certificate. The Proxmox DNAT rule was not
+  observable on the VM and must be confirmed/added at the hypervisor. Existing
+  Proxmox services and ports were not changed by this agent.
+- No permanent tester credential was issued or printed. The gateway remains a
+  closed pilot and is not considered externally reachable until certificate and
+  Host checks pass from outside.
+- Next: confirm the exact Proxmox DNAT rule, then run external TLS/Basic Auth and
+  browser-origin checks. After pilot acceptance, automate certificate renewal.
+
+## External-port Origin compatibility (2026-09-14)
+
+- Found a pilot configuration defect: nginx stripped external `:8443` from
+  Host, while browser Origin retains it; requestGuard correctly rejected the
+  mismatch. Both pilot configs now preserve the fixed external authority.
+- Added guard regression cases for matching port, stripped port and wrong-port
+  Origin; HTTPS smoke now includes actual browser Origin/Sec-Fetch-Site headers.
+- VM still requires adding `staging.movemailbox.com:8443` to AllowedHosts and
+  recreating the idle API container before the corrected gateway can be used.
+  No runtime protection has been relaxed; configs are not deployed yet.
+- Owner reported external 8443 NAT configured. DNS A resolves correctly. First
+  DNS-01 validation failed because TXT was not published yet. TXT subsequently
+  appeared; a new manual challenge is pending replacement TXT. Certificate not
+  issued, HTTPS not publicly active. Certbot installed on VM, containers unchanged.
+- Next: complete DNS challenge, then deploy gated HTTPS with external-port
+  authority preserved and test browser-like POST/CSRF from outside.
+
+## Bounded HTTPS load and invitation gate (2026-09-14)
+
+- Continued technical PR #41 on `ops/recovery-https-pilot`. Main advanced with
+  website handoff notes; preserved both sections when resolving the docs-only
+  merge conflict. No Claude PR was merged or website file edited.
+- HTTPS readiness load: 80 requests / 4 clients, 22 HTTP 200 and 58 expected
+  HTTP 429; p95 222.91 ms, max 224.48 ms. After 12 seconds, three probes returned
+  200. Total 13.88 seconds. This measures gate throttling/recovery, not mailbox
+  transfer capacity. nginx constrained to 0.5 CPU / 128 MiB; after-run memory
+  was 4.305 MiB (not a peak measurement).
+- Separate invited-pilot nginx config passed anonymous/wrong-password rejection,
+  authorized readiness/session and revocation-on-next-request checks using a
+  disposable secret. No jobs submitted, no real tester credentials issued.
+- External invitation delivery remains blocked on the owner's access-route
+  choice: private network/tunnel versus public endpoint and trusted certificate.
+  Do not expose the loopback gateway by changing its bind address blindly.
+- Next: agree the tester access route and provision it; then conduct one actual
+  invited-user acceptance run. Backend observability requested below is a
+  separate useful implementation step, not part of website work.
+
+## Worker recovery and operator-local HTTPS (2026-09-14)
+
+- Branch `ops/recovery-https-pilot`; backend operational scripts only. Website
+  PRs remain Claude's responsibility. Staging image remains `staging-5b55549`.
+- Live idle staging worker stop/start: readiness `200 -> 503 -> 200`, API did
+  not restart, image unchanged; measured drill duration 0.33 seconds. Script
+  requires explicit restart flag and an exclusive maintenance window.
+- Isolated demo drill passed API kill/reconnect, worker kill/retry, cancellation,
+  strict-mirror non-replay, owner isolation and plaintext checks (954 synthetic
+  messages). This is not evidence of real-provider IMAP throughput.
+- Operator-local nginx HTTPS through SSH passed certificate/hostname validation,
+  readiness, Secure/HttpOnly/SameSite cookie, missing-CSRF rejection, valid-CSRF
+  input validation, wrong-Host rejection and 64 KiB request limit. No migration
+  was submitted. No public ports, DNS or website changes were made.
+- See [private HTTPS runbook](PRIVATE-HTTPS-PILOT.md). This prepares a closed
+  operator pilot, not a publicly trusted certificate or public launch.
+- Next: (1) bounded guest API load through this gateway, checking throttling and
+  recovery; (2) invite-based HTTPS access once its exposure/certificate model is
+  approved. No additional backup work is scheduled.
+
 ## Website security pass and a request for observability (2026-09-14)
 
 Website side, merged in PRs #37 and #39. Nothing under `internal/` was touched.
