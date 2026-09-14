@@ -1,5 +1,28 @@
 # Engineering handoff — 2026-09-13
 
+## Backend audit: bounded rate limiter (2026-09-14)
+
+Owner deferred off-site backup. Continue backend correctness and security work;
+do not keep requesting a bucket as a prerequisite for unrelated development.
+
+Confirmed availability defect in `internal/api/identity.go`: active IP/session
+counters were unbounded; after 4096 entries every accepted request scanned the
+entire table under its shared mutex. Distinct clients within a minute could
+increase both memory and CPU work. The overflow regression failed before the
+fix. No exploitation on the VM has been established.
+
+The table now holds at most 8192 combined counters, rejects new identities at
+capacity with the existing retry response, retains existing quotas, and clears
+expired counters once per minute. Delayed timestamps cannot roll the window
+backward. Tests cover capacity/recovery, quota preservation, delayed requests,
+and 256 concurrent calls admitting exactly 32 requests. Full Go race tests and
+vet are the validation gate. This is a focused audit, not a claim that all
+backend code is free of defects. The fix is not yet deployed to the VM.
+
+Next: review/merge the fix after CI and deploy it to the private VM; then audit
+worker transient-operation concurrency and cancellation under contention.
+
+
 ## Current state: pilot limits deployed (2026-09-14)
 
 - PR #31 was reviewed and merged after all seven CI checks succeeded.
