@@ -71,8 +71,14 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
 .shell{width:min(var(--shell),calc(100% - 44px));margin-inline:auto}
-.wide-shell{width:min(1580px,calc(100% - 40px));margin-inline:auto;padding-block:clamp(56px,7vw,104px);position:relative}
-section{padding-block:clamp(56px,7vw,104px);position:relative}
+/* Вертикальный ритм секций.
+   Было clamp(56px,7vw,104px): на 1440px это ~101px сверху и снизу, то есть
+   около 200px пустоты между соседними секциями — на широком мониторе
+   страница читалась разреженной. Средний член уменьшен, нижний почти нет:
+   на телефоне воздуха и так было в меру, резать там нечего. В итоге десктоп
+   теряет около четверти отступа, мобильный — примерно десятую часть. */
+.wide-shell{width:min(1580px,calc(100% - 40px));margin-inline:auto;padding-block:clamp(50px,5.4vw,80px);position:relative}
+section{padding-block:clamp(50px,5.4vw,80px);position:relative}
 .crumbs + main section:first-of-type,
 main section[data-pg]:not([data-pg~="home"]):first-of-type{padding-top:clamp(30px,3.4vw,46px)}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.19em;text-transform:uppercase;color:var(--acc);margin-bottom:16px}
