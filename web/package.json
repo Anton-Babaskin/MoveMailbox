@@ -10,7 +10,8 @@
     "build": "next build",
     "export": "next build && node scripts/embed.mjs",
     "lint": "next lint",
-    "build:static": "NEXT_PUBLIC_STATIC_SITE=1 next build",
+    "build:static": "NEXT_PUBLIC_STATIC_SITE=1 next build && npm run csp",
+    "csp": "node scripts/add-csp.mjs",
     "check": "node scripts/check-export.mjs",
     "check:live": "node scripts/check-live.mjs"
   },

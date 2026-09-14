@@ -35,6 +35,11 @@ jobs:
         working-directory: web
         env:
           NEXT_PUBLIC_STATIC_SITE: '1'
+      # GitHub Pages не даёт выставлять свои заголовки, поэтому политику
+      # приходится класть в <meta> на каждую страницу. Когда сайт раздаёт наш
+      # Go-сервер, то же делает internal/web/static.go — там шаг не нужен.
+      - run: npm run csp
+        working-directory: web
       - run: npm run check
         working-directory: web
       - run: npm audit --omit=dev --audit-level=high

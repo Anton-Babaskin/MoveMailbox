@@ -51,6 +51,11 @@ export function SiteShell({
   return (
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
       <head>
+        {/* Заголовками это не поставить: на GitHub Pages раздаётся голая
+            статика. Современные браузеры и так берут этот режим по умолчанию,
+            но полагаться на умолчание браузера в правиле, которое решает,
+            уйдёт ли полный адрес страницы на чужой домен, не стоит. */}
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
