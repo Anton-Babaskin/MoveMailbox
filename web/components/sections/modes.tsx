@@ -17,7 +17,7 @@ export function Modes({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boo
         </div>
         <div className="grid3">
           <article className="card lead">
-            <div className="ctop"><span className="ico"><svg aria-hidden="true"><use href="#cl" /></svg></span><span className="tagr hot">{t.cloud.tag}</span></div>
+            <div className="ctop"><span className="ico"><svg aria-hidden="true"><use href="#cl" /></svg></span><span className="tagr">{t.cloud.tag}</span></div>
             <Card className="big">{t.cloud.h3}</Card>
             <p className="t">{t.cloud.t}</p>
             <ul className="ticks">
@@ -28,7 +28,7 @@ export function Modes({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boo
             <a className="go" href="#workspace">{t.cloud.go}<svg aria-hidden="true"><use href="#ar" /></svg></a>
           </article>
           <article className="card">
-            <div className="ctop"><span className="ico"><svg aria-hidden="true"><use href="#lp" /></svg></span><span className="tagr">Windows · Linux · macOS</span></div>
+            <div className="ctop"><span className="ico"><svg aria-hidden="true"><use href="#lp" /></svg></span><span className="tagr hot">Windows · Linux</span></div>
             <Card className="big">{t.desktop.h3}</Card>
             <p className="t">{t.desktop.t}</p>
             <ul className="ticks">

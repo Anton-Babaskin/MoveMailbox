@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { ProtocolLimits } from '@/components/sections/protocol-limits';
 import { PopularRoutes } from '@/components/sections/popular-routes';
@@ -17,6 +18,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={"/routes"} kind="collection" />
       <HowItWorks lang={'ru'} pageTitle />
       <ProtocolLimits lang={'ru'} />
       <PopularRoutes lang={'ru'} />

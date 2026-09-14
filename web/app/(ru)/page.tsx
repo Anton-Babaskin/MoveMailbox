@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Hero } from '@/components/sections/hero';
 import { Workspace } from '@/components/sections/workspace';
 import { TrustRow } from '@/components/sections/trust-row';
@@ -20,6 +21,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={""} kind="home" />
       <Hero lang={'ru'} />
       <Workspace lang={'ru'} />
       <TrustRow lang={'ru'} />

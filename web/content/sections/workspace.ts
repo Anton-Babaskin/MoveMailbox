@@ -6,8 +6,8 @@
  * в интерфейсе стоят прочерки, а не красивые выдуманные числа. */
 export const workspace = {
   ru: {
-    staticPasswordPlaceholder: 'Онлайн-перенос пока недоступен',
-    previewNoticeA: 'Онлайн-перенос готовится к запуску. Здесь показан интерфейс: ввод данных и отправка запросов отключены. Для переноса сейчас используйте ',
+    staticPasswordPlaceholder: 'Пока не нужен',
+    previewNoticeA: 'Онлайн-перенос готовится к запуску. Интерфейс рабочий — можно выбрать провайдера и посмотреть настройки, но пароль здесь не спрашивается и ни один запрос никуда не уходит. Чтобы перенести почту сейчас, возьмите ',
     previewNoticeLink: 'локальный клиент',
     previewNoticeB: '.',
     title: 'Рабочая область переноса',
@@ -92,8 +92,8 @@ export const workspace = {
     logFoot: 'Каждая папка, счётчики с обеих сторон и причина по каждому пропущенному письму.',
   },
   en: {
-    staticPasswordPlaceholder: 'Online transfer is not live yet',
-    previewNoticeA: 'Online transfer is getting ready for launch. What you see here is the interface: data entry and outgoing requests are disabled. To move mail right now, use the ',
+    staticPasswordPlaceholder: 'Not needed yet',
+    previewNoticeA: 'Online transfer is getting ready for launch. The interface works — pick a provider and look at the settings — but the password field is off and nothing is sent anywhere. To move mail right now, take the ',
     previewNoticeLink: 'local client',
     previewNoticeB: '.',
     title: 'Transfer workspace',
@@ -178,8 +178,8 @@ export const workspace = {
     logFoot: 'Every folder, counts from both sides, and a reason for each skipped message.',
   },
   uk: {
-    staticPasswordPlaceholder: 'Онлайн-перенесення поки недоступне',
-    previewNoticeA: 'Онлайн-перенесення готується до запуску. Тут показано інтерфейс: введення даних і надсилання запитів вимкнено. Для перенесення зараз скористайтеся ',
+    staticPasswordPlaceholder: 'Поки не потрібен',
+    previewNoticeA: 'Онлайн-перенесення готується до запуску. Інтерфейс робочий — можна обрати провайдера й подивитися налаштування, але пароль тут не запитується і жоден запит нікуди не йде. Щоб перенести пошту зараз, візьміть ',
     previewNoticeLink: 'локальним клієнтом',
     previewNoticeB: '.',
     title: 'Робоча область перенесення',

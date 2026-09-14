@@ -1,7 +1,7 @@
 /** Копия подвала сайта. Один файл — три языка рядом. */
 export const siteFooter = {
   ru: {
-    tagline: 'Онлайн до 5 ГБ бесплатно. Настольный клиент без облачного лимита.',
+    tagline: 'Настольный клиент и Docker — уже сейчас, без облачного лимита. Онлайн до 5 ГБ бесплатно — на запуске.',
     privacy: 'Конфиденциальность',
     terms: 'Условия',
     security: 'Безопасность',
@@ -9,7 +9,7 @@ export const siteFooter = {
     credit: 'на базе imapsync (NLPL)',
   },
   en: {
-    tagline: 'Up to 5 GB free online. The desktop client has no cloud limit.',
+    tagline: 'Desktop client and Docker are available today, with no cloud limit. Up to 5 GB free online at launch.',
     privacy: 'Privacy',
     terms: 'Terms',
     security: 'Security',
@@ -17,7 +17,7 @@ export const siteFooter = {
     credit: 'built on imapsync (NLPL)',
   },
   uk: {
-    tagline: 'Онлайн до 5 ГБ безкоштовно. Настільний клієнт без хмарного ліміту.',
+    tagline: 'Настільний клієнт і Docker — уже зараз, без хмарного ліміту. Онлайн до 5 ГБ безкоштовно — на запуску.',
     privacy: 'Конфіденційність',
     terms: 'Умови',
     security: 'Безпека',

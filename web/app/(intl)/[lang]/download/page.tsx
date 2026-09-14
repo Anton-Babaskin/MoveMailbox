@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Modes } from '@/components/sections/modes';
 import { DesktopApp } from '@/components/sections/desktop-app';
 import { FinalCta } from '@/components/sections/final-cta';
@@ -35,6 +36,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/download" kind="app" />
       <Modes lang={l} pageTitle />
       <DesktopApp lang={l} />
       <FinalCta lang={l} />

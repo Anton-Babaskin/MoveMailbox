@@ -1,6 +1,9 @@
 import { FinalCta } from '@/components/sections/final-cta';
+import { JsonLd } from '@/components/json-ld';
 import { legal, legalUpdatedLabel, type LegalDocId } from '@/content/legal';
-import type { Lang } from '@/i18n/config';
+import { guideArticlePage } from '@/content/guide-article-page';
+import { breadcrumbLd, webPageLd } from '@/lib/seo';
+import { href, type Lang } from '@/i18n/config';
 
 /**
  * Адрес поддержки в правовом тексте должен открывать почтовый клиент:
@@ -25,8 +28,21 @@ function withMail(text: string) {
  */
 export function LegalDoc({ lang, doc }: { lang: Lang; doc: LegalDocId }) {
   const t = legal[doc][lang];
+  /* Разметка живёт здесь, а не на странице: обе правовые страницы берут
+     текст отсюда же, и заголовок в schema не разъедется с заголовком на
+     экране по построению. */
+  const path = href(lang, `/${doc}`);
   return (
     <main>
+      <JsonLd
+        data={[
+          breadcrumbLd([
+            { name: guideArticlePage[lang].home, path: href(lang, '/') },
+            { name: t.title, path },
+          ]),
+          webPageLd({ name: t.title, description: t.meta.description, path, lang }),
+        ]}
+      />
       <section className="shell legal">
         <div className="head-wide">
           <p className="eyebrow">{t.eyebrow}</p>

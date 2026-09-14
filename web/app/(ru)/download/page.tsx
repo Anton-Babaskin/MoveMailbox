@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Modes } from '@/components/sections/modes';
 import { DesktopApp } from '@/components/sections/desktop-app';
 import { FinalCta } from '@/components/sections/final-cta';
@@ -14,6 +15,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={"/download"} kind="app" />
       <Modes lang={'ru'} pageTitle />
       <DesktopApp lang={'ru'} />
       <FinalCta lang={'ru'} />

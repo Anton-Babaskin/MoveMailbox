@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { UseCases } from '@/components/sections/use-cases';
 import { Calculator } from '@/components/sections/calculator';
 import { Pricing } from '@/components/sections/pricing';
@@ -37,6 +38,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/pricing" kind="app" />
       <UseCases lang={l} pageTitle />
       <Calculator lang={l} />
       <Pricing lang={l} />

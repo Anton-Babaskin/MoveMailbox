@@ -20,6 +20,7 @@ export function guideArticleMetadata(lang: Lang, slug: string): Metadata {
     path: `/guides/${slug}`,
     title: copy.title,
     description: copy.description,
+    ogType: 'article',
   });
 }
 

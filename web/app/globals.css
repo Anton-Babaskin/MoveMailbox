@@ -1482,3 +1482,83 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .rt .pvi{width:24px;height:24px;border-radius:7px}
 .rt .pvi i{font-size:10.5px}
 .rt .pvi img{width:14px;height:14px}
+
+/* Заголовок, который нужен структуре, но не нужен глазу: на странице
+   гайдов за h1 сразу шёл h3 панели провайдера — пропуск уровня. Видимого
+   заголовка там ставить некуда, подпись выше и так объясняет, что делать,
+   поэтому h2 есть в разметке и скрыт визуально. Не display:none и не
+   visibility:hidden — их скринридер тоже не читает. */
+.h-struct{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* ==========================================================================
+   Пальцы и мелкий текст на телефоне.
+
+   Внешний аудит насчитал 45 интерактивных элементов уже 44px при ширине
+   375px. Рекомендация WCAG 2.5.8 — минимум 24x24, у Apple и Google в
+   руководствах 44 и 48. Трогаем только узкие экраны: на мышке 38px попасть
+   несложно, а на ходу в метро — нет.
+
+   Правила собраны в одном месте намеренно: разнесённые по секциям, они
+   разъезжаются при первой же правке компонента.
+   ========================================================================== */
+@media (pointer:coarse), (max-width:620px){
+  /* Шапка: тема и меню. */
+  .tgl,.burger{width:44px;height:44px}
+  /* Поля формы и списки провайдеров. */
+  .f input,.f-preset select,.adv-in select,.adv-in input{height:46px}
+  .f-preset::after{bottom:17px}
+  /* Показать пароль — кнопка внутри поля растёт вместе с ним. */
+  .pw button{height:36px;top:5px}
+  /* Ссылки-строки под кнопкой проверки: были 20px высотой. */
+  .mid-links a{display:block;padding-block:11px}
+  /* Переключатель языка. */
+  .seg a{min-height:44px;display:inline-flex;align-items:center}
+  /* Ссылка «Настройки и порядок» в плитках провайдеров. */
+  .qs-go{padding-block:10px}
+}
+
+/* Мелкий текст. Ниже 12px разрядка прописными читается по буквам, а не
+   словами — особенно в моно. Поднимаем нижнюю границу, разрядку убавляем. */
+@media (max-width:620px){
+  .eyebrow,.trust li,.qs-go,.rt .go,.drop .sum{font-size:12px;letter-spacing:.08em}
+  .badge{font-size:11.5px;letter-spacing:.06em}
+  .mon-s small,.mon-h small{font-size:11px}
+  details.adv>summary small{font-size:11.5px}
+  .pv-note,.fhint,.note{font-size:13px}
+}
+
+/* Кнопка «наверх» перекрывала ссылку GitHub в подвале на десктопе и текст
+   с кнопкой «Остановить» на телефоне. Подвал отодвигаем на её ширину, а
+   у самой кнопки убираем перехват кликов, когда подвал уже на экране. */
+footer{padding-bottom:calc(34px + 54px)}
+@media (max-width:600px){footer{padding-bottom:calc(34px + 48px)}}
+.top-btn.hide{opacity:0;pointer-events:none;transform:translateY(16px) scale(.9)}
+
+/* Второй проход по целям нажатия: текстовые ссылки-строки. Они были
+   18-24px высотой — это высота самой строки, попасть по такой на ходу
+   трудно. Добавляем вертикальный отступ, не меняя вид: строка остаётся
+   строкой, растёт только область попадания. */
+@media (pointer:coarse), (max-width:620px){
+  .go,.brief-link,.mid-links a,footer a,.crumbs a{
+    display:inline-flex;align-items:center;min-height:44px}
+  .btn,.os{min-height:46px}
+  .drop>summary,details.adv>summary{min-height:48px}
+  .top-btn{width:48px;height:48px}
+  /* Подписи «Откуда» и «Куда» в форме были 10px прописными в разрядку —
+     это читается по буквам. Языки в шапке тоже подрастают. */
+  .mbx-head small{font-size:12px;letter-spacing:.12em}
+  .seg a{font-size:12.5px}
+  .chip{font-size:11.5px}
+}
+/* В подвале ссылки стоят в колонке: у inline-flex с min-height они бы
+   слиплись в строку, поэтому там вертикальный отступ вместо высоты. */
+@media (pointer:coarse), (max-width:620px){
+  footer a{min-height:0;padding-block:11px}
+}
+/* Последние две настоящие цели: кнопка включения строгого зеркала и
+   ссылка «Забрать клиент» в заметке под формой. */
+@media (pointer:coarse), (max-width:620px){
+  .strict button{min-height:44px;padding-inline:16px}
+  .keep a{display:inline-flex;align-items:center;min-height:44px}
+}

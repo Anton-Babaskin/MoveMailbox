@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Security } from '@/components/sections/security';
 import { FinalCta } from '@/components/sections/final-cta';
 import { pages } from '@/content/pages';
@@ -13,6 +14,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={"/security"} kind="page" />
       <Security lang={'ru'} pageTitle />
       <FinalCta lang={'ru'} />
     </main>

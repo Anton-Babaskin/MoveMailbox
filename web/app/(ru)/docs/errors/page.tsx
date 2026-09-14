@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Errors } from '@/components/sections/errors';
 import { ErrorIndex } from '@/components/sections/error-index';
 import { FinalCta } from '@/components/sections/final-cta';
@@ -14,6 +15,7 @@ export const metadata: Metadata = buildMetadata({
 export default function Page() {
   return (
     <main>
+      <PageSchema lang={"ru"} path={"/docs/errors"} kind="collection" />
       <Errors lang={'ru'} pageTitle />
       <ErrorIndex lang={'ru'} />
       <FinalCta lang={'ru'} />

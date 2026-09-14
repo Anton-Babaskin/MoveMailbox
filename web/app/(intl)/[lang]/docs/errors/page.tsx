@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PageSchema } from '@/components/page-schema';
 import { Errors } from '@/components/sections/errors';
 import { ErrorIndex } from '@/components/sections/error-index';
 import { FinalCta } from '@/components/sections/final-cta';
@@ -35,6 +36,7 @@ export default async function Page({
   const l = toLang(lang);
   return (
     <main>
+      <PageSchema lang={l} path="/docs/errors" kind="collection" />
       <Errors lang={l} pageTitle />
       <ErrorIndex lang={l} />
       <FinalCta lang={l} />
