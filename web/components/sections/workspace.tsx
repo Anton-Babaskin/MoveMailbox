@@ -1,7 +1,4 @@
-'use client';
-
-import { useEffect } from 'react';
-import { initWorkspace } from '@/lib/workspace';
+import { WorkspaceInit } from '@/components/section-init';
 import { workspace } from '@/content/sections/workspace';
 import { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
@@ -37,13 +34,14 @@ export function Workspace({ lang }: { lang: Lang }) {
   // первое обновление в браузере не расходились.
   const rt = workspaceRuntime[lang];
 
-  // Интерфейс инициализируется всегда: без этого не работают ни схема
-  // соединения, ни расширенные настройки, ни дерево папок — страница
-  // выглядит сломанной. В статической сборке гасятся только сетевые вызовы.
-  useEffect(() => { initWorkspace(lang, !STATIC_SITE); }, [lang]);
-
   return (
     <>
+      {/* Секция серверная: её разметка статична. Клиентским остаётся только
+          запускатель — он и вешает обработчики. Интерфейс инициализируется
+          всегда, даже в статической сборке: без этого не работают ни схема
+          соединения, ни расширенные настройки, ни дерево папок. Гаснут там
+          только сетевые вызовы. */}
+      <WorkspaceInit lang={lang} strings={rt} online={!STATIC_SITE} />
       <section className="wide-shell" id="workspace" style={{ paddingTop: '0' }}>
 
         <div className="ws">

@@ -1,17 +1,22 @@
 // @ts-nocheck — imperative bundle ported from the static mockup
 /* eslint-disable */
 
-import { calculatorRuntime } from '@/content/sections/calculator-runtime';
+import type { calculatorRuntime } from '@/content/sections/calculator-runtime';
 import type { Lang } from '@/i18n/config';
 
 const $ = (s: string, r: ParentNode = document) => r.querySelector(s) as HTMLElement | null;
 const $$ = (s: string, r: ParentNode = document) =>
   Array.prototype.slice.call(r.querySelectorAll(s)) as HTMLElement[];
 
-/** Калькулятор времени переноса по лимитам провайдеров. */
-export function initCalculator(lang: Lang = 'ru') {
+/** Калькулятор времени переноса по лимитам провайдеров.
+ *  Словарь приходит аргументом — по той же причине, что и в workspace:
+ *  клиентскому бандлу незачем знать языки, которых посетитель не видит. */
+export function initCalculator(
+  strings: (typeof calculatorRuntime)[Lang],
+  lang: Lang = 'ru',
+) {
   /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
-  var T = calculatorRuntime[lang] || calculatorRuntime.ru;
+  var T = strings;
 
   /* ---- calculator ---- */
   (function(){

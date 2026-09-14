@@ -4,6 +4,7 @@ import { PageEffects } from '@/components/page-effects';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { LangSuggest } from '@/components/lang-suggest';
+import { bootScript } from '@/lib/boot-script';
 import { HTML_LANG, type Lang } from '@/i18n/config';
 import '@/app/globals.css';
 
@@ -50,7 +51,7 @@ export function SiteShell({
   return (
     <html lang={HTML_LANG[lang]} suppressHydrationWarning>
       <head>
-        <script src="/theme.js" />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
         <IconSprite />

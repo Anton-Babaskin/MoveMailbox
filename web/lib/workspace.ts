@@ -3,7 +3,7 @@
 // Разметка секции статична, поэтому обработчики вешаются императивно один раз.
 
 import { createGuestClient } from '../../sdk/guest-client.mjs';
-import { workspaceRuntime } from '@/content/sections/workspace-runtime';
+import type { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
 import { providers, providerByEmail } from '@/data/providers';
 
@@ -41,14 +41,20 @@ const TERMINAL = ['completed', 'failed', 'cancelled'];
  * гостевого API (docs/GUEST-INTEGRATION.md). Он же владеет сессией, CSRF,
  * потоком событий и переподключением; здесь остаётся только отрисовка.
  *
- * @param lang   язык строк интерфейса
- * @param online false — статическая сборка без бекенда: интерфейс живёт
- *               полностью (переключатели, схема соединения, модалки),
- *               но ни один сетевой вызов не выполняется.
+ * @param strings словарь уже выбранного языка — приходит пропом от серверного
+ *                компонента, чтобы в клиентский бандл не уезжали все три языка
+ * @param lang    язык (нужен для locale-зависимого форматирования чисел и ссылок)
+ * @param online  false — статическая сборка без бекенда: интерфейс живёт
+ *                полностью (переключатели, схема соединения, модалки),
+ *                но ни один сетевой вызов не выполняется.
  */
-export function initWorkspace(lang: Lang = 'ru', online: boolean = true) {
+export function initWorkspace(
+  strings: (typeof workspaceRuntime)[Lang],
+  lang: Lang = 'ru',
+  online: boolean = true,
+) {
   /* Строки интерфейса берём одним блоком: ниже код работает только с T. */
-  var T = workspaceRuntime[lang] || workspaceRuntime.ru;
+  var T = strings;
   var ONLINE = online;
   /* Клиент создаётся один раз на инициализацию: он держит промис сессии. */
   var client = ONLINE ? createGuestClient() : null;

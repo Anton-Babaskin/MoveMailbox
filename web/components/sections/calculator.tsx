@@ -1,17 +1,14 @@
-'use client';
-
-import { useEffect } from 'react';
-import { initCalculator } from '@/lib/calculator';
+import { CalculatorInit } from '@/components/section-init';
 import { calculator } from '@/content/sections/calculator';
+import { calculatorRuntime } from '@/content/sections/calculator-runtime';
 import type { Lang } from '@/i18n/config';
 
 export function Calculator({ lang }: { lang: Lang }) {
   const t = calculator[lang];
 
-  useEffect(() => { initCalculator(lang); }, [lang]);
-
   return (
     <>
+      <CalculatorInit lang={lang} strings={calculatorRuntime[lang]} />
       <section className="shell alt" id="calc">
         <div className="head-wide">
           <p className="eyebrow">{t.eyebrow}</p>
