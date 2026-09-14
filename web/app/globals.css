@@ -71,8 +71,14 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}
 .shell{width:min(var(--shell),calc(100% - 44px));margin-inline:auto}
-.wide-shell{width:min(1580px,calc(100% - 40px));margin-inline:auto;padding-block:clamp(56px,7vw,104px);position:relative}
-section{padding-block:clamp(56px,7vw,104px);position:relative}
+/* Вертикальный ритм секций.
+   Было clamp(56px,7vw,104px): на 1440px это ~101px сверху и снизу, то есть
+   около 200px пустоты между соседними секциями — на широком мониторе
+   страница читалась разреженной. Средний член уменьшен, нижний почти нет:
+   на телефоне воздуха и так было в меру, резать там нечего. В итоге десктоп
+   теряет около четверти отступа, мобильный — примерно десятую часть. */
+.wide-shell{width:min(1580px,calc(100% - 40px));margin-inline:auto;padding-block:clamp(50px,5.4vw,80px);position:relative}
+section{padding-block:clamp(50px,5.4vw,80px);position:relative}
 .crumbs + main section:first-of-type,
 main section[data-pg]:not([data-pg~="home"]):first-of-type{padding-top:clamp(30px,3.4vw,46px)}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.19em;text-transform:uppercase;color:var(--acc);margin-bottom:16px}
@@ -1365,3 +1371,114 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .guide-body li{display:grid;grid-template-columns:18px 1fr;gap:12px;align-items:start;
   font-size:.94rem;color:var(--ink-2)}
 .guide-body li svg{width:15px;height:15px;margin-top:4px;color:var(--acc)}
+
+/* ==========================================================================
+   Эффекты секций.
+
+   Начальное состояние живёт только под html[data-fx-on] — флагом, который
+   boot-script ставит до первой отрисовки и только если человек не просил
+   уменьшить движение. Без скрипта селектор не совпадает, и страница видна
+   целиком: спрятать контент и не показать его обратно — худшее, что может
+   сделать анимация.
+
+   Меняем исключительно opacity и transform: в подсчёт CLS трансформации не
+   входят, поэтому нулевой сдвиг раскладки сохраняется.
+   ========================================================================== */
+:root[data-fx-on] [data-fx] [data-fx-head],
+:root[data-fx-on] [data-fx] [data-fx-i]{
+  transition:opacity .62s cubic-bezier(.2,.7,.25,1),transform .62s cubic-bezier(.2,.7,.25,1);
+  transition-delay:var(--fx-d,0ms);will-change:opacity,transform}
+
+/* Заголовок секции везде поднимается одинаково: он и так разный по тексту,
+   плясать ему ещё и по-разному незачем. Разница — у содержимого. */
+:root[data-fx-on] [data-fx] [data-fx-head]{opacity:0;transform:translate3d(0,18px,0)}
+:root[data-fx-on] [data-fx][data-fx-in] [data-fx-head]{opacity:1;transform:none}
+
+/* steps — хронология: шаги встают по одному слева направо, как их и читают */
+:root[data-fx-on] [data-fx="steps"] [data-fx-i]{opacity:0;transform:translate3d(-22px,0,0)}
+/* split — две колонки «переносится / не переносится» съезжаются навстречу */
+:root[data-fx-on] [data-fx="split"] [data-fx-i]:first-child{opacity:0;transform:translate3d(-34px,0,0)}
+:root[data-fx-on] [data-fx="split"] [data-fx-i]:last-child{opacity:0;transform:translate3d(34px,0,0)}
+/* tiles — плитки маршрутов всплывают пачкой снизу */
+:root[data-fx-on] [data-fx="tiles"] [data-fx-i]{opacity:0;transform:translate3d(0,26px,0)}
+/* zoom — крупные карточки провайдеров подрастают из глубины */
+:root[data-fx-on] [data-fx="zoom"] [data-fx-i]{opacity:0;transform:scale(.94) translate3d(0,14px,0)}
+/* deal — длинный каталог сдаётся колодой: чуть со сдвигом и наклоном */
+:root[data-fx-on] [data-fx="deal"] [data-fx-i]{opacity:0;transform:translate3d(0,20px,0) rotate(-.6deg)}
+
+:root[data-fx-on] [data-fx][data-fx-in] [data-fx-i]{opacity:1;transform:none}
+
+/* Мелкий экран: то же движение, но короче. Длинный выезд на телефоне
+   раздражает — там прокрутка быстрее и секция проходит мимо. */
+@media (max-width:620px){
+  :root[data-fx-on] [data-fx] [data-fx-head],
+  :root[data-fx-on] [data-fx] [data-fx-i]{transition-duration:.42s}
+  :root[data-fx-on] [data-fx="steps"] [data-fx-i],
+  :root[data-fx-on] [data-fx="split"] [data-fx-i]:first-child,
+  :root[data-fx-on] [data-fx="split"] [data-fx-i]:last-child{transform:translate3d(0,18px,0)}
+}
+/* Страховка: системная настройка может смениться после загрузки страницы. */
+@media (prefers-reduced-motion:reduce){
+  :root[data-fx-on] [data-fx] [data-fx-head],
+  :root[data-fx-on] [data-fx] [data-fx-i]{opacity:1!important;transform:none!important;transition:none}
+}
+
+/* ==========================================================================
+   Каталог маршрутов.
+
+   Было: моноширинная плашка «Gmail → Outlook», заголовок и описание светло-
+   серым в одну строку во всю ширину. Шестнадцать таких строк подряд читались
+   как лог, а не как каталог. Стало: значки сервисов, описание нормального
+   контраста и ограниченной длины строки.
+   ========================================================================== */
+.route-grid{display:grid;gap:12px;margin-top:30px}
+@media (min-width:1080px){.route-grid{grid-template-columns:1fr 1fr}}
+.route-row{display:grid;grid-template-columns:auto 1fr auto;gap:0 18px;align-items:center;
+  padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--surf);
+  text-decoration:none;position:relative;overflow:hidden;
+  transition:border-color .22s ease,transform .22s ease,box-shadow .22s ease}
+.route-row::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;
+  background:linear-gradient(180deg,var(--b1,var(--acc)),var(--b2,var(--acc)));
+  opacity:0;transition:opacity .22s ease}
+.route-row:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line));
+  transform:translateY(-2px);box-shadow:var(--sh-hi)}
+.route-row:hover::before{opacity:1}
+.route-row:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.route-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.route-txt strong{font-size:1rem;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+/* Описание было var(--ink-3) — на светлом фоне оно читалось как подпись к
+   подписи. Тон на ступень темнее и ограниченная строка. */
+.route-txt span{font-size:.87rem;line-height:1.5;color:var(--ink-2);max-width:62ch}
+.route-ar{width:16px;height:16px;color:var(--ink-3);flex:none;transition:transform .22s ease,color .22s ease}
+.route-row:hover .route-ar{color:var(--acc);transform:translateX(3px)}
+
+/* Пара значков «откуда → куда». */
+.rmk{display:inline-flex;align-items:center;gap:7px;flex:none}
+.rmk .pvi{width:34px;height:34px;border-radius:10px;opacity:1}
+.rmk .pvi i{font-size:13px}
+.rmk .pvi img{width:19px;height:19px}
+.rmk-a{width:13px;height:13px;color:var(--ink-3);flex:none}
+.route-row:hover .rmk .pvi{border-color:color-mix(in srgb,var(--b2) 45%,var(--line))}
+@media (max-width:560px){
+  .route-row{grid-template-columns:auto 1fr;gap:10px 14px}
+  .route-ar{display:none}
+  .rmk .pvi{width:30px;height:30px;border-radius:9px}
+  .rmk .pvi i{font-size:12px}
+  .rmk .pvi img{width:17px;height:17px}
+}
+
+/* Значки в плитках популярных маршрутов: там значок стоит перед каждым
+   названием стороны, поэтому размер меньше и без собственного фона-рамки. */
+.rt .pvi{width:26px;height:26px;border-radius:8px;opacity:1;margin-right:-2px}
+.rt .pvi i{font-size:11px}
+@media (max-width:420px){.rt .pvi{display:none}}
+/* Со значками маршрут перестал помещаться в строку: «Yahoo Mail» ломался
+   пополам и наезжал на подпись «ГАЙД». Подпись уведена на собственную
+   строку — у всех плиток, а не у тех, кому не хватило места: иначе половина
+   сетки была бы на строку выше другой. */
+.rt{flex-wrap:wrap;row-gap:6px;gap:8px;font-size:.86rem;padding:15px 15px 13px}
+.rt>span:not(.go){white-space:nowrap}
+.rt .go{flex:1 0 100%;margin-left:0;text-align:right}
+.rt .pvi{width:24px;height:24px;border-radius:7px}
+.rt .pvi i{font-size:10.5px}
+.rt .pvi img{width:14px;height:14px}

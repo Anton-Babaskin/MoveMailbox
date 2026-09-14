@@ -72,6 +72,68 @@ export function initEffects() {
     });
   }
 
+  /* ==================================================================
+     Эффект секции.
+
+     Раньше появление вешалось на список классов элементов: карточки, посты,
+     плитки. На странице маршрутов из шести секций под него попадали десять
+     элементов, и страница выглядела статичной — что и было замечено.
+
+     Теперь единица — секция. Она сама говорит разметкой, какой у неё эффект
+     (data-fx), заголовок помечен data-fx-head, а сетка внутри — data-fx-items,
+     и её дети выезжают очередью. Разные секции двигаются по-разному
+     осознанно: одинаковое появление шесть раз подряд читается как шаблон.
+
+     Двигаем только opacity и transform. Это не сдвиг раскладки: CLS считает
+     изменение позиции в потоке, а трансформации в него не входят — иначе
+     каждая такая анимация портила бы метрику, за которую боролись отдельно.
+
+     Флаг data-fx-on ставит boot-script до первой отрисовки. Нет скрипта или
+     человек просил меньше движения — начальное состояние не применяется
+     вовсе, и страница просто видна.
+     ================================================================== */
+  (function(){
+    if(!document.documentElement.hasAttribute('data-fx-on')) return;
+    if(!('IntersectionObserver' in window)) return;
+    var sections=$$('[data-fx]');
+    if(!sections.length) return;
+
+    /* Шаг очереди внутри сетки. Больше десяти элементов — шаг режем, иначе
+       последняя карточка ждёт появления почти секунду. */
+    function queue(box){
+      if(!box) return;
+      var kids=Array.prototype.slice.call(box.children);
+      var step=kids.length>10?28:60;
+      kids.forEach(function(el,i){
+        el.setAttribute('data-fx-i','');
+        el.style.setProperty('--fx-d',(i*step)+'ms');
+      });
+    }
+
+    sections.forEach(function(sec){ queue($('[data-fx-items]',sec)); });
+
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        e.target.setAttribute('data-fx-in','');
+        io.unobserve(e.target);
+      });
+    },{rootMargin:'0px 0px -12% 0px',threshold:0.12});
+
+    sections.forEach(function(sec){
+      /* Первый экран наблюдателем не дождёшься: он уже виден, порог сработает
+         сразу и эффекта никто не заметит. Такую секцию запускаем сами, через
+         кадр — чтобы начальное состояние успело отрисоваться. */
+      if(sec.getBoundingClientRect().top < innerHeight*0.85){
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){ sec.setAttribute('data-fx-in',''); });
+        });
+        return;
+      }
+      io.observe(sec);
+    });
+  })();
+
   /* ---- линия шагов прочерчивается по мере прокрутки ---- */
   (function(){
     var list=$('.brief-list');

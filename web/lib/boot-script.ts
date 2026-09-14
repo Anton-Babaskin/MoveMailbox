@@ -11,14 +11,21 @@
  * CSP не страдает: бекенд сайта считает sha256 всех инлайн-скриптов страницы
  * сам — internal/web/static.go.
  *
- * Делает ровно две вещи, обе — до первого кадра:
+ * Делает ровно три вещи, все — до первого кадра:
  *   1) выставляет выбранную тему, иначе тёмная мигает светлым;
- *   2) решает, показывать ли плашку «страница есть на вашем языке», иначе
+ *   2) разрешает скролл-эффекты, если человек не просил уменьшить движение.
+ *      Начальное «спрятано» вешается на секции только под этим флагом: без
+ *      скрипта и при отключённой анимации страница просто видна целиком, а не
+ *      остаётся пустой. Решать это после гидратации нельзя — контент успел бы
+ *      мигнуть и спрятаться;
+ *   3) решает, показывать ли плашку «страница есть на вашем языке», иначе
  *      её появление двигает раскладку (было 0.11 CLS на мобильном).
  */
 export const bootScript = `(function(){
 try{var m=localStorage.getItem('mm.theme');
 if(m==='dark'||m==='light')document.documentElement.dataset.theme=m;}catch(e){}
+try{if(!matchMedia('(prefers-reduced-motion:reduce)').matches)
+document.documentElement.setAttribute('data-fx-on','');}catch(e){}
 try{if(localStorage.getItem('mm.lang'))return;}catch(e){}
 var p=(document.documentElement.getAttribute('lang')||'').slice(0,2);
 var l=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language];

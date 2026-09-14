@@ -13,14 +13,14 @@ export function Quickstart({ lang }: { lang: Lang }) {
   const t = quickstart[lang];
 
   return (
-    <section className="shell" id="quickstart">
-      <div className="head-wide">
+    <section className="shell" id="quickstart" data-fx="zoom">
+      <div className="head-wide" data-fx-head>
         <p className="eyebrow">{t.eyebrow}</p>
         <h2>{t.h2a}<span className="ital">{t.h2b}</span></h2>
         <p className="lede" style={{ marginTop: '16px' }}>{t.lede}</p>
       </div>
 
-      <div className="qs-grid">
+      <div className="qs-grid" data-fx-items>
         {quickstartOrder.map((slug) => {
           const hub = findProviderHub(slug);
           const mark = quickstartMarks[slug];
