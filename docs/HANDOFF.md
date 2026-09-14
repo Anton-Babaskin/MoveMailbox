@@ -44,9 +44,10 @@ or Git.
 
 PR #27 is now merged into `main` as `eebc6659bb9bd5d9605b634fd047f56584d4d5a3`.
 
-Next two technical steps: (1) define and verify closed-pilot admission/rate
-limits with bounded API-abuse checks; (2) schedule the first encrypted off-site
-metadata backup/restore drill. Keep website/frontend changes with Claude.
+Next two technical steps: (1) apply the reviewed closed-pilot profile to the
+private VM through the transactional staging update and rerun non-mail health
+checks; (2) choose the off-site provider/retention policy and perform one real
+encrypted upload/restore. Keep website/frontend changes with Claude.
 
 ## Closed-pilot admission profile (ops/pilot-gates)
 
