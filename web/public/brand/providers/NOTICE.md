@@ -8,6 +8,8 @@
 | Файл | Сервис | Правообладатель |
 | --- | --- | --- |
 | `gmail.svg` | Gmail | Google LLC |
+| `microsoft-365.svg` | Microsoft 365 | Microsoft Corporation |
+| `yahoo.svg` | Yahoo Mail | Yahoo Inc. |
 | `outlook.svg` | Microsoft Outlook | Microsoft Corporation |
 | `exchange.svg` | Microsoft Exchange | Microsoft Corporation |
 | `icloud.svg` | iCloud Mail | Apple Inc. |

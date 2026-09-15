@@ -37,10 +37,13 @@ export type ProviderMark = {
 
 export const providerMarks: Record<ProviderKey, ProviderMark> = {
   gmail: { letter: 'G', b1: '#F2685A', b2: '#C42D20', logo: '/brand/providers/gmail.svg' },
-  'google-workspace': { letter: 'W', b1: '#F2907A', b2: '#B3421F' },
-  'microsoft-365': { letter: 'M', b1: '#5A8DE8', b2: '#1B4699' },
+  /* Официальный знак Google Workspace — надпись в восемь ширин, квадратного
+     нет вообще. Решение владельца: показывать знак Gmail. Он не подменяет
+     бренд — почта Workspace и есть Gmail, и рядом стоит название текстом. */
+  'google-workspace': { letter: 'W', b1: '#F2907A', b2: '#B3421F', logo: '/brand/providers/gmail.svg' },
+  'microsoft-365': { letter: 'M', b1: '#5A8DE8', b2: '#1B4699', logo: '/brand/providers/microsoft-365.svg' },
   outlook: { letter: 'O', b1: '#5AA0E8', b2: '#0F5FA8', logo: '/brand/providers/outlook.svg' },
-  yahoo: { letter: 'Y', b1: '#A98BE8', b2: '#5B2D91' },
+  yahoo: { letter: 'Y', b1: '#A98BE8', b2: '#5B2D91', logo: '/brand/providers/yahoo.svg' },
   icloud: { letter: 'i', b1: '#7FC4F0', b2: '#14719E', logo: '/brand/providers/icloud.svg' },
   yandex: { letter: 'Я', b1: '#F0655E', b2: '#C22B26', wordmark: '/brand/providers/yandex-wm.svg' },
   mailru: { letter: '@', b1: '#6E8FE8', b2: '#1F3FA8', logo: '/brand/providers/mailru.svg' },
