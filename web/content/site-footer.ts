@@ -6,6 +6,7 @@ export const siteFooter = {
     terms: 'Условия',
     security: 'Безопасность',
     errors: 'Ошибки IMAP',
+    imap: 'Настройки IMAP',
     credit: 'на базе imapsync (NLPL)',
   },
   en: {
@@ -14,6 +15,7 @@ export const siteFooter = {
     terms: 'Terms',
     security: 'Security',
     errors: 'IMAP errors',
+    imap: 'IMAP settings',
     credit: 'built on imapsync (NLPL)',
   },
   uk: {
@@ -22,6 +24,7 @@ export const siteFooter = {
     terms: 'Умови',
     security: 'Безпека',
     errors: 'Помилки IMAP',
+    imap: 'Налаштування IMAP',
     credit: 'на базі imapsync (NLPL)',
   },
 } as const;

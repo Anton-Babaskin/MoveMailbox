@@ -23,6 +23,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           <Link href={href(lang, '/terms')}>{t.terms}</Link>
           <Link href={href(lang, '/security')}>{t.security}</Link>
           <Link href={href(lang, '/docs/errors')}>{t.errors}</Link>
+          <Link href={href(lang, '/imap')}>{t.imap}</Link>
           <a
             href="https://github.com/Anton-Babaskin/MoveMailbox"
             target="_blank"

@@ -33,6 +33,9 @@ The desktop client and the Docker image have no size cap.
   cPanel hosting, Exchange), with hosts, ports and the traps of that pair.
 - [Provider guides](https://movemailbox.com/guides/): settings per service —
   app passwords, OAuth, throttling, folder naming.
+- [IMAP settings](https://movemailbox.com/imap/): host, port, encryption and
+  which kind of password each mail service accepts, taken from the services'
+  own autoconfiguration files.
 - [IMAP errors](https://movemailbox.com/docs/errors/): what a specific IMAP
   error means and how to fix it.
 - [Pricing](https://movemailbox.com/pricing/) ·
