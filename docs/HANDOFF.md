@@ -1,5 +1,28 @@
 # Engineering handoff — 2026-09-13
 
+## Owner access, real HTTPS mail and paid-account brief (2026-09-15)
+
+- Merged PR #44 after all seven checks succeeded for 0aad8b1. Current work:
+  `ops/owner-pilot-account-brief`; no website files changed.
+- Issued named owner pilot access, verified it over public trusted TLS. The
+  generated password is in an ACL-protected local file outside Git; only the
+  salted hash was sent to the gateway password file. Secret is not synchronized
+  between computers. `scripts/pilot-access.py` refuses silent account replacement.
+- Real authorized disposable-mail acceptance through external :18443 passed:
+  one synthetic message plus 64 KiB attachment, selected folder and destination
+  subfolder, exact body hash/flags/internal date, unchanged source, repeat copied
+  zero messages. Fixture retained: `MoveMailbox-HTTPS-5cf13b72e03b`. API reported
+  `imapsync-remote-worker`. No destructive mode or broad mailbox sync was used.
+- Added [paid-account design brief](PAID-ACCOUNT-DESIGN.md) for Claude: three
+  sections, progressive complexity, purchase -> verified email link -> account,
+  honest state handling and backend ownership/payment requirements. This is a
+  design specification, not implemented billing or account functionality.
+- Next: implement verified-email identity and idempotent payment entitlements;
+  Claude can prototype the specified cabinet in parallel. Automatic certificate
+  renewal still needs a DNS automation/delegation mechanism: manual TXT does not
+  suffice, and no DNS-provider API credential is configured. Current expiry:
+  2026-12-13. Do not claim renewal is automated.
+
 ## External HTTPS :18443 verified (2026-09-15)
 
 - PR #41 is merged; continued from updated main on `ops/pilot-18443`.
