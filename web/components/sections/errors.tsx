@@ -1,5 +1,5 @@
 import { errors, type ErrorPart } from '@/content/sections/errors';
-import type { Lang } from '@/i18n/config';
+import { href, type Lang } from '@/i18n/config';
 
 /** Абзац из кусков: обычный текст и inline-<code>. */
 function parts(items: readonly ErrorPart[]) {
@@ -26,6 +26,17 @@ export function Errors({ lang, pageTitle = false }: { lang: Lang; pageTitle?: bo
               <div className="err-in">
                 <p>{parts(item.body)}</p>
                 <div className="fix"><svg aria-hidden="true"><use href="#ck" /></svg><span><b>{item.fixLabel}</b>{parts(item.fix)}</span></div>
+                {/* Ссылка на подробный разбор живёт внутри ответа, а не во
+                    втором таком же списке ниже: раньше страница показывала
+                    одни и те же семь ошибок дважды — сначала гармошкой, потом
+                    карточками. Ссылки никуда не делись, они просто там, где
+                    человек дочитал до конца и ему мало. */}
+                <p className="err-more">
+                  <a className="brief-link" href={href(lang, `/docs/errors/${item.slug}`)}>
+                    {t.more}
+                    <svg aria-hidden="true"><use href="#ar" /></svg>
+                  </a>
+                </p>
               </div>
             </details>
           ))}

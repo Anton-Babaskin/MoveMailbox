@@ -14,7 +14,8 @@ export type ProviderKey =
   | 'mailru'
   | 'zoho'
   | 'cpanel'
-  | 'exchange';
+  | 'exchange'
+  | 'ukr-net';
 
 export type Provider = {
   key: ProviderKey;
@@ -42,6 +43,21 @@ export type Provider = {
 };
 
 export const providers: Record<ProviderKey, Provider> = {
+  /* Украинский рынок: @UKR.NET — самая массовая местная почта. Настройки
+     сверены с её файлом автоконфигурации, как и на странице /imap/ukr-net. */
+  'ukr-net': {
+    key: 'ukr-net',
+    name: '@UKR.NET',
+    short: 'UKR.NET',
+    host: 'imap.ukr.net',
+    port: 993,
+    security: 'tls',
+    login: 'email',
+    appPassword: true,
+    oauth: false,
+    rateMbPerHour: 90,
+    domains: ['ukr.net'],
+  },
   gmail: {
     key: 'gmail',
     name: 'Gmail',

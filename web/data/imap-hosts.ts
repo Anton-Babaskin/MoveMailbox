@@ -1838,6 +1838,552 @@ export const imapHosts: ImapHost[] = [
       ],
     },
   },
+
+  {
+    slug: 'spectrum',
+    name: 'Spectrum',
+    domains: ['spectrum.net', 'charter.net', 'bresnan.net', 'roadrunner.com'],
+    imap: { host: 'mobile.charter.net', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'mobile.charter.net', port: 587, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/charter.net',
+      'https://www.spectrum.net/support/internet/spectrum-email-server-settings',
+    ],
+    checked: '2026-09-15',
+    en: {
+      title: 'Spectrum email IMAP settings — mobile.charter.net',
+      description:
+        'IMAP for a Spectrum, Charter or Roadrunner mailbox: mobile.charter.net, port 993, SSL. One host for both directions, and the old brand domains all land here.',
+      h1: 'Spectrum email IMAP settings',
+      intro:
+        'Spectrum kept the mailboxes of every brand it absorbed, so charter.net, bresnan.net and old Roadrunner addresses all still work — and all of them connect to the same server, which is named after none of those brands. The host to type is mobile.charter.net, whatever your address ends with.',
+      pitfalls: [
+        'The host is mobile.charter.net for every Spectrum brand domain. "Mobile" in the name is historical; it serves desktop clients just the same.',
+        'Both directions use the same hostname: IMAP on 993, SMTP on 587, authentication required on the outgoing server too.',
+        'The username is the full address, including the old brand domain if that is what you have.',
+        'A Spectrum mailbox is tied to the internet subscription. Cancel the service and the address goes away — which is the usual reason people migrate this one in a hurry.',
+      ],
+      faq: [
+        [
+          'Why does the server have "charter" in it?',
+          'Charter is the company behind the Spectrum brand. The mail servers were never renamed, so the host stayed mobile.charter.net for all its domains.',
+        ],
+        [
+          'Which ports?',
+          'IMAP 993 and SMTP 587, both encrypted, with authentication switched on for outgoing mail.',
+        ],
+        [
+          'Is an app password needed?',
+          'No, the mailbox password is used directly.',
+        ],
+        [
+          'I am leaving Spectrum — can I keep the mail?',
+          'Move it before the account closes: point the source at mobile.charter.net and the destination at any new mailbox. Messages, folders and dates come across; nothing is deleted at Spectrum.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Spectrum — mobile.charter.net',
+      description:
+        'IMAP для ящика Spectrum, Charter или Roadrunner: mobile.charter.net, порт 993, SSL. Один хост в обе стороны, старые домены работают там же.',
+      h1: 'Настройки IMAP для Spectrum',
+      intro:
+        'Spectrum сохранил ящики всех поглощённых брендов, поэтому адреса на charter.net, bresnan.net и старые Roadrunner до сих пор работают — и все они подключаются к одному серверу, который не называется ни одним из этих брендов. Хост, который нужно вписать, — mobile.charter.net, чем бы ни оканчивался ваш адрес.',
+      pitfalls: [
+        'Хост — mobile.charter.net для всех доменов Spectrum. Слово «mobile» в имени историческое: настольные клиенты он обслуживает так же.',
+        'Обе стороны ходят на один и тот же хост: IMAP — 993, SMTP — 587, авторизация нужна и на исходящем сервере.',
+        'Логин — полный адрес, включая старый доменный бренд, если он у вас именно такой.',
+        'Ящик Spectrum привязан к интернет-подписке. Отказались от услуги — адрес пропадает; это и есть обычная причина, по которой такой ящик переносят срочно.',
+      ],
+      faq: [
+        [
+          'Почему в имени сервера «charter»?',
+          'Charter — компания, которой принадлежит бренд Spectrum. Почтовые серверы не переименовывали, поэтому хост так и остался mobile.charter.net для всех доменов.',
+        ],
+        [
+          'Какие порты?',
+          'IMAP — 993, SMTP — 587, оба шифрованные, с включённой авторизацией на отправке.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет, используется обычный пароль ящика.',
+        ],
+        [
+          'Ухожу от Spectrum — можно сохранить почту?',
+          'Переносите до закрытия аккаунта: источник — mobile.charter.net, назначение — любой новый ящик. Письма, папки и даты переезжают, в Spectrum ничего не удаляется.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Spectrum — mobile.charter.net',
+      description:
+        'IMAP для скриньки Spectrum, Charter або Roadrunner: mobile.charter.net, порт 993, SSL. Один хост в обидва боки, старі домени працюють там само.',
+      h1: 'Налаштування IMAP для Spectrum',
+      intro:
+        'Spectrum зберіг скриньки всіх поглинутих брендів, тому адреси на charter.net, bresnan.net і старі Roadrunner досі працюють — і всі вони підключаються до одного сервера, який не називається жодним із цих брендів. Хост, який треба вписати, — mobile.charter.net, хоч би чим закінчувалася ваша адреса.',
+      pitfalls: [
+        'Хост — mobile.charter.net для всіх доменів Spectrum. Слово «mobile» в імені історичне: настільні клієнти він обслуговує так само.',
+        'Обидва боки ходять на той самий хост: IMAP — 993, SMTP — 587, авторизація потрібна і на вихідному сервері.',
+        'Логін — повна адреса, включно зі старим доменним брендом, якщо він у вас саме такий.',
+        'Скринька Spectrum прив’язана до інтернет-передплати. Відмовилися від послуги — адреса зникає; це і є звичайна причина, чому таку скриньку переносять терміново.',
+      ],
+      faq: [
+        [
+          'Чому в імені сервера «charter»?',
+          'Charter — компанія, якій належить бренд Spectrum. Поштові сервери не перейменовували, тому хост так і лишився mobile.charter.net для всіх доменів.',
+        ],
+        [
+          'Які порти?',
+          'IMAP — 993, SMTP — 587, обидва шифровані, з увімкненою авторизацією на надсиланні.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні, використовується звичайний пароль скриньки.',
+        ],
+        [
+          'Іду від Spectrum — чи можна зберегти пошту?',
+          'Переносьте до закриття акаунта: джерело — mobile.charter.net, призначення — будь-яка нова скринька. Листи, папки та дати переїжджають, у Spectrum нічого не видаляється.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 't-online',
+    name: 'T-Online',
+    domains: ['t-online.de', 'magenta.de'],
+    imap: { host: 'secureimap.t-online.de', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'securesmtp.t-online.de', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'app-password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/t-online.de',
+      'https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-verwalten',
+    ],
+    checked: '2026-09-15',
+    ru: {
+      title: 'Настройки IMAP для T-Online — хост, порт, отдельный пароль',
+      description:
+        'IMAP для ящика T-Online: secureimap.t-online.de, порт 993, SSL. Почтовым программам нужен отдельный пароль, а не пароль от учётной записи Telekom.',
+      h1: 'Настройки IMAP для T-Online',
+      intro:
+        'T-Online — почта немецкого Telekom, и главная её особенность в пароле. Тот пароль, которым вы входите в личный кабинет Telekom, почтовая программа не примет: для IMAP и POP3 заводится отдельный «пароль для почтовых программ», и его нужно сначала создать в настройках самой почты.',
+      pitfalls: [
+        'Пароль от учётной записи Telekom по IMAP не работает. В почтовом центре создаётся отдельный «Passwort für E-Mail-Programme» — он и вводится в клиенте.',
+        'Telekom прямо советует делать этот пароль непохожим на пароль от кабинета: он живёт в почтовых программах, а значит, хранится на устройствах.',
+        'Хосты с приставкой secure: secureimap.t-online.de на приём и securesmtp.t-online.de на отправку. Нешифрованных вариантов нет.',
+        'Логин — полный адрес, включая @t-online.de или @magenta.de.',
+      ],
+      faq: [
+        [
+          'Где создать пароль для почтовых программ?',
+          'В почтовом центре T-Online: шестерёнка → «Показать все настройки» → «Данные учётной записи» → раздел паролей → «Пароль для почтовых программ». Если пароля ещё нет, там же он и создаётся.',
+        ],
+        [
+          'Какие порты и шифрование?',
+          'IMAP — 993 с SSL/TLS, SMTP — 465 с SSL/TLS (порт 587 со STARTTLS сервис тоже принимает).',
+        ],
+        [
+          'Почему не подходит пароль, с которым я вхожу на сайт?',
+          'Так устроено намеренно: доступ внешним программам отделён от входа в личный кабинет, чтобы пароль от кабинета не расходился по устройствам.',
+        ],
+        [
+          'Можно ли перенести почту T-Online на другой сервис?',
+          'Да. Укажите secureimap.t-online.de источником и введите пароль для почтовых программ; письма, папки и даты переносятся, в T-Online всё остаётся на месте.',
+        ],
+      ],
+    },
+    en: {
+      title: 'T-Online IMAP settings — host, port, the separate password',
+      description:
+        'IMAP for a T-Online mailbox: secureimap.t-online.de, port 993, SSL. Mail clients need the separate email-program password, not the Telekom account one.',
+      h1: 'T-Online IMAP settings',
+      intro:
+        'T-Online is the mail service of German Telekom, and its defining quirk is the password. The one you sign in to your Telekom account with is not accepted over IMAP: external programs need a separate "password for email programs", and it has to be created in the mail settings first.',
+      pitfalls: [
+        'The Telekom account password does not work over IMAP. A separate "Passwort für E-Mail-Programme" is created in the mail centre, and that is what the client takes.',
+        'Telekom explicitly advises making it different from the account password: this one lives inside mail programs, which means it is stored on devices.',
+        'The hosts carry the secure prefix: secureimap.t-online.de in, securesmtp.t-online.de out. There are no unencrypted variants.',
+        'The username is the full address, @t-online.de or @magenta.de included.',
+      ],
+      faq: [
+        [
+          'Where is the email-program password created?',
+          'In the T-Online mail centre: the gear icon → show all settings → account details → the passwords section → password for email programs. If none exists yet, you create it there.',
+        ],
+        [
+          'Which ports and encryption?',
+          'IMAP 993 with SSL/TLS, SMTP 465 with SSL/TLS (port 587 with STARTTLS is accepted as well).',
+        ],
+        [
+          'Why is my website password refused?',
+          'By design: access for external programs is separated from the account login, so the account password does not end up spread across devices.',
+        ],
+        [
+          'Can I migrate a T-Online mailbox elsewhere?',
+          'Yes. Use secureimap.t-online.de as the source with the email-program password; messages, folders and dates transfer, and nothing changes at T-Online.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для T-Online — хост, порт, окремий пароль',
+      description:
+        'IMAP для скриньки T-Online: secureimap.t-online.de, порт 993, SSL. Поштовим програмам потрібен окремий пароль, а не пароль від облікового запису Telekom.',
+      h1: 'Налаштування IMAP для T-Online',
+      intro:
+        'T-Online — пошта німецького Telekom, і головна її особливість у паролі. Той пароль, яким ви входите до особистого кабінету Telekom, поштова програма не прийме: для IMAP і POP3 заводиться окремий «пароль для поштових програм», і його спершу треба створити в налаштуваннях самої пошти.',
+      pitfalls: [
+        'Пароль від облікового запису Telekom за IMAP не працює. У поштовому центрі створюється окремий «Passwort für E-Mail-Programme» — він і вводиться в клієнті.',
+        'Telekom прямо радить робити цей пароль несхожим на пароль від кабінету: він живе в поштових програмах, а отже, зберігається на пристроях.',
+        'Хости з приставкою secure: secureimap.t-online.de на прийом і securesmtp.t-online.de на надсилання. Нешифрованих варіантів немає.',
+        'Логін — повна адреса, включно з @t-online.de або @magenta.de.',
+      ],
+      faq: [
+        [
+          'Де створити пароль для поштових програм?',
+          'У поштовому центрі T-Online: шестерня → «Показати всі налаштування» → «Дані облікового запису» → розділ паролів → «Пароль для поштових програм». Якщо пароля ще немає, там само він і створюється.',
+        ],
+        [
+          'Які порти та шифрування?',
+          'IMAP — 993 із SSL/TLS, SMTP — 465 із SSL/TLS (порт 587 зі STARTTLS сервіс теж приймає).',
+        ],
+        [
+          'Чому не підходить пароль, з яким я входжу на сайт?',
+          'Так влаштовано навмисно: доступ зовнішнім програмам відокремлено від входу в особистий кабінет, щоб пароль від кабінету не розходився пристроями.',
+        ],
+        [
+          'Чи можна перенести пошту T-Online на інший сервіс?',
+          'Так. Укажіть secureimap.t-online.de джерелом і введіть пароль для поштових програм; листи, папки та дати переносяться, у T-Online усе лишається на місці.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'bt-mail',
+    name: 'BT Mail',
+    domains: ['btinternet.com', 'btopenworld.com', 'talk21.com'],
+    imap: { host: 'mail.btinternet.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'mail.btinternet.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: ['https://autoconfig.thunderbird.net/v1.1/btinternet.com'],
+    checked: '2026-09-15',
+    en: {
+      title: 'BT Mail IMAP settings — mail.btinternet.com',
+      description:
+        'IMAP for a BT Internet mailbox: mail.btinternet.com, port 993, SSL. One host for both directions, and the older BT domains use the same one.',
+      h1: 'BT Mail IMAP settings',
+      intro:
+        'BT serves its mail from a single host for both directions: mail.btinternet.com, port 993 for receiving and 465 for sending. Older BT addresses — btopenworld.com, talk21.com — were never moved anywhere else and connect exactly the same way.',
+      pitfalls: [
+        'There is no separate imap. or smtp. host. Both directions go to mail.btinternet.com; the port is what differs.',
+        'btopenworld.com and talk21.com addresses use the same settings as btinternet.com.',
+        'The username is the full address, not the BT ID you sign in to the website with.',
+        'A BT mailbox is tied to the broadband account. When the line is cancelled the mailbox goes with it unless you have moved the mail first.',
+      ],
+      faq: [
+        [
+          'What is the incoming server for BT?',
+          'mail.btinternet.com on port 993 with SSL/TLS, using your full email address as the username.',
+        ],
+        [
+          'And for sending?',
+          'The same host, mail.btinternet.com, on port 465 with SSL/TLS and authentication enabled.',
+        ],
+        [
+          'Do I need an app password?',
+          'No. BT accepts the mailbox password over IMAP.',
+        ],
+        [
+          'I am switching broadband provider — will I lose the mail?',
+          'The address can stop working once the line closes, so copy the mailbox to another provider before that happens. The transfer keeps folders, flags and dates.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для BT Mail — mail.btinternet.com',
+      description:
+        'IMAP для ящика BT Internet: mail.btinternet.com, порт 993, SSL. Один хост в обе стороны, старые домены BT подключаются так же.',
+      h1: 'Настройки IMAP для BT Mail',
+      intro:
+        'BT отдаёт почту с одного хоста в обе стороны: mail.btinternet.com, порт 993 на приём и 465 на отправку. Старые адреса BT — btopenworld.com, talk21.com — никуда не переезжали и подключаются ровно так же.',
+      pitfalls: [
+        'Отдельных хостов с приставками imap. или smtp. не существует. Обе стороны ходят на mail.btinternet.com, отличается только порт.',
+        'Адреса btopenworld.com и talk21.com используют те же настройки, что и btinternet.com.',
+        'Логин — полный адрес, а не BT ID, под которым вы входите на сайт.',
+        'Ящик BT привязан к договору на интернет. Закрыли линию — ящик уходит вместе с ней, если почту не перенесли заранее.',
+      ],
+      faq: [
+        [
+          'Какой сервер входящей почты у BT?',
+          'mail.btinternet.com, порт 993 с SSL/TLS, логин — полный адрес почты.',
+        ],
+        [
+          'А исходящей?',
+          'Тот же хост, mail.btinternet.com, порт 465 с SSL/TLS и включённой авторизацией.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет. BT принимает по IMAP обычный пароль ящика.',
+        ],
+        [
+          'Меняю провайдера — потеряю почту?',
+          'Адрес может перестать работать после закрытия договора, поэтому копию ящика стоит сделать заранее. Перенос сохраняет папки, флаги и даты.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для BT Mail — mail.btinternet.com',
+      description:
+        'IMAP для скриньки BT Internet: mail.btinternet.com, порт 993, SSL. Один хост в обидва боки, старі домени BT підключаються так само.',
+      h1: 'Налаштування IMAP для BT Mail',
+      intro:
+        'BT віддає пошту з одного хоста в обидва боки: mail.btinternet.com, порт 993 на прийом і 465 на надсилання. Старі адреси BT — btopenworld.com, talk21.com — нікуди не переїжджали і підключаються так само.',
+      pitfalls: [
+        'Окремих хостів із приставками imap. чи smtp. не існує. Обидва боки ходять на mail.btinternet.com, відрізняється лише порт.',
+        'Адреси btopenworld.com і talk21.com використовують ті самі налаштування, що й btinternet.com.',
+        'Логін — повна адреса, а не BT ID, під яким ви входите на сайт.',
+        'Скринька BT прив’язана до договору на інтернет. Закрили лінію — скринька йде разом із нею, якщо пошту не перенесли заздалегідь.',
+      ],
+      faq: [
+        [
+          'Який сервер вхідної пошти у BT?',
+          'mail.btinternet.com, порт 993 із SSL/TLS, логін — повна адреса пошти.',
+        ],
+        [
+          'А вихідної?',
+          'Той самий хост, mail.btinternet.com, порт 465 із SSL/TLS та увімкненою авторизацією.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні. BT приймає за IMAP звичайний пароль скриньки.',
+        ],
+        [
+          'Міняю провайдера — чи втрачу пошту?',
+          'Адреса може перестати працювати після закриття договору, тому копію скриньки варто зробити заздалегідь. Перенесення зберігає папки, прапорці та дати.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'sky-mail',
+    name: 'Sky Mail',
+    domains: ['sky.com'],
+    imap: { host: 'imap.tools.sky.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.tools.sky.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: ['https://autoconfig.thunderbird.net/v1.1/sky.com'],
+    checked: '2026-09-15',
+    en: {
+      title: 'Sky Mail IMAP settings — imap.tools.sky.com',
+      description:
+        'IMAP for a Sky mailbox: imap.tools.sky.com, port 993, SSL. The host has an extra tools. level that is easy to miss.',
+      h1: 'Sky Mail IMAP settings',
+      intro:
+        'Sky\'s mail hosts carry an extra level in the name that people routinely drop: it is imap.tools.sky.com, not imap.sky.com. Typing the shorter version gives a connection error rather than a password error, which sends the search in the wrong direction.',
+      pitfalls: [
+        'The host is imap.tools.sky.com, with tools. in the middle. Without it nothing answers.',
+        'Sending goes through smtp.tools.sky.com on 465 with SSL, authentication on.',
+        'The username is the full sky.com address.',
+        'Sky mail is part of the broadband package: when the contract ends the mailbox does too, so a copy has to be made before that.',
+      ],
+      faq: [
+        [
+          'imap.sky.com or imap.tools.sky.com?',
+          'imap.tools.sky.com. The short form is not a real host, and a client pointed at it fails to connect at all.',
+        ],
+        [
+          'Which ports?',
+          'IMAP 993 and SMTP 465, both with SSL/TLS.',
+        ],
+        [
+          'Is an app password needed?',
+          'No, the mailbox password is accepted.',
+        ],
+        [
+          'Can I keep my Sky mail after leaving Sky?',
+          'Only as a copy somewhere else, made while the account is still active. The transfer carries messages, folders, flags and dates to the new mailbox.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Sky Mail — imap.tools.sky.com',
+      description:
+        'IMAP для ящика Sky: imap.tools.sky.com, порт 993, SSL. В имени хоста есть лишний уровень tools, который легко пропустить.',
+      h1: 'Настройки IMAP для Sky Mail',
+      intro:
+        'У почтовых хостов Sky в имени есть лишний уровень, который регулярно теряют: это imap.tools.sky.com, а не imap.sky.com. С коротким вариантом клиент выдаёт ошибку соединения, а не ошибку пароля, и поиски уходят не туда.',
+      pitfalls: [
+        'Хост — imap.tools.sky.com, с tools. посередине. Без него никто не отвечает.',
+        'Отправка идёт через smtp.tools.sky.com, порт 465 с SSL и включённой авторизацией.',
+        'Логин — полный адрес на sky.com.',
+        'Почта Sky входит в пакет с интернетом: закончился договор — закончился и ящик, поэтому копию нужно сделать заранее.',
+      ],
+      faq: [
+        [
+          'imap.sky.com или imap.tools.sky.com?',
+          'imap.tools.sky.com. Короткого хоста не существует, и клиент, направленный на него, не подключится вовсе.',
+        ],
+        [
+          'Какие порты?',
+          'IMAP — 993, SMTP — 465, оба с SSL/TLS.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет, принимается обычный пароль ящика.',
+        ],
+        [
+          'Можно ли сохранить почту Sky после ухода от Sky?',
+          'Только копией в другом месте, сделанной пока аккаунт ещё жив. Перенос отдаёт в новый ящик письма, папки, флаги и даты.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Sky Mail — imap.tools.sky.com',
+      description:
+        'IMAP для скриньки Sky: imap.tools.sky.com, порт 993, SSL. В імені хоста є зайвий рівень tools, який легко пропустити.',
+      h1: 'Налаштування IMAP для Sky Mail',
+      intro:
+        'У поштових хостів Sky в імені є зайвий рівень, який регулярно гублять: це imap.tools.sky.com, а не imap.sky.com. З коротким варіантом клієнт видає помилку з’єднання, а не помилку пароля, і пошуки йдуть не туди.',
+      pitfalls: [
+        'Хост — imap.tools.sky.com, із tools. посередині. Без нього ніхто не відповідає.',
+        'Надсилання йде через smtp.tools.sky.com, порт 465 із SSL та увімкненою авторизацією.',
+        'Логін — повна адреса на sky.com.',
+        'Пошта Sky входить у пакет з інтернетом: скінчився договір — скінчилася і скринька, тому копію треба зробити заздалегідь.',
+      ],
+      faq: [
+        [
+          'imap.sky.com чи imap.tools.sky.com?',
+          'imap.tools.sky.com. Короткого хоста не існує, і клієнт, спрямований на нього, не підключиться взагалі.',
+        ],
+        [
+          'Які порти?',
+          'IMAP — 993, SMTP — 465, обидва із SSL/TLS.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні, приймається звичайний пароль скриньки.',
+        ],
+        [
+          'Чи можна зберегти пошту Sky після відходу від Sky?',
+          'Лише копією в іншому місці, зробленою поки акаунт ще живий. Перенесення віддає в нову скриньку листи, папки, прапорці та дати.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'wp-pl',
+    name: 'Poczta WP',
+    domains: ['wp.pl'],
+    imap: { host: 'imap.wp.pl', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.wp.pl', port: 465, security: 'SSL/TLS' },
+    login: 'local',
+    auth: 'password',
+    sources: ['https://autoconfig.thunderbird.net/v1.1/wp.pl'],
+    checked: '2026-09-15',
+    ru: {
+      title: 'Настройки IMAP для Poczta WP — логин без домена',
+      description:
+        'IMAP для ящика wp.pl: imap.wp.pl, порт 993, SSL. Логин указывается без @wp.pl — на этом чаще всего и спотыкаются.',
+      h1: 'Настройки IMAP для Poczta WP',
+      intro:
+        'Poczta WP — крупнейшая польская почта, и подключается она просто, кроме одной детали: логином здесь служит не адрес целиком, а только часть до собаки. Полный адрес сервер отклоняет так же, как неверный пароль, поэтому человек проверяет пароль, а дело в поле логина.',
+      pitfalls: [
+        'Логин — часть адреса до собаки. Для ящика nazwa@wp.pl в поле имени пользователя вводится nazwa.',
+        'Хосты без сюрпризов: imap.wp.pl на приём (993, SSL) и smtp.wp.pl на отправку (465, SSL).',
+        'Бесплатные ящики WP ограничены по объёму, и при переносе В такой ящик место может кончиться на середине — объём стоит замерить заранее.',
+        'Польские имена папок приезжают в кодировке modified UTF-7; мы декодируем их автоматически, в чужих логах они выглядят как набор символов.',
+      ],
+      faq: [
+        [
+          'Логин с доменом или без?',
+          'Без. Для nazwa@wp.pl логин — nazwa. Это отличает WP от большинства сервисов и даёт ту же ошибку, что неверный пароль.',
+        ],
+        [
+          'Какие хосты и порты?',
+          'IMAP — imap.wp.pl, порт 993 с SSL/TLS. SMTP — smtp.wp.pl, порт 465 с SSL/TLS.',
+        ],
+        [
+          'Нужен ли отдельный пароль для программ?',
+          'Нет, подходит обычный пароль ящика.',
+        ],
+        [
+          'Можно ли перенести почту с WP на Gmail или Microsoft 365?',
+          'Да, по IMAP: источник — imap.wp.pl с логином без домена, назначение — новый ящик. Письма, папки и даты сохраняются.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Poczta WP IMAP settings — the username has no domain',
+      description:
+        'IMAP for a wp.pl mailbox: imap.wp.pl, port 993, SSL. The username goes in without @wp.pl, which is where most setups fail.',
+      h1: 'Poczta WP IMAP settings',
+      intro:
+        'Poczta WP is the largest Polish mail service and connects simply enough, apart from one detail: the username is not the whole address but only the part before the @. The full address is rejected exactly like a wrong password, so people re-check the password while the problem sits in the username field.',
+      pitfalls: [
+        'The username is the part before the @. For nazwa@wp.pl you type nazwa.',
+        'The hosts hold no surprises: imap.wp.pl for receiving (993, SSL) and smtp.wp.pl for sending (465, SSL).',
+        'Free WP mailboxes have a size cap, so a migration into one can run out of room half-way — measure the size first.',
+        'Polish folder names travel in modified UTF-7. We decode them automatically; in other tools\' logs they look like gibberish.',
+      ],
+      faq: [
+        [
+          'Username with or without the domain?',
+          'Without. For nazwa@wp.pl the username is nazwa. This sets WP apart from most services and produces the same error as a wrong password.',
+        ],
+        [
+          'Which hosts and ports?',
+          'IMAP is imap.wp.pl on 993 with SSL/TLS. SMTP is smtp.wp.pl on 465 with SSL/TLS.',
+        ],
+        [
+          'Is a separate app password needed?',
+          'No, the mailbox password works.',
+        ],
+        [
+          'Can I migrate from WP to Gmail or Microsoft 365?',
+          'Yes, over IMAP: the source is imap.wp.pl with the domain-less username, the destination is the new mailbox. Messages, folders and dates are preserved.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Poczta WP — логін без домену',
+      description:
+        'IMAP для скриньки wp.pl: imap.wp.pl, порт 993, SSL. Логін вказується без @wp.pl — на цьому найчастіше й спотикаються.',
+      h1: 'Налаштування IMAP для Poczta WP',
+      intro:
+        'Poczta WP — найбільша польська пошта, і підключається вона просто, окрім однієї деталі: логіном тут служить не адреса цілком, а лише частина до равлика. Повну адресу сервер відхиляє так само, як невірний пароль, тому людина перевіряє пароль, а річ у полі логіна.',
+      pitfalls: [
+        'Логін — частина адреси до равлика. Для скриньки nazwa@wp.pl у полі імені користувача вводиться nazwa.',
+        'Хости без сюрпризів: imap.wp.pl на прийом (993, SSL) і smtp.wp.pl на надсилання (465, SSL).',
+        'Безкоштовні скриньки WP обмежені за обсягом, і під час перенесення В таку скриньку місце може скінчитися на середині — обсяг варто виміряти заздалегідь.',
+        'Польські назви папок приїжджають у кодуванні modified UTF-7; ми декодуємо їх автоматично, у чужих логах вони виглядають як набір символів.',
+      ],
+      faq: [
+        [
+          'Логін із доменом чи без?',
+          'Без. Для nazwa@wp.pl логін — nazwa. Це відрізняє WP від більшості сервісів і дає ту саму помилку, що й невірний пароль.',
+        ],
+        [
+          'Які хости та порти?',
+          'IMAP — imap.wp.pl, порт 993 із SSL/TLS. SMTP — smtp.wp.pl, порт 465 із SSL/TLS.',
+        ],
+        [
+          'Чи потрібен окремий пароль для програм?',
+          'Ні, підходить звичайний пароль скриньки.',
+        ],
+        [
+          'Чи можна перенести пошту з WP у Gmail або Microsoft 365?',
+          'Так, за IMAP: джерело — imap.wp.pl з логіном без домену, призначення — нова скринька. Листи, папки та дати зберігаються.',
+        ],
+      ],
+    },
+  },
 ];
 
 export const imapHostSlugs = imapHosts.map((host) => host.slug);
