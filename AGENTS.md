@@ -26,6 +26,8 @@
 - Keep an outcome-driven sequence toward MVP. At each handoff distinguish
   implemented, tested, deployed and still pending; propose the next two concrete
   stages and explain their purpose. Website/frontend remain Claude's scope.
+- When a user choice is needed, explain the concrete alternatives and give a
+  recommendation with the operational tradeoff (owner instruction, 2026-09-14).
 - Choose tests by risk and new evidence. Keep checks for mail integrity, secrets,
   ownership, recovery, quota/concurrency and relevant load behavior. Do not add
   redundant tests or rerun unchanged suites without a reason; preserve required
