@@ -722,6 +722,558 @@ export const imapHosts: ImapHost[] = [
       ],
     },
   },
+
+  {
+    slug: 'comcast-xfinity',
+    name: 'Comcast Xfinity',
+    domains: ['comcast.net'],
+    imap: { host: 'imap.comcast.net', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.comcast.net', port: 587, security: 'STARTTLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/comcast.net',
+      'https://www.xfinity.com/support/articles/third-party-email-access',
+    ],
+    checked: '2026-09-15',
+    en: {
+      title: 'Comcast Xfinity IMAP settings — host, port, third-party access',
+      description:
+        'IMAP for a comcast.net mailbox: imap.comcast.net, port 993, SSL. Why every client fails until you tick one box in Xfinity Email security.',
+      h1: 'Comcast Xfinity IMAP settings',
+      intro:
+        'Comcast blocks mail clients outright until you allow them yourself. The setting is a single checkbox buried in Xfinity Email security, and while it is off, every client fails with what looks like a password problem — the password is fine, the account simply refuses anything that is not the web interface.',
+      pitfalls: [
+        'Third-party access is off by default. Turn it on at connect.xfinity.com → the gear icon → Email Settings → Security → the box under Third Party Access Security.',
+        'Until that box is ticked no client connects, no matter how right the host, port and password are. The error looks like bad credentials, which is why people spend an evening re-typing their password.',
+        'The username is the full address, including @comcast.net.',
+        'Outgoing mail goes through smtp.comcast.net on port 587 with STARTTLS; the encrypted IMAP port is 993.',
+      ],
+      faq: [
+        [
+          'Where is the third-party access setting?',
+          'Sign in to Xfinity Email at connect.xfinity.com, open the gear icon → Email Settings → Security, and tick the box under Third Party Access Security. It takes effect right away.',
+        ],
+        [
+          'Do I need an app password?',
+          'No. Comcast takes the account password over IMAP once third-party access is allowed — the checkbox is the gate here, not a separate password.',
+        ],
+        [
+          'Which ports does Comcast use?',
+          'IMAP 993 with SSL/TLS (or 143 with STARTTLS), SMTP 587 with STARTTLS or 465 with SSL.',
+        ],
+        [
+          'Can I move a comcast.net mailbox to Gmail or Microsoft 365?',
+          'Yes. Allow third-party access, use imap.comcast.net as the source and the new mailbox as the destination. Nothing is deleted at Comcast: the default mode only copies.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Comcast Xfinity — хост, порт, доступ программам',
+      description:
+        'IMAP для ящика comcast.net: imap.comcast.net, порт 993, SSL. Почему клиент не подключается, пока в настройках Xfinity не разрешить доступ.',
+      h1: 'Настройки IMAP для Comcast Xfinity',
+      intro:
+        'Comcast блокирует почтовые программы, пока вы сами их не разрешите. Настройка — одна галочка в разделе безопасности Xfinity Email, и пока она снята, любой клиент падает с тем, что выглядит как неверный пароль. Пароль при этом верный: аккаунт просто не пускает никого, кроме веб-интерфейса.',
+      pitfalls: [
+        'Доступ сторонним программам выключен по умолчанию. Включается на connect.xfinity.com: шестерёнка → «Email Settings» → «Security» → галочка в разделе Third Party Access Security.',
+        'Пока галочка снята, не подключится ни один клиент, каким бы верным ни были хост, порт и пароль. Ошибка выглядит как неверные учётные данные — отсюда вечер, потраченный на перенабор пароля.',
+        'Логин — полный адрес, вместе с @comcast.net.',
+        'Отправка идёт через smtp.comcast.net на порту 587 со STARTTLS; шифрованный порт IMAP — 993.',
+      ],
+      faq: [
+        [
+          'Где находится разрешение для сторонних программ?',
+          'Войдите в Xfinity Email на connect.xfinity.com, откройте шестерёнку → «Email Settings» → «Security» и поставьте галочку в разделе Third Party Access Security. Действует сразу.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет. Comcast принимает по IMAP обычный пароль аккаунта, когда доступ сторонним программам разрешён: здесь пропуском служит галочка, а не отдельный пароль.',
+        ],
+        [
+          'Какие порты у Comcast?',
+          'IMAP — 993 с SSL/TLS (или 143 со STARTTLS), SMTP — 587 со STARTTLS либо 465 с SSL.',
+        ],
+        [
+          'Можно ли перенести ящик comcast.net в Gmail или Microsoft 365?',
+          'Да. Разрешите доступ сторонним программам, укажите imap.comcast.net источником, новый ящик — назначением. В Comcast ничего не удаляется: базовый режим только копирует.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Comcast Xfinity — хост, порт, доступ програмам',
+      description:
+        'IMAP для скриньки comcast.net: imap.comcast.net, порт 993, SSL. Чому клієнт не підключається, доки в налаштуваннях Xfinity не дозволити доступ.',
+      h1: 'Налаштування IMAP для Comcast Xfinity',
+      intro:
+        'Comcast блокує поштові програми, доки ви самі їх не дозволите. Налаштування — одна позначка в розділі безпеки Xfinity Email, і доки вона знята, будь-який клієнт падає з тим, що виглядає як невірний пароль. Пароль при цьому правильний: акаунт просто не пускає нікого, крім вебінтерфейсу.',
+      pitfalls: [
+        'Доступ стороннім програмам вимкнений за замовчуванням. Вмикається на connect.xfinity.com: шестерня → «Email Settings» → «Security» → позначка в розділі Third Party Access Security.',
+        'Доки позначку знято, не підключиться жоден клієнт, хоч би якими правильними були хост, порт і пароль. Помилка виглядає як невірні облікові дані — звідси вечір, витрачений на перенабирання пароля.',
+        'Логін — повна адреса, разом із @comcast.net.',
+        'Надсилання йде через smtp.comcast.net на порту 587 зі STARTTLS; шифрований порт IMAP — 993.',
+      ],
+      faq: [
+        [
+          'Де знаходиться дозвіл для сторонніх програм?',
+          'Увійдіть у Xfinity Email на connect.xfinity.com, відкрийте шестерню → «Email Settings» → «Security» і поставте позначку в розділі Third Party Access Security. Діє одразу.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні. Comcast приймає за IMAP звичайний пароль акаунта, коли доступ стороннім програмам дозволено: тут перепусткою служить позначка, а не окремий пароль.',
+        ],
+        [
+          'Які порти у Comcast?',
+          'IMAP — 993 із SSL/TLS (або 143 зі STARTTLS), SMTP — 587 зі STARTTLS чи 465 із SSL.',
+        ],
+        [
+          'Чи можна перенести скриньку comcast.net у Gmail або Microsoft 365?',
+          'Так. Дозвольте доступ стороннім програмам, укажіть imap.comcast.net джерелом, нову скриньку — призначенням. У Comcast нічого не видаляється: базовий режим лише копіює.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'att',
+    name: 'AT&T Mail',
+    domains: ['att.net', 'sbcglobal.net', 'bellsouth.net'],
+    imap: { host: 'imap.mail.att.net', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.mail.att.net', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'app-password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/att.net',
+      'https://www.att.com/support/article/email-support/KM1240308/',
+    ],
+    checked: '2026-09-15',
+    en: {
+      title: 'AT&T Mail IMAP settings — host, port, secure mail key',
+      description:
+        'IMAP for att.net, sbcglobal.net and bellsouth.net: imap.mail.att.net, port 993, SSL. The account password is replaced by a secure mail key.',
+      h1: 'AT&T Mail IMAP settings',
+      intro:
+        'AT&T does not take your account password from a mail client. Since 2019 every third-party program needs a secure mail key — a code generated in your AT&T profile that goes into the password field instead. Old sbcglobal.net and bellsouth.net addresses live on the same servers and follow the same rule.',
+      pitfalls: [
+        'The account password is refused. Generate a secure mail key in your AT&T profile and paste it into both the IMAP and the SMTP password fields.',
+        'The key is per program, and each device you set up gets its own. Revoking one does not lock the others out — convenient when a migration is over.',
+        'sbcglobal.net and bellsouth.net are AT&T mailboxes. Their settings are the AT&T ones; there is no separate server left under those names.',
+        'The username is the full address, whichever of the three domains it ends with.',
+      ],
+      faq: [
+        [
+          'What is a secure mail key?',
+          'A code generated in your AT&T profile that replaces the account password in mail clients. It does not change the password you use on AT&T websites.',
+        ],
+        [
+          'Where do I create one?',
+          'In the myAT&T profile, under the secure mail key section: create the key, name it after the program, and copy it — it goes into the password field of the client.',
+        ],
+        [
+          'My address is @sbcglobal.net — what do I use?',
+          'The AT&T settings: imap.mail.att.net on 993 with SSL, and a secure mail key as the password.',
+        ],
+        [
+          'Will anything be deleted at AT&T when I migrate?',
+          'No. The default mode copies messages and folders and leaves the source untouched.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для AT&T Mail — хост, порт, secure mail key',
+      description:
+        'IMAP для att.net, sbcglobal.net и bellsouth.net: imap.mail.att.net, порт 993, SSL. Вместо пароля аккаунта используется secure mail key.',
+      h1: 'Настройки IMAP для AT&T Mail',
+      intro:
+        'AT&T не принимает пароль аккаунта от почтовой программы. С 2019 года любой сторонней программе нужен secure mail key — код, который создаётся в профиле AT&T и вводится вместо пароля. Старые адреса sbcglobal.net и bellsouth.net живут на тех же серверах и подчиняются тому же правилу.',
+      pitfalls: [
+        'Пароль аккаунта не принимается. Создайте secure mail key в профиле AT&T и вводите его и в поле пароля IMAP, и в поле пароля SMTP.',
+        'Ключ выдаётся на программу, и у каждого настроенного устройства он свой. Отзыв одного не отключает остальные — удобно, когда перенос закончен.',
+        'sbcglobal.net и bellsouth.net — это ящики AT&T. Настройки у них AT&T-овские, отдельных серверов под этими именами не осталось.',
+        'Логин — полный адрес, на каком бы из трёх доменов он ни был.',
+      ],
+      faq: [
+        [
+          'Что такое secure mail key?',
+          'Код, который создаётся в профиле AT&T и заменяет пароль аккаунта в почтовых программах. Пароль для сайтов AT&T он не меняет.',
+        ],
+        [
+          'Где его создать?',
+          'В профиле myAT&T, в разделе secure mail key: создать ключ, назвать по имени программы и скопировать — он и пойдёт в поле пароля клиента.',
+        ],
+        [
+          'У меня адрес @sbcglobal.net — какие настройки?',
+          'AT&T-овские: imap.mail.att.net, порт 993 с SSL, паролем — secure mail key.',
+        ],
+        [
+          'Удалится ли что-нибудь в AT&T при переносе?',
+          'Нет. Базовый режим копирует письма и папки, источник остаётся нетронутым.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для AT&T Mail — хост, порт, secure mail key',
+      description:
+        'IMAP для att.net, sbcglobal.net і bellsouth.net: imap.mail.att.net, порт 993, SSL. Замість пароля акаунта використовується secure mail key.',
+      h1: 'Налаштування IMAP для AT&T Mail',
+      intro:
+        'AT&T не приймає пароль акаунта від поштової програми. З 2019 року будь-якій сторонній програмі потрібен secure mail key — код, який створюється у профілі AT&T і вводиться замість пароля. Старі адреси sbcglobal.net і bellsouth.net живуть на тих самих серверах і підпорядковані тому ж правилу.',
+      pitfalls: [
+        'Пароль акаунта не приймається. Створіть secure mail key у профілі AT&T і вводьте його і в поле пароля IMAP, і в поле пароля SMTP.',
+        'Ключ видається на програму, і в кожного налаштованого пристрою він свій. Відкликання одного не вимикає інші — зручно, коли перенесення завершено.',
+        'sbcglobal.net і bellsouth.net — це скриньки AT&T. Налаштування в них AT&T-івські, окремих серверів під цими іменами не лишилося.',
+        'Логін — повна адреса, на якому б із трьох доменів вона не була.',
+      ],
+      faq: [
+        [
+          'Що таке secure mail key?',
+          'Код, який створюється у профілі AT&T і замінює пароль акаунта в поштових програмах. Пароль для сайтів AT&T він не змінює.',
+        ],
+        [
+          'Де його створити?',
+          'У профілі myAT&T, у розділі secure mail key: створити ключ, назвати за іменем програми та скопіювати — він і піде в поле пароля клієнта.',
+        ],
+        [
+          'У мене адреса @sbcglobal.net — які налаштування?',
+          'AT&T-івські: imap.mail.att.net, порт 993 із SSL, паролем — secure mail key.',
+        ],
+        [
+          'Чи видалиться щось в AT&T під час перенесення?',
+          'Ні. Базовий режим копіює листи й папки, джерело залишається недоторканим.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'cox',
+    name: 'Cox Email',
+    domains: ['cox.net'],
+    imap: { host: 'imap.mail.yahoo.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.mail.yahoo.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'app-password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/cox.net',
+      'https://help.yahoo.com/kb/SLN36637.html',
+    ],
+    checked: '2026-09-15',
+    en: {
+      title: 'Cox email IMAP settings — cox.net runs on Yahoo now',
+      description:
+        'cox.net mailboxes moved to Yahoo in 2024. The IMAP host is imap.mail.yahoo.com, port 993, SSL, and a Yahoo app password is required.',
+      h1: 'Cox email IMAP settings',
+      intro:
+        'There is no Cox mail server left to point a client at. Cox finished moving residential cox.net mailboxes to Yahoo in 2024: the address stayed the same, the servers behind it did not. Anything still configured with an old cox.net host will simply stop connecting, and the settings to use are Yahoo\'s.',
+      pitfalls: [
+        'The host is imap.mail.yahoo.com, not anything at cox.net. Old settings kept from before the move are the usual reason a client suddenly stopped working.',
+        'A Yahoo app password is required. The password you use to sign in is refused by third-party clients.',
+        'The username stays your full cox.net address — the mailbox moved, the address did not.',
+        'Yahoo also offers export.imap.mail.yahoo.com for pulling a whole mailbox; that is the host meant for bulk reads such as a migration.',
+      ],
+      faq: [
+        [
+          'Why did my Cox email stop working in Outlook?',
+          'Because the mailbox moved to Yahoo and the old Cox server no longer answers. Replace the host with imap.mail.yahoo.com and the password with a Yahoo app password.',
+        ],
+        [
+          'Where do I generate the app password?',
+          'In Yahoo Account Security, under app passwords. Sign in with the cox.net address — the account is a Yahoo account now.',
+        ],
+        [
+          'Can I move my cox.net mail somewhere else entirely?',
+          'Yes, and many people do after a move like this. Use imap.mail.yahoo.com as the source with an app password; messages, folders and dates come across.',
+        ],
+        [
+          'Is my old mail still there?',
+          'Messages, folders and other eligible data moved with the account. Whatever is visible in the web interface is what a client sees over IMAP.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Cox — cox.net теперь на серверах Yahoo',
+      description:
+        'Ящики cox.net переехали на Yahoo в 2024 году. Хост IMAP — imap.mail.yahoo.com, порт 993, SSL, и нужен пароль приложения Yahoo.',
+      h1: 'Настройки IMAP для Cox',
+      intro:
+        'Почтового сервера Cox больше не существует. В 2024 году Cox завершил перевод домашних ящиков cox.net на Yahoo: адрес остался прежним, а серверы за ним — нет. Клиент, настроенный на старый хост cox.net, просто перестанет подключаться, и верные настройки здесь — Yahoo-вские.',
+      pitfalls: [
+        'Хост — imap.mail.yahoo.com, а не что-либо на cox.net. Старые настройки, оставшиеся с прежних времён, и есть обычная причина, по которой почта вдруг отвалилась.',
+        'Нужен пароль приложения Yahoo. Пароль, которым вы входите в почту, сторонние клиенты не принимают.',
+        'Логин остаётся вашим полным адресом на cox.net — переехал ящик, а не адрес.',
+        'У Yahoo есть и отдельный хост для полной выгрузки — export.imap.mail.yahoo.com. Он предназначен как раз для массового чтения, то есть для переноса.',
+      ],
+      faq: [
+        [
+          'Почему почта Cox перестала работать в Outlook?',
+          'Потому что ящик переехал на Yahoo, а старый сервер Cox больше не отвечает. Замените хост на imap.mail.yahoo.com, а пароль — на пароль приложения Yahoo.',
+        ],
+        [
+          'Где создать пароль приложения?',
+          'В настройках безопасности аккаунта Yahoo, в разделе app passwords. Входить нужно под адресом на cox.net — это теперь аккаунт Yahoo.',
+        ],
+        [
+          'Можно ли уйти с cox.net совсем?',
+          'Да, после такого переезда так делают часто. Источник — imap.mail.yahoo.com с паролем приложения; письма, папки и даты переносятся.',
+        ],
+        [
+          'Старая почта на месте?',
+          'Письма, папки и прочие подходящие данные переехали вместе с аккаунтом. Что видно в веб-интерфейсе, то клиент и увидит по IMAP.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Cox — cox.net тепер на серверах Yahoo',
+      description:
+        'Скриньки cox.net переїхали на Yahoo у 2024 році. Хост IMAP — imap.mail.yahoo.com, порт 993, SSL, і потрібен пароль застосунку Yahoo.',
+      h1: 'Налаштування IMAP для Cox',
+      intro:
+        'Поштового сервера Cox більше не існує. У 2024 році Cox завершив переведення домашніх скриньок cox.net на Yahoo: адреса лишилася та сама, а сервери за нею — ні. Клієнт, налаштований на старий хост cox.net, просто перестане підключатися, і правильні налаштування тут — Yahoo-івські.',
+      pitfalls: [
+        'Хост — imap.mail.yahoo.com, а не щось на cox.net. Старі налаштування, що лишилися з колишніх часів, і є звичайна причина, чому пошта раптом відвалилася.',
+        'Потрібен пароль застосунку Yahoo. Пароль, яким ви входите в пошту, сторонні клієнти не приймають.',
+        'Логін лишається вашою повною адресою на cox.net — переїхала скринька, а не адреса.',
+        'У Yahoo є й окремий хост для повного вивантаження — export.imap.mail.yahoo.com. Він призначений саме для масового читання, тобто для перенесення.',
+      ],
+      faq: [
+        [
+          'Чому пошта Cox перестала працювати в Outlook?',
+          'Бо скринька переїхала на Yahoo, а старий сервер Cox більше не відповідає. Замініть хост на imap.mail.yahoo.com, а пароль — на пароль застосунку Yahoo.',
+        ],
+        [
+          'Де створити пароль застосунку?',
+          'У налаштуваннях безпеки акаунта Yahoo, у розділі app passwords. Входити треба під адресою на cox.net — це тепер акаунт Yahoo.',
+        ],
+        [
+          'Чи можна піти з cox.net зовсім?',
+          'Так, після такого переїзду так роблять часто. Джерело — imap.mail.yahoo.com із паролем застосунку; листи, папки та дати переносяться.',
+        ],
+        [
+          'Чи стара пошта на місці?',
+          'Листи, папки та інші придатні дані переїхали разом з акаунтом. Що видно у вебінтерфейсі, те клієнт і побачить за IMAP.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'godaddy',
+    name: 'GoDaddy Workspace Email',
+    domains: ['secureserver.net'],
+    imap: { host: 'imap.secureserver.net', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtpout.secureserver.net', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://autoconfig.thunderbird.net/v1.1/secureserver.net',
+      'https://gdhelp.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394',
+    ],
+    checked: '2026-09-15',
+    en: {
+      title: 'GoDaddy email IMAP settings — Workspace and Microsoft 365',
+      description:
+        'IMAP for GoDaddy mail: imap.secureserver.net, port 993, SSL for legacy Workspace Email — and outlook.office365.com once the account has moved.',
+      h1: 'GoDaddy email IMAP settings',
+      intro:
+        'GoDaddy has two different mail products behind one bill, and the settings depend on which one your mailbox is on. Legacy Workspace Email answers at secureserver.net; GoDaddy is retiring it and moving accounts to Microsoft 365, and a migrated mailbox no longer lives at those hosts at all. Checking which one you are on takes a minute and saves an hour.',
+      pitfalls: [
+        'Workspace Email uses imap.secureserver.net on 993 with SSL. If your account has already been moved to Microsoft 365, the host is outlook.office365.com instead — the secureserver hosts will not authenticate you.',
+        'Workspace Email is being retired. A migration to another provider is easier to run before that transition than after, when the mailbox has to be treated as Microsoft 365.',
+        'On Microsoft 365 basic authentication is mostly disabled, so an IMAP migration from a moved mailbox needs OAuth rather than a plain password.',
+        'The username is the full address; sending goes through smtpout.secureserver.net on 465.',
+      ],
+      faq: [
+        [
+          'How do I tell which product my mailbox is on?',
+          'Look at where webmail signs you in: a Workspace mailbox uses GoDaddy\'s own webmail, a migrated one lands in Outlook on the web. The IMAP host follows from that.',
+        ],
+        [
+          'Which host for legacy Workspace Email?',
+          'imap.secureserver.net, port 993, SSL/TLS, with the full address as the username and the mailbox password.',
+        ],
+        [
+          'And after the move to Microsoft 365?',
+          'outlook.office365.com on 993. Microsoft 365 usually needs OAuth rather than a password — our Microsoft 365 guide covers that path.',
+        ],
+        [
+          'Can I migrate away from GoDaddy without losing folders?',
+          'Yes. Messages, the folder tree, flags and original dates come across; the source mailbox is left as it was.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для почты GoDaddy — Workspace и Microsoft 365',
+      description:
+        'IMAP для почты GoDaddy: imap.secureserver.net, порт 993, SSL для старого Workspace Email — и outlook.office365.com, если ящик уже переехал.',
+      h1: 'Настройки IMAP для почты GoDaddy',
+      intro:
+        'У GoDaddy за одним счётом стоят два разных почтовых продукта, и настройки зависят от того, на каком из них ваш ящик. Старый Workspace Email отвечает на secureserver.net; GoDaddy его сворачивает и переводит аккаунты на Microsoft 365, а переехавший ящик на этих хостах уже не живёт. Проверить, где вы, — минута, а экономит час.',
+      pitfalls: [
+        'Workspace Email — это imap.secureserver.net, порт 993 с SSL. Если аккаунт уже переведён на Microsoft 365, хост другой: outlook.office365.com, а secureserver вас просто не авторизует.',
+        'Workspace Email сворачивается. Перенос к другому провайдеру проще сделать до этого перевода, чем после, когда ящик придётся считать ящиком Microsoft 365.',
+        'В Microsoft 365 базовая авторизация в основном отключена, поэтому перенос из переехавшего ящика требует OAuth, а не обычного пароля.',
+        'Логин — полный адрес; отправка идёт через smtpout.secureserver.net на порту 465.',
+      ],
+      faq: [
+        [
+          'Как понять, на каком продукте мой ящик?',
+          'По тому, куда пускает веб-почта: ящик Workspace открывается в собственной почте GoDaddy, переехавший — в Outlook в браузере. Хост IMAP следует отсюда.',
+        ],
+        [
+          'Какой хост у старого Workspace Email?',
+          'imap.secureserver.net, порт 993, SSL/TLS, логин — полный адрес, пароль — от ящика.',
+        ],
+        [
+          'А после перевода на Microsoft 365?',
+          'outlook.office365.com, порт 993. Microsoft 365 обычно требует OAuth вместо пароля — этот путь разобран в нашем гайде по Microsoft 365.',
+        ],
+        [
+          'Можно ли уйти от GoDaddy, не потеряв папки?',
+          'Да. Письма, дерево папок, флаги и исходные даты переносятся; исходный ящик остаётся таким, каким был.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для пошти GoDaddy — Workspace і Microsoft 365',
+      description:
+        'IMAP для пошти GoDaddy: imap.secureserver.net, порт 993, SSL для старого Workspace Email — і outlook.office365.com, якщо скринька вже переїхала.',
+      h1: 'Налаштування IMAP для пошти GoDaddy',
+      intro:
+        'У GoDaddy за одним рахунком стоять два різні поштові продукти, і налаштування залежать від того, на якому з них ваша скринька. Старий Workspace Email відповідає на secureserver.net; GoDaddy його згортає й переводить акаунти на Microsoft 365, а скринька, що переїхала, на цих хостах уже не живе. Перевірити, де ви, — хвилина, а економить годину.',
+      pitfalls: [
+        'Workspace Email — це imap.secureserver.net, порт 993 із SSL. Якщо акаунт уже переведено на Microsoft 365, хост інший: outlook.office365.com, а secureserver вас просто не авторизує.',
+        'Workspace Email згортається. Перенесення до іншого провайдера простіше зробити до цього переведення, ніж після, коли скриньку доведеться вважати скринькою Microsoft 365.',
+        'У Microsoft 365 базова авторизація здебільшого вимкнена, тому перенесення зі скриньки, що переїхала, потребує OAuth, а не звичайного пароля.',
+        'Логін — повна адреса; надсилання йде через smtpout.secureserver.net на порту 465.',
+      ],
+      faq: [
+        [
+          'Як зрозуміти, на якому продукті моя скринька?',
+          'За тим, куди пускає вебпошта: скринька Workspace відкривається у власній пошті GoDaddy, та, що переїхала, — в Outlook у браузері. Хост IMAP випливає звідси.',
+        ],
+        [
+          'Який хост у старого Workspace Email?',
+          'imap.secureserver.net, порт 993, SSL/TLS, логін — повна адреса, пароль — від скриньки.',
+        ],
+        [
+          'А після переведення на Microsoft 365?',
+          'outlook.office365.com, порт 993. Microsoft 365 зазвичай вимагає OAuth замість пароля — цей шлях розібрано в нашому гайді за Microsoft 365.',
+        ],
+        [
+          'Чи можна піти від GoDaddy, не втративши папки?',
+          'Так. Листи, дерево папок, прапорці та початкові дати переносяться; вихідна скринька лишається такою, якою була.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'mail-com',
+    name: 'mail.com',
+    domains: ['mail.com', 'email.com', 'usa.com'],
+    imap: { host: 'imap.mail.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.mail.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: ['https://autoconfig.thunderbird.net/v1.1/mail.com'],
+    checked: '2026-09-15',
+    en: {
+      title: 'mail.com IMAP settings — host, port, enabling access',
+      description:
+        'IMAP for a mail.com mailbox: imap.mail.com, port 993, SSL. Access for external programs is a setting in the mailbox, not a default.',
+      h1: 'mail.com IMAP settings',
+      intro:
+        'mail.com belongs to the same operator as GMX and WEB.DE and inherits the family habit: access for external programs is something you switch on in the mailbox, not something that is already there. The hosts are its own, and the alias domains — email.com, usa.com and the rest — all connect to the same server.',
+      pitfalls: [
+        'Access for external programs is a mailbox setting. Until it is on, a client gets an authentication failure with a perfectly good password.',
+        'All the alias domains use imap.mail.com. The address can end in email.com or usa.com; the host does not change.',
+        'The username is the full address, alias domain included.',
+        'Free mailboxes are dormancy-checked: an account left unused long enough can stop answering at all, which is worth knowing before you plan a migration out of one.',
+      ],
+      faq: [
+        [
+          'Where is IMAP switched on?',
+          'In the mail.com web interface, in the settings section for POP3/IMAP access. The change applies immediately.',
+        ],
+        [
+          'Does an email.com address use a different server?',
+          'No. Every mail.com alias domain connects to imap.mail.com on port 993 with SSL/TLS.',
+        ],
+        [
+          'Is an app password needed?',
+          'No, the mailbox password is accepted once external access is enabled.',
+        ],
+        [
+          'Can I keep the mail.com address after migrating?',
+          'Yes — a migration copies the mail to another mailbox and changes nothing about the old address, which keeps working until you close it.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для mail.com — хост, порт, включение доступа',
+      description:
+        'IMAP для ящика mail.com: imap.mail.com, порт 993, SSL. Доступ внешним программам включается в настройках ящика, а не работает сразу.',
+      h1: 'Настройки IMAP для mail.com',
+      intro:
+        'mail.com принадлежит тому же оператору, что GMX и WEB.DE, и наследует семейную привычку: доступ внешним программам здесь включают в настройках ящика, а не получают по умолчанию. Хосты у сервиса свои, а все домены-синонимы — email.com, usa.com и прочие — подключаются к тому же серверу.',
+      pitfalls: [
+        'Доступ внешним программам — настройка ящика. Пока она выключена, клиент получает ошибку авторизации при совершенно верном пароле.',
+        'Все домены-синонимы работают через imap.mail.com. Адрес может оканчиваться на email.com или usa.com — хост от этого не меняется.',
+        'Логин — полный адрес, вместе с доменом-синонимом.',
+        'Бесплатные ящики проверяются на заброшенность: аккаунт, которым долго не пользовались, может перестать отвечать вовсе. Это стоит учесть, планируя перенос именно из такого ящика.',
+      ],
+      faq: [
+        [
+          'Где включается IMAP?',
+          'В веб-интерфейсе mail.com, в разделе настроек доступа по POP3/IMAP. Изменение действует сразу.',
+        ],
+        [
+          'У адреса на email.com другой сервер?',
+          'Нет. Все домены-синонимы mail.com подключаются к imap.mail.com на порту 993 с SSL/TLS.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет, при включённом внешнем доступе принимается обычный пароль ящика.',
+        ],
+        [
+          'Можно ли сохранить адрес на mail.com после переноса?',
+          'Да — перенос копирует почту в другой ящик и ничего не меняет в старом адресе: он работает, пока вы сами его не закроете.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для mail.com — хост, порт, увімкнення доступу',
+      description:
+        'IMAP для скриньки mail.com: imap.mail.com, порт 993, SSL. Доступ зовнішнім програмам вмикається в налаштуваннях скриньки, а не працює одразу.',
+      h1: 'Налаштування IMAP для mail.com',
+      intro:
+        'mail.com належить тому самому оператору, що GMX і WEB.DE, і успадковує родинну звичку: доступ зовнішнім програмам тут вмикають у налаштуваннях скриньки, а не отримують за замовчуванням. Хости в сервісу свої, а всі домени-синоніми — email.com, usa.com та інші — підключаються до того самого сервера.',
+      pitfalls: [
+        'Доступ зовнішнім програмам — налаштування скриньки. Доки воно вимкнене, клієнт отримує помилку авторизації за цілком правильного пароля.',
+        'Усі домени-синоніми працюють через imap.mail.com. Адреса може закінчуватися на email.com чи usa.com — хост від цього не змінюється.',
+        'Логін — повна адреса, разом із доменом-синонімом.',
+        'Безкоштовні скриньки перевіряються на занедбаність: акаунт, яким довго не користувалися, може перестати відповідати взагалі. Це варто врахувати, плануючи перенесення саме з такої скриньки.',
+      ],
+      faq: [
+        [
+          'Де вмикається IMAP?',
+          'У вебінтерфейсі mail.com, у розділі налаштувань доступу за POP3/IMAP. Зміна діє одразу.',
+        ],
+        [
+          'У адреси на email.com інший сервер?',
+          'Ні. Усі домени-синоніми mail.com підключаються до imap.mail.com на порту 993 із SSL/TLS.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні, за увімкненого зовнішнього доступу приймається звичайний пароль скриньки.',
+        ],
+        [
+          'Чи можна зберегти адресу на mail.com після перенесення?',
+          'Так — перенесення копіює пошту в іншу скриньку і нічого не змінює у старій адресі: вона працює, доки ви самі її не закриєте.',
+        ],
+      ],
+    },
+  },
 ];
 
 export const imapHostSlugs = imapHosts.map((host) => host.slug);
