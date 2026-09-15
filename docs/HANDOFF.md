@@ -1,5 +1,28 @@
 # Engineering handoff — 2026-09-13
 
+## External HTTPS :18443 verified (2026-09-15)
+
+- PR #41 is merged; continued from updated main on `ops/pilot-18443`.
+- Owner's Proxmox dump confirms public :443 belongs to Amnezia Xray and :8443
+  to OpenVPN Cloak. Docker DNAT precedes custom PREROUTING rules. Earlier claims
+  that the provider intercepted traffic or that DNAT was missing were incorrect.
+  Owner removed the custom :8443 rule and added exactly one :18443 -> VM :443.
+- Updated only public pilot nginx upstream authority to :18443. API AllowedHosts
+  changed through the idle guarded script; same immutable image, worker start
+  time unchanged. UFW on the VM now allows TCP :443 on ens18 to the VM address.
+- Proxy is running with `unless-stopped`, read-only root filesystem, resource
+  limits and nginx workers as UID 101. The master requires NET_BIND_SERVICE,
+  CHOWN, SETUID and SETGID; it is not a fully rootless container. API and worker
+  are healthy. Certificate expires 2026-12-13; renewal still requires manual DNS.
+- External direct TLS smoke passed with normal trust verification: anonymous
+  rejection, temporary invitation, readiness, secure session cookie, missing
+  CSRF rejection, matching-Origin input validation, wrong-port Origin rejection,
+  wrong Host and next-request revocation. No mail job submitted. Temporary
+  invitation removed. Permanent tester credentials have not been issued.
+- Next: issue named pilot credentials through a private channel and perform one
+  invited-user migration acceptance; automate renewal before certificate expiry.
+  The owner-added NAT rule's reboot persistence is not verified.
+
 ## HTTPS certificate and VM gateway staged (2026-09-14)
 
 - DNS-01 certificate `staging.movemailbox.com` is present on the VM and valid
@@ -11,10 +34,9 @@
 - A rootless-worker nginx gateway is running on VM `:443`, using the certificate,
   Basic Auth pilot gate, request limits and no-cache proxy settings. It keeps API
   `Authorization` private and proxies only to loopback.
-- External verification is currently blocked: direct public `:8443` returns a
-  Fastly certificate, not this VM certificate. The Proxmox DNAT rule was not
-  observable on the VM and must be confirmed/added at the hypervisor. Existing
-  Proxmox services and ports were not changed by this agent.
+- Historical external :8443 checks returned a Fastly certificate. Subsequent
+  host diagnostics identified Docker's OpenVPN Cloak on that port; the earlier
+  attribution to missing DNAT/provider interception was not supported.
 - No permanent tester credential was issued or printed. The gateway remains a
   closed pilot and is not considered externally reachable until certificate and
   Host checks pass from outside.
