@@ -107,6 +107,22 @@ main,header,footer{position:relative;z-index:1}
 .btn-g:hover{border-color:var(--acc)}
 .btn-s{height:38px;padding:0 14px;font-size:.83rem;border-radius:9px}
 .btn[disabled]{opacity:.42;cursor:not-allowed;transform:none !important;box-shadow:none}
+/* Главные кнопки страницы выключены всё время, пока онлайн-перенос не
+   запущен, — и полупрозрачная заливка читалась как поломка вёрстки, а не
+   как «пока недоступно». Цвет остаётся своим, но приглушается подмешиванием
+   фона, а не прозрачностью: кнопка выглядит намеренно спокойной. */
+.launch .acts .btn[disabled]{opacity:1}
+/* Заливка светлая, а надпись своего цвета: белым по бледно-зелёному текст
+   не читался вовсе — а прочесть, что именно сейчас недоступно, важнее
+   яркости. */
+.launch .acts .btn-p[disabled]{background:color-mix(in srgb,var(--acc) 14%,var(--surf));
+  border-color:color-mix(in srgb,var(--acc) 26%,var(--line));
+  color:color-mix(in srgb,var(--acc) 72%,var(--ink))}
+.launch .acts .btn-stop[disabled]{background:color-mix(in srgb,var(--warn) 13%,var(--surf));
+  border-color:color-mix(in srgb,var(--warn) 26%,var(--line));
+  color:color-mix(in srgb,var(--warn) 68%,var(--ink))}
+/* Блик по наведению у выключенной кнопки не нужен: он обещает нажатие. */
+.btn-p[disabled]::after{display:none}
 
 /* header */
 header.top{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);
@@ -278,6 +294,14 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .adv-in select:focus,.adv-in input:focus{outline:none;border-color:var(--acc)}
 .mid{position:relative;display:grid;place-items:center;border-inline:1px solid var(--line);
   background:var(--surf-2)}
+/* Связь между ящиками — тонкая рельса, а не облако точек. Точки на
+   холсте остались, но теперь они бегут только во время переноса: на
+   неработающем задании это была не анимация данных, а пыль на экране. */
+.mid::before{content:"";position:absolute;left:50%;top:24px;bottom:24px;width:2px;
+  transform:translateX(-50%);border-radius:2px;
+  background:linear-gradient(180deg,transparent,
+    color-mix(in srgb,var(--acc) 24%,transparent) 16%,
+    color-mix(in srgb,var(--acc) 24%,transparent) 84%,transparent)}
 #flow{position:absolute;inset:0;width:100%;height:100%}
 .mid-in{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:20px;
   padding:20px 12px;width:100%}
@@ -295,6 +319,10 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .mid-links a:hover{color:var(--acc)}
 @media (max-width:880px){
   .mid{border-inline:0;border-block:1px solid var(--line)}
+  /* На узком экране ящики стоят друг над другом, а содержимое перемычки
+     выстраивается в несколько рядов — рельса посередине проходила бы не
+     между ящиками, а поперёк собственных кнопок. Убираем. */
+  .mid::before{display:none}
   .mid-in{flex-direction:row;flex-wrap:wrap;justify-content:center;padding:18px 14px}
   .mid-links{flex-direction:row;gap:16px;width:100%;justify-content:center}
 }
@@ -1347,6 +1375,20 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
   background:none;border:0;border-radius:8px;color:var(--ink-3);cursor:pointer;transition:.2s}
 .lang-suggest-x:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .lang-suggest-x svg{width:15px;height:15px}
+/* На телефоне плашка занимала четверть первого экрана: крупная строка, под
+   ней ряд из кнопки и ссылки, а крестик висел посередине правого края —
+   ровно между двумя строками, будто относится к обеим. Ужимаем строку и
+   поднимаем крестик к верхнему краю, к началу текста. */
+@media (max-width:560px){
+  .lang-suggest-in{padding:10px 44px 10px 16px;gap:10px}
+  .lang-suggest p{font-size:.86rem}
+  .lang-suggest .btn-s{height:34px;padding:0 14px;font-size:.82rem}
+  /* Ужимаем надписи, но не площадь нажатия: у ссылки «остаться» поле
+     добирается отступами, у крестика — размером кнопки; рисунок внутри
+     остаётся прежним. */
+  .lang-suggest-no{font-size:.82rem;padding:12px 4px}
+  .lang-suggest-x{top:2px;transform:none;width:44px;height:44px;border-radius:12px}
+}
 @keyframes lang-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes lang-out{to{opacity:0;transform:translateY(-8px)}}
 /* Здесь было left/right/bottom: 12px — остаток от времён, когда плашка
@@ -1538,8 +1580,10 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
    разъезжаются при первой же правке компонента.
    ========================================================================== */
 @media (pointer:coarse), (max-width:620px){
-  /* Шапка: тема и меню. */
+  /* Шапка: тема, меню и сам логотип — он ведёт на главную, а был высотой
+     в 34 пикселя. */
   .tgl,.burger{width:44px;height:44px}
+  .logo{min-height:44px}
   /* Поля формы и списки провайдеров. */
   .f input,.f-preset select,.adv-in select,.adv-in input{height:46px}
   .f-preset::after{bottom:17px}

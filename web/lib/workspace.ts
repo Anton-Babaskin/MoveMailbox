@@ -844,9 +844,23 @@ export function initWorkspace(
   size(); addEventListener('resize',size); addEventListener('hashchange',function(){setTimeout(size,60)});
   for(var i=0;i<26;i++)parts.push({t:Math.random(),o:Math.random()*.8+.2,sp:.0016+Math.random()*.0028,j:Math.random()});
   function accent(){return getComputedStyle(root()).getPropertyValue('--acc-glow').trim()||'12,138,103';}
+  /* Точки бегут только во время переноса.
+     Раньше цикл крутился всегда: на странице, где ничего не происходит, это
+     была не анимация данных, а мерцающая пыль между ящиками — и постоянно
+     занятый кадр анимации на ноутбуке от батареи. Пока задания нет, холст
+     чистый, связь показывает статичная рельса из CSS, а проверка состояния
+     заходит четыре раза в секунду вместо шестидесяти.
+     При включённом «уменьшить движение» точек нет вовсе. */
+  var calm=matchMedia('(prefers-reduced-motion:reduce)');
   (function loop(){
+    var idle=calm.matches||!((typeof running!=='undefined') && running);
+    if(idle){
+      var ri=cv.parentElement.getBoundingClientRect();
+      cx.clearRect(0,0,ri.width,ri.height);
+      setTimeout(loop,250); return;
+    }
     var r=cv.parentElement.getBoundingClientRect(); cx.clearRect(0,0,r.width,r.height);
-    var a=accent(), fast=(typeof running!=='undefined') && running;
+    var a=accent(), fast=true;
     parts.forEach(function(pt){
       pt.t+=pt.sp*(fast?3.4:1); if(pt.t>1)pt.t-=1;
       var x,y;
