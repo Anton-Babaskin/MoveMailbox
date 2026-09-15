@@ -40,7 +40,10 @@ assert(robots.includes('Sitemap: ' + origin + '/sitemap.xml'), 'Missing sitemap 
 assert(!/^Disallow:\s*\/\s*$/mi.test(robots), 'robots.txt blocks the site');
 const sitemap = await (await request(origin + '/sitemap.xml')).text();
 const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(match => match[1]);
-assert(urls.length >= 20 && urls.length <= 200, 'Unexpected sitemap size');
+/* Верхняя граница — защита от «карта сайта внезапно распухла», а не предел
+   роста: раздел настроек IMAP один поднял её с 162 до 213. Двигаем потолок
+   вместе с сайтом, нижнюю границу оставляем — она ловит пустую сборку. */
+assert(urls.length >= 20 && urls.length <= 600, 'Unexpected sitemap size');
 assert.equal(new Set(urls).size, urls.length, 'Duplicate sitemap URLs');
 
 for (const url of urls) {

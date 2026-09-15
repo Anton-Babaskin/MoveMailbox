@@ -7,12 +7,16 @@ export function DesktopApp({ lang }: { lang: Lang }) {
     <>
       <section className="shell" id="windows">
         <div className="win">
+          {/* Было нарисованное окно приложения: полоса с тремя точками, именем
+              программы и подписью «IMAP → IMAP». От него отказались на главной
+              и отказываемся здесь — сайт говорит своим языком, а не рисует
+              чужой интерфейс. Осталось то, что действительно что-то сообщает:
+              значок, название режима словами и полосы идущего копирования. */}
           <div className="frame" aria-hidden="true">
-            <div className="frame-t"><i></i><i></i><i></i><small>MoveMailbox</small></div>
             <div className="frame-b">
               <span className="ico"><svg aria-hidden="true" style={{ width: '26px', height: '26px' }}><use href="#lp" /></svg></span>
-              <strong>LOCAL MODE</strong>
-              <span>IMAP → IMAP</span>
+              <strong>{t.mockTitle}</strong>
+              <span>{t.mockNote}</span>
               <div className="bars"><i></i><i></i><i></i><i></i><i></i></div>
             </div>
           </div>

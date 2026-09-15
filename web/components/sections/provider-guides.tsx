@@ -1,5 +1,6 @@
 import { ProviderGuidesInit } from '@/components/section-init';
 import { ProviderMark } from '@/components/provider-mark';
+import { RichText } from '@/components/rich-text';
 import { mark } from '@/data/provider-marks';
 import { providerGuides } from '@/content/sections/provider-guides';
 import { guidesRuntime } from '@/content/sections/guides-runtime';
@@ -63,14 +64,14 @@ export function ProviderGuides({ lang, pageTitle = false }: { lang: Lang; pageTi
                 <div>
                   <h4>{rt.stepsTitle}</h4>
                   <ol className="olist">
-                    {first.steps.map((step) => <li key={step}>{step}</li>)}
+                    {first.steps.map((step) => <li key={step}><RichText text={step} /></li>)}
                   </ol>
                 </div>
                 <div>
                   <h4>{rt.warnsTitle}</h4>
                   <ul className="warns">
                     {first.warns.map(([text]) => (
-                      <li key={text}><svg aria-hidden="true"><use href="#al" /></svg><span>{text}</span></li>
+                      <li key={text}><svg aria-hidden="true"><use href="#al" /></svg><span><RichText text={text} /></span></li>
                     ))}
                   </ul>
                 </div>
