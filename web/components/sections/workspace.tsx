@@ -44,12 +44,14 @@ export function Workspace({ lang }: { lang: Lang }) {
       <WorkspaceInit lang={lang} strings={rt} online={!STATIC_SITE} />
       <section className="wide-shell" id="workspace" style={{ paddingTop: '0' }}>
 
+        {/* Заголовок есть в разметке, но не на экране.
+            Раньше карточку венчала полоса «как у окна»: значок, название и
+            плашка IMAP → IMAP. Окно ничего не значило — внутри не приложение,
+            а форма, — а плашка повторяла то, что и так написано в первом
+            экране. Убрано: инструмент стоит прямо под заголовком страницы,
+            без рамки вокруг рамки. Структуре h2 всё ещё нужен. */}
         <div className="ws">
-          <div className="ws-bar">
-            <span className="ws-ico"><svg aria-hidden="true"><use href="#sw" /></svg></span>
-            <h2>{t.title}</h2>
-            <span className="tail"><span className="chip">{t.chip}</span></span>
-          </div>
+          <h2 className="h-struct">{t.title}</h2>
 
           {/* Предупреждение стоит до полей, а не после них. Ниже формы его
               читали уже после того, как ввели адрес сервера и логин — то есть

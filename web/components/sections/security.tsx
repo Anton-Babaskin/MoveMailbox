@@ -16,19 +16,28 @@ export function Security({ lang, pageTitle = false }: { lang: Lang; pageTitle?: 
           </div>
 
           <div className="board">
+            {/* Была панель мониторинга: моноширинные метки TTL, IN-MEMORY,
+                NO-STORE, пульсирующие точки состояния и подпись «предварительная
+                версия» мелкими прописными. Читалось как серверный дашборд, хотя
+                рассказывает эта секция не про аптайм, а про то, что происходит
+                с чужим паролем. Осталась суть: значок, заголовок, объяснение.
+                Значки заданы здесь, а не в словаре: они одни на три языка. */}
             <header>
-              <span className="live"><i></i>{t.live}</span>
-              <span className="upd">{t.upd}</span>
+              <span className="live">{t.live}</span>
             </header>
             <ul>
-              {t.items.map((item) => (
-                <li key={item.tag}>
-                  <span className="tag">{item.tag}</span>
+              {t.items.map((item, i) => (
+                <li key={item.title}>
+                  <span className="b-ico" aria-hidden="true">
+                    {/* ключ · щит · конверт · сервер — по смыслу пункта:
+                        свой ключ на задание, расшифровка в памяти, письма не
+                        оседают у нас, всё можно держать на своём железе. */}
+                    <svg><use href={`#${['ky', 'sh', 'lp', 'sv'][i] ?? 'sh'}`} /></svg>
+                  </span>
                   <div>
                     <strong>{item.title}</strong>
                     <p>{item.text}</p>
                   </div>
-                  <i className="dot" aria-hidden="true"></i>
                 </li>
               ))}
             </ul>

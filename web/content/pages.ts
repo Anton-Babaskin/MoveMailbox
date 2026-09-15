@@ -27,6 +27,23 @@ export const pages: Record<string, Record<Lang, PageMeta>> = {
         'Перенесення пошти між IMAP-серверами: листи, папки та вкладення. Онлайн до 5 ГБ безкоштовно або локальний клієнт без обмеження обсягу.',
     },
   },
+  '/imap': {
+    ru: {
+      title: 'Настройки IMAP по сервисам — хост, порт, пароль',
+      description:
+        'Справочник настроек IMAP: сервер, порт, шифрование и вид пароля для Gmail, UKR.NET, GMX, WEB.DE, AOL, Fastmail и других сервисов.',
+    },
+    en: {
+      title: 'IMAP settings by service — host, port, password',
+      description:
+        'IMAP reference: server, port, encryption and which password each service wants — UKR.NET, GMX, WEB.DE, AOL, Fastmail, Proton Mail and more.',
+    },
+    uk: {
+      title: 'Налаштування IMAP за сервісами — хост, порт, пароль',
+      description:
+        'Довідник налаштувань IMAP: сервер, порт, шифрування та вид пароля для UKR.NET, GMX, WEB.DE, AOL, Fastmail та інших сервісів.',
+    },
+  },
   '/routes': {
     ru: {
       title: 'Маршруты переноса почты — MoveMailbox',

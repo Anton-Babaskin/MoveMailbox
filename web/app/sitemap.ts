@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { migrationRoutes } from '@/data/migration-routes';
 import { providerHubSlugs } from '@/data/provider-hubs';
 import { guideArticleSlugs } from '@/data/guide-articles';
+import { imapHostSlugs } from '@/data/imap-hosts';
 import { imapErrorSlugs } from '@/data/imap-errors';
 import { blogPosts } from '@/data/blog-posts';
 import { LANGS, href } from '@/i18n/config';
@@ -44,6 +45,7 @@ const pages: Entry[] = [
   { path: '/routes', changeFrequency: 'weekly', priority: 0.86 },
   { path: '/guides', changeFrequency: 'weekly', priority: 0.84 },
   { path: '/docs/errors', changeFrequency: 'monthly', priority: 0.8 },
+
   { path: '/pricing', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/download', changeFrequency: 'weekly', priority: 0.78 },
   { path: '/security', changeFrequency: 'monthly', priority: 0.7 },
@@ -77,6 +79,28 @@ const guidePages: Entry[] = guideArticleSlugs.map((slug) => ({
   lastModified: CONTENT_UPDATED,
 }));
 
+/* Настройки IMAP по сервисам. Запрос «хост и порт такого-то сервиса» люди
+   задают постоянно и независимо от переезда — это самый широкий вход в
+   раздел, поэтому приоритет на уровне гайдов провайдеров.
+
+   Своя дата: раздел появился позже остальных текстов, и ставить ему общую
+   дату значит соврать в обе стороны сразу. */
+const IMAP_SECTION_UPDATED = '2026-09-15';
+
+const imapHostPages: Entry[] = imapHostSlugs.map((slug) => ({
+  path: `/imap/${slug}`,
+  changeFrequency: 'monthly' as ChangeFrequency,
+  priority: 0.78,
+  lastModified: IMAP_SECTION_UPDATED,
+}));
+
+imapHostPages.unshift({
+  path: '/imap',
+  changeFrequency: 'weekly',
+  priority: 0.82,
+  lastModified: IMAP_SECTION_UPDATED,
+});
+
 const errorPages: Entry[] = imapErrorSlugs.map((slug) => ({
   path: `/docs/errors/${slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
@@ -102,6 +126,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...routePages,
     ...hubPages,
     ...guidePages,
+    ...imapHostPages,
     ...errorPages,
     ...blogPages,
   ];

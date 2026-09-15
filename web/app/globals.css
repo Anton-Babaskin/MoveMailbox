@@ -107,6 +107,22 @@ main,header,footer{position:relative;z-index:1}
 .btn-g:hover{border-color:var(--acc)}
 .btn-s{height:38px;padding:0 14px;font-size:.83rem;border-radius:9px}
 .btn[disabled]{opacity:.42;cursor:not-allowed;transform:none !important;box-shadow:none}
+/* Главные кнопки страницы выключены всё время, пока онлайн-перенос не
+   запущен, — и полупрозрачная заливка читалась как поломка вёрстки, а не
+   как «пока недоступно». Цвет остаётся своим, но приглушается подмешиванием
+   фона, а не прозрачностью: кнопка выглядит намеренно спокойной. */
+.launch .acts .btn[disabled]{opacity:1}
+/* Заливка светлая, а надпись своего цвета: белым по бледно-зелёному текст
+   не читался вовсе — а прочесть, что именно сейчас недоступно, важнее
+   яркости. */
+.launch .acts .btn-p[disabled]{background:color-mix(in srgb,var(--acc) 14%,var(--surf));
+  border-color:color-mix(in srgb,var(--acc) 26%,var(--line));
+  color:color-mix(in srgb,var(--acc) 72%,var(--ink))}
+.launch .acts .btn-stop[disabled]{background:color-mix(in srgb,var(--warn) 13%,var(--surf));
+  border-color:color-mix(in srgb,var(--warn) 26%,var(--line));
+  color:color-mix(in srgb,var(--warn) 68%,var(--ink))}
+/* Блик по наведению у выключенной кнопки не нужен: он обещает нажатие. */
+.btn-p[disabled]::after{display:none}
 
 /* header */
 header.top{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);
@@ -202,18 +218,16 @@ nav.main a.now{background:var(--acc-soft);color:var(--acc);font-weight:600}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
 /* workspace */
-.ws{background:var(--surf);border:1px solid var(--line);border-radius:24px;box-shadow:var(--sh-hi);overflow:hidden;margin-top:14px}
-.ws-bar{display:flex;align-items:center;gap:11px;padding:9px 20px;border-bottom:1px solid var(--line);background:var(--surf-2)}
-/* Раньше здесь были три серых кружка «как у окна macOS». Они ничего не
-   значили и не читались — заменены значком, как в шапке журнала ниже. */
-.ws-ico{width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
-  background:var(--acc-soft);color:var(--acc);
-  border:1px solid color-mix(in srgb,var(--acc) 22%,transparent)}
-.ws-ico svg{width:15px;height:15px}
-.ws-bar h2{font-size:.9rem;font-weight:700;letter-spacing:-.01em}
-.ws-bar .tail{margin-left:auto;display:flex;gap:8px;align-items:center}
-.chip{font-family:var(--mono);font-size:10.5px;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:7px;
-  background:var(--amb-soft);color:var(--amb);border:1px solid color-mix(in srgb,var(--amb) 28%,transparent)}
+/* Карточка переноса.
+   Сверху у неё была полоса «как у окна»: кружки, значок, название и плашка
+   IMAP → IMAP. Рамка вокруг рамки — внутри не приложение, а форма, и окно
+   ничего не объясняло. Осталась одна поверхность: мягче тень, крупнее
+   скругление, ни одной лишней линии. */
+.ws{background:var(--surf);border:1px solid var(--line);border-radius:28px;
+  box-shadow:0 1px 2px rgba(13,27,38,.04),0 18px 48px -28px rgba(13,27,38,.28);
+  overflow:hidden;margin-top:18px}
+:root[data-theme="dark"] .ws,
+:root:not([data-theme="light"]) .ws{box-shadow:0 1px 2px rgba(0,0,0,.4),0 18px 48px -28px rgba(0,0,0,.8)}
 .panes{display:grid;grid-template-columns:minmax(0,1fr) 216px minmax(0,1fr);align-items:stretch}
 @media (max-width:1180px){.panes{grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr)}}
 @media (max-width:880px){.panes{grid-template-columns:1fr}}
@@ -280,6 +294,14 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .adv-in select:focus,.adv-in input:focus{outline:none;border-color:var(--acc)}
 .mid{position:relative;display:grid;place-items:center;border-inline:1px solid var(--line);
   background:var(--surf-2)}
+/* Связь между ящиками — тонкая рельса, а не облако точек. Точки на
+   холсте остались, но теперь они бегут только во время переноса: на
+   неработающем задании это была не анимация данных, а пыль на экране. */
+.mid::before{content:"";position:absolute;left:50%;top:24px;bottom:24px;width:2px;
+  transform:translateX(-50%);border-radius:2px;
+  background:linear-gradient(180deg,transparent,
+    color-mix(in srgb,var(--acc) 24%,transparent) 16%,
+    color-mix(in srgb,var(--acc) 24%,transparent) 84%,transparent)}
 #flow{position:absolute;inset:0;width:100%;height:100%}
 .mid-in{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:20px;
   padding:20px 12px;width:100%}
@@ -297,6 +319,10 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .mid-links a:hover{color:var(--acc)}
 @media (max-width:880px){
   .mid{border-inline:0;border-block:1px solid var(--line)}
+  /* На узком экране ящики стоят друг над другом, а содержимое перемычки
+     выстраивается в несколько рядов — рельса посередине проходила бы не
+     между ящиками, а поперёк собственных кнопок. Убираем. */
+  .mid::before{display:none}
   .mid-in{flex-direction:row;flex-wrap:wrap;justify-content:center;padding:18px 14px}
   .mid-links{flex-direction:row;gap:16px;width:100%;justify-content:center}
 }
@@ -484,11 +510,53 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 .log-foot{padding:0 24px 16px;font-size:.8rem;color:#74899B}
 
 /* trust row */
-.trust{border-block:1px solid var(--line);background:var(--surf)}
-.trust ul{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;padding-block:22px}
-.trust li{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--ink-3)}
-.trust li svg{width:15px;height:15px;color:var(--acc)}
+/* ==========================================================================
+   Бегущая лента сервисов.
+
+   Две одинаковые дорожки подряд; первая уезжает влево ровно на свою ширину,
+   и в этот момент вторая встаёт на её место. Смещение кратно ширине дорожки,
+   поэтому шва не видно и не нужен ни один скрипт.
+
+   По краям растушёвка маской: обрубленный на полуслове текст у края читается
+   как ошибка вёрстки.
+   ========================================================================== */
+/* Маска висит на .trust, а не на .mq: .mq шириной в две дорожки (под пять
+   тысяч пикселей), и проценты в градиенте считались бы от неё — растушёвка
+   съедала бы треть видимой полосы слева и никогда не доходила до правого
+   края. На .trust проценты считаются от ширины экрана, как и задумано. */
+.trust{border-block:1px solid var(--line);background:var(--surf);overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.mq{display:flex;width:max-content}
+.mq-track{display:flex;align-items:center;gap:34px;padding:16px 17px;flex:none;
+  animation:mq 46s linear infinite}
+@keyframes mq{from{transform:translate3d(0,0,0)}to{transform:translate3d(-100%,0,0)}}
+/* Пауза по наведению и по фокусу с клавиатуры: догонять уезжающую ссылку
+   глазами — то же самое, что читать бегущую строку в метро. */
+.mq:hover .mq-track,.mq:focus-within .mq-track{animation-play-state:paused}
+
+.mq-item{display:inline-flex;align-items:center;gap:9px;flex:none;white-space:nowrap;
+  font-size:.92rem;font-weight:600;letter-spacing:-.01em;color:var(--ink-2)}
+.mq-item .pvi{width:28px;height:28px;border-radius:9px;opacity:1}
+.mq-item .pvi i{font-size:12px}
+.mq-item .pvi img{width:16px;height:16px}
+/* Логотип-надпись вместо плашки с буквой. Надпись у «Yandex» набрана чёрным,
+   а лента на тёмной теме тёмная — поэтому надпись сидит на светлой подложке:
+   один файл на обе темы вместо двух и гарантированный контраст. */
+.mq-item .mq-wm{height:17px;width:auto;display:block;box-sizing:content-box;
+  padding:7px 11px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.mq-claim{display:inline-flex;align-items:center;gap:8px;flex:none;white-space:nowrap;
+  font-size:.86rem;color:var(--ink-3)}
+.mq-claim svg{width:15px;height:15px;color:var(--acc);flex:none}
+
+/* Движение отключено — лента просто стоит. Прокрутить её при этом можно
+   пальцем или колесом: содержимое остаётся доступным, а не обрезанным. */
+@media (prefers-reduced-motion:reduce){
+  .trust{overflow-x:auto;scrollbar-width:none}
+  .trust::-webkit-scrollbar{display:none}
+  .mq-track{animation:none}
+  .mq-track+.mq-track{display:none}
+}
 
 /* generic cards */
 .head-wide{max-width:66ch}
@@ -590,9 +658,14 @@ details.adv[open]>summary svg.chev{transform:rotate(180deg)}
 @media (max-width:760px){.pv-cols{grid-template-columns:1fr}}
 .pv-cols h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin-bottom:12px}
 .olist{counter-reset:o;display:flex;flex-direction:column;gap:11px}
-.olist li{counter-increment:o;display:grid;grid-template-columns:22px 1fr;gap:11px;font-size:.885rem;color:var(--ink-2)}
-.olist li::before{content:counter(o);font-family:var(--mono);font-size:11px;color:var(--acc);background:var(--acc-soft);
-  width:22px;height:22px;border-radius:7px;display:grid;place-items:center;margin-top:1px}
+/* Номер шага висит слева абсолютом, а не занимает колонку грида.
+   Грид здесь ломался: в шаге бывает <code>, и каждый такой тег становился
+   отдельным элементом сетки — хост наезжал на пояснение рядом с ним.
+   Обычный поток строки этого не делает. */
+.olist li{counter-increment:o;position:relative;padding-left:33px;font-size:.885rem;color:var(--ink-2)}
+.olist li::before{content:counter(o);position:absolute;left:0;top:1px;
+  font-family:var(--mono);font-size:11px;color:var(--acc);background:var(--acc-soft);
+  width:22px;height:22px;border-radius:7px;display:grid;place-items:center}
 .warns{display:flex;flex-direction:column;gap:11px}
 .warns li{display:grid;grid-template-columns:16px 1fr;gap:11px;font-size:.885rem;color:var(--ink-2)}
 .warns svg{width:16px;height:16px;color:var(--amb);margin-top:4px}
@@ -637,34 +710,24 @@ code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px
 @media (max-width:920px){.band-g{grid-template-columns:1fr}}
 .band p.lede{color:#94AABA}
 /* ---- status board ---- */
-.board{border:1px solid rgba(255,255,255,.11);border-radius:18px;overflow:hidden;
-  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))}
-.board>header{display:flex;align-items:center;gap:12px;padding:15px 20px;
-  border-bottom:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02)}
-.live{display:inline-flex;align-items:center;gap:9px;font-size:.88rem;font-weight:700;color:var(--term-hi)}
-.live i{width:8px;height:8px;border-radius:50%;background:var(--term-g);position:relative}
-.live i::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--term-g);
-  animation:live 2.4s cubic-bezier(.2,.6,.3,1) infinite}
-@keyframes live{0%{transform:scale(.55);opacity:.75}70%,100%{transform:scale(1.5);opacity:0}}
-.upd{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;
-  text-transform:uppercase;color:#74899B}
-.board ul{display:flex;flex-direction:column}
-.board li{display:grid;grid-template-columns:auto 1fr 10px;gap:18px;align-items:start;
-  padding:20px;border-bottom:1px solid rgba(255,255,255,.07);transition:background .3s}
-.board li:last-child{border-bottom:0}
-.board li:hover{background:rgba(255,255,255,.03)}
-.board .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--term-g);
-  background:rgba(79,214,172,.1);border:1px solid rgba(79,214,172,.26);border-radius:6px;
-  padding:5px 9px;white-space:nowrap;margin-top:2px}
-.board strong{display:block;color:var(--term-hi);font-size:.98rem;font-weight:700;
-  letter-spacing:-.015em;margin-bottom:5px}
-.board li p{font-size:.865rem;color:#8FA5B5;line-height:1.6}
-.board .dot{width:8px;height:8px;border-radius:50%;background:var(--term-g);margin-top:8px;
-  box-shadow:0 0 10px rgba(79,214,172,.8);animation:beat 3.2s ease-in-out infinite}
-.board li:nth-child(2) .dot{animation-delay:.4s}
-.board li:nth-child(3) .dot{animation-delay:.8s}
-.board li:nth-child(4) .dot{animation-delay:1.2s}
-@keyframes beat{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.board{border:1px solid rgba(255,255,255,.09);border-radius:24px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008))}
+/* Панель мониторинга превратилась в спокойный список: без пульсирующих
+   точек состояния, без моноширинных меток и без подписи «предварительная
+   версия» мелкими прописными. Секция объясняет, что происходит с чужим
+   паролем, — ей нужна ясность, а не вид серверного дашборда. */
+.board>header{display:flex;align-items:center;padding:20px 24px 4px}
+.live{font-size:.92rem;font-weight:700;color:var(--term-hi);letter-spacing:-.01em}
+.board ul{display:flex;flex-direction:column;padding:8px 10px 10px}
+.board li{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;
+  padding:18px 14px;border-radius:14px;transition:background .3s}
+.board li:hover{background:rgba(255,255,255,.035)}
+.b-ico{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;
+  background:rgba(79,214,172,.12);border:1px solid rgba(79,214,172,.22);color:var(--term-g)}
+.b-ico svg{width:18px;height:18px}
+.board strong{display:block;color:var(--term-hi);font-size:1.02rem;font-weight:700;
+  letter-spacing:-.015em;margin-bottom:6px}
+.board li p{font-size:.9rem;color:#9BB0BF;line-height:1.65}
 .board>footer{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:15px 20px;
   border-top:1px solid rgba(255,255,255,.09);font-size:.83rem;color:#7C93A6;background:rgba(0,0,0,.18)}
 .board>footer a{margin-left:auto;display:inline-flex;align-items:center;gap:7px;
@@ -672,9 +735,7 @@ code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px
 .board>footer svg{width:14px;height:14px;transition:transform .25s}
 .board>footer a:hover svg{transform:translateX(3px)}
 @media (max-width:560px){
-  .board li{grid-template-columns:1fr 10px;gap:10px}
-  .board .tag{grid-column:1;justify-self:start}
-  .board li>div{grid-column:1/-1}
+  .board li{grid-template-columns:auto 1fr;gap:14px;padding:16px 10px}
 }
 .band .go{display:inline-flex;align-items:center;gap:8px;margin-top:24px;color:var(--term-g);font-weight:700;font-size:.93rem}
 .band .go svg{width:15px;height:15px;transition:transform .25s}
@@ -1314,11 +1375,27 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
   background:none;border:0;border-radius:8px;color:var(--ink-3);cursor:pointer;transition:.2s}
 .lang-suggest-x:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .lang-suggest-x svg{width:15px;height:15px}
+/* На телефоне плашка занимала четверть первого экрана: крупная строка, под
+   ней ряд из кнопки и ссылки, а крестик висел посередине правого края —
+   ровно между двумя строками, будто относится к обеим. Ужимаем строку и
+   поднимаем крестик к верхнему краю, к началу текста. */
+@media (max-width:560px){
+  .lang-suggest-in{padding:10px 44px 10px 16px;gap:10px}
+  .lang-suggest p{font-size:.86rem}
+  .lang-suggest .btn-s{height:34px;padding:0 14px;font-size:.82rem}
+  /* Ужимаем надписи, но не площадь нажатия: у ссылки «остаться» поле
+     добирается отступами, у крестика — размером кнопки; рисунок внутри
+     остаётся прежним. */
+  .lang-suggest-no{font-size:.82rem;padding:12px 4px}
+  .lang-suggest-x{top:2px;transform:none;width:44px;height:44px;border-radius:12px}
+}
 @keyframes lang-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes lang-out{to{opacity:0;transform:translateY(-8px)}}
-@media (max-width:560px){
-  .lang-suggest{left:12px;right:12px;width:auto;bottom:12px}
-}
+/* Здесь было left/right/bottom: 12px — остаток от времён, когда плашка
+   языка была плавающей карточкой в углу. Сейчас она в потоке и относительная:
+   right и bottom на неё не действуют вовсе, а left просто сдвигал блок
+   вправо, не сужая, и 12px торчали за правым краем экрана — то есть страница
+   на телефоне прокручивалась вбок. Правило удалено целиком. */
 
 /* Сравнение сторон в калькуляторе: какая из них держит перенос.
    Полосы — доля от быстрой стороны, поэтому разрыв виден глазами. */
@@ -1503,8 +1580,10 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
    разъезжаются при первой же правке компонента.
    ========================================================================== */
 @media (pointer:coarse), (max-width:620px){
-  /* Шапка: тема и меню. */
+  /* Шапка: тема, меню и сам логотип — он ведёт на главную, а был высотой
+     в 34 пикселя. */
   .tgl,.burger{width:44px;height:44px}
+  .logo{min-height:44px}
   /* Поля формы и списки провайдеров. */
   .f input,.f-preset select,.adv-in select,.adv-in input{height:46px}
   .f-preset::after{bottom:17px}

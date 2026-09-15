@@ -25,20 +25,31 @@ export type ProviderMark = {
   b2: string;
   /** Путь к официальному знаку, если он есть и читается в квадрате. */
   logo?: string;
+  /**
+   * Путь к логотипу-надписи («Yandex», «cPanel»). У этих сервисов квадратного
+   * знака просто нет, а надпись в квадрате 28px нечитаема, поэтому она
+   * показывается во всю ширину — там, где ширина не ограничена: в бегущей
+   * ленте. Надпись заменяет собой и плашку, и название текстом: она и есть
+   * название, и уходит в alt, а не в скрытый текст.
+   */
+  wordmark?: string;
 };
 
 export const providerMarks: Record<ProviderKey, ProviderMark> = {
   gmail: { letter: 'G', b1: '#F2685A', b2: '#C42D20', logo: '/brand/providers/gmail.svg' },
-  'google-workspace': { letter: 'W', b1: '#F2907A', b2: '#B3421F' },
-  'microsoft-365': { letter: 'M', b1: '#5A8DE8', b2: '#1B4699' },
+  /* Официальный знак Google Workspace — надпись в восемь ширин, квадратного
+     нет вообще. Решение владельца: показывать знак Gmail. Он не подменяет
+     бренд — почта Workspace и есть Gmail, и рядом стоит название текстом. */
+  'google-workspace': { letter: 'W', b1: '#F2907A', b2: '#B3421F', logo: '/brand/providers/gmail.svg' },
+  'microsoft-365': { letter: 'M', b1: '#5A8DE8', b2: '#1B4699', logo: '/brand/providers/microsoft-365.svg' },
   outlook: { letter: 'O', b1: '#5AA0E8', b2: '#0F5FA8', logo: '/brand/providers/outlook.svg' },
-  yahoo: { letter: 'Y', b1: '#A98BE8', b2: '#5B2D91' },
-  icloud: { letter: 'i', b1: '#7FC4F0', b2: '#14719E' },
-  yandex: { letter: 'Я', b1: '#F0655E', b2: '#C22B26' },
-  mailru: { letter: '@', b1: '#6E8FE8', b2: '#1F3FA8' },
-  zoho: { letter: 'Z', b1: '#E8A05A', b2: '#9E5A0E' },
-  cpanel: { letter: 'c', b1: '#E8944E', b2: '#A4560D' },
-  exchange: { letter: 'E', b1: '#6FA8DC', b2: '#1F5FA8' },
+  yahoo: { letter: 'Y', b1: '#A98BE8', b2: '#5B2D91', logo: '/brand/providers/yahoo.svg' },
+  icloud: { letter: 'i', b1: '#7FC4F0', b2: '#14719E', logo: '/brand/providers/icloud.svg' },
+  yandex: { letter: 'Я', b1: '#F0655E', b2: '#C22B26', wordmark: '/brand/providers/yandex-wm.svg' },
+  mailru: { letter: '@', b1: '#6E8FE8', b2: '#1F3FA8', logo: '/brand/providers/mailru.svg' },
+  zoho: { letter: 'Z', b1: '#E8A05A', b2: '#9E5A0E', logo: '/brand/providers/zoho.svg' },
+  cpanel: { letter: 'c', b1: '#E8944E', b2: '#A4560D', wordmark: '/brand/providers/cpanel-wm.svg' },
+  exchange: { letter: 'E', b1: '#6FA8DC', b2: '#1F5FA8', logo: '/brand/providers/exchange.svg' },
 };
 
 export function mark(key: ProviderKey): ProviderMark {
