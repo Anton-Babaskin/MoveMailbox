@@ -107,7 +107,7 @@ export function ImapHostPage({ lang, slug }: { lang: Lang; slug: string }) {
           {/* Откуда значения. Без этой строки таблица ничем не отличается от
               сотни перепечаток друг у друга, половина которых устарела. */}
           <p className="hub-settings-lede" style={{ marginTop: '16px' }}>
-            {t.checkedNote(host.checked)}{' '}
+            {host.sourceKind === 'docs' ? t.checkedNoteDocs(host.checked) : t.checkedNote(host.checked)}{' '}
             {t.sourceLabel}:{' '}
             {host.sources.map((src, i) => (
               <span key={src}>

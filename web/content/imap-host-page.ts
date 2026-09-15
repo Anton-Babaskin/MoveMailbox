@@ -30,6 +30,7 @@ export const imapHostPage: Record<
     exportText: (host: string) => string;
     noImapTitle: string;
     checkedNote: (date: string) => string;
+    checkedNoteDocs: (date: string) => string;
     sourceLabel: string;
     pitfallsA: string;
     pitfallsB: string;
@@ -63,6 +64,8 @@ export const imapHostPage: Record<
     noImapTitle: 'Прямого IMAP нет',
     checkedNote: (date) =>
       `Значения сверены с файлом автоконфигурации сервиса ${date}. Это тот же источник, откуда настройки берёт Thunderbird.`,
+    checkedNoteDocs: (date) =>
+      `Значения сверены с документацией самого сервиса ${date}: файла автоконфигурации у него нет.`,
     sourceLabel: 'Источник',
     pitfallsA: 'Что здесь ',
     pitfallsB: 'ломается.',
@@ -95,6 +98,8 @@ export const imapHostPage: Record<
     noImapTitle: 'No direct IMAP',
     checkedNote: (date) =>
       `Checked against the service's own autoconfiguration file on ${date} — the same source Thunderbird reads when it fills the settings in for you.`,
+    checkedNoteDocs: (date) =>
+      `Checked against the service's own documentation on ${date}: it publishes no autoconfiguration file.`,
     sourceLabel: 'Source',
     pitfallsA: 'What breaks ',
     pitfallsB: 'here.',
@@ -127,6 +132,8 @@ export const imapHostPage: Record<
     noImapTitle: 'Прямого IMAP немає',
     checkedNote: (date) =>
       `Значення звірені з файлом автоконфігурації сервісу ${date}. Це те саме джерело, звідки налаштування бере Thunderbird.`,
+    checkedNoteDocs: (date) =>
+      `Значення звірені з документацією самого сервісу ${date}: файла автоконфігурації в нього немає.`,
     sourceLabel: 'Джерело',
     pitfallsA: 'Що тут ',
     pitfallsB: 'ламається.',
@@ -148,21 +155,21 @@ export const imapIndexPage: Record<
     eyebrow: 'Справочник',
     h1: 'Настройки IMAP по сервисам',
     lede:
-      'Хост, порт, шифрование и вид пароля для каждого почтового сервиса — и то, из-за чего подключение обычно не выходит с первого раза. Значения взяты из файлов автоконфигурации самих сервисов, а не из чужих обзоров.',
+      'Хост, порт, шифрование и вид пароля для каждого почтового сервиса — и то, из-за чего подключение обычно не выходит с первого раза. Значения взяты из автоконфигурации и документации самих сервисов, а не из чужих обзоров.',
     tableNote: 'Сервер и порт для подключения по IMAP',
   },
   en: {
     eyebrow: 'Reference',
     h1: 'IMAP settings by service',
     lede:
-      'Host, port, encryption and which kind of password each mail service wants — plus the thing that usually stops the first attempt. Values come from the services\' own autoconfiguration files, not from second-hand write-ups.',
+      'Host, port, encryption and which kind of password each mail service wants — plus the thing that usually stops the first attempt. Values come from the services\' own autoconfiguration files and documentation, not from second-hand write-ups.',
     tableNote: 'Server and port for the IMAP connection',
   },
   uk: {
     eyebrow: 'Довідник',
     h1: 'Налаштування IMAP за сервісами',
     lede:
-      'Хост, порт, шифрування та вид пароля для кожного поштового сервісу — і те, через що підключення зазвичай не виходить з першого разу. Значення взяті з файлів автоконфігурації самих сервісів, а не з чужих оглядів.',
+      'Хост, порт, шифрування та вид пароля для кожного поштового сервісу — і те, через що підключення зазвичай не виходить з першого разу. Значення взяті з автоконфігурації та документації самих сервісів, а не з чужих оглядів.',
     tableNote: 'Сервер і порт для підключення за IMAP',
   },
 };

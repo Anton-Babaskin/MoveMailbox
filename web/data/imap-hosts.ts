@@ -10,13 +10,19 @@
  * человека появляется наша задача.
  *
  * ОТКУДА ЗНАЧЕНИЯ. Хост, порт и шифрование не берутся по памяти и не
- * списываются с чужих обзоров: каждая строка таблицы взята из файла
- * автоконфигурации — либо из базы Mozilla (autoconfig.thunderbird.net),
- * либо с autoconfig-домена самого сервиса. Это то же самое, что читает
- * Thunderbird, когда подставляет настройки сам. Ссылки лежат в поле
- * sources, дата проверки — в checked. Всё, что нельзя было подтвердить
- * источником, на страницу не попало: неверный хост в такой таблице — это
- * час чужого времени и обращение в поддержку не по адресу.
+ * списываются с чужих обзоров. Основной источник — файл автоконфигурации:
+ * либо база Mozilla (autoconfig.thunderbird.net), либо autoconfig-домен
+ * самого сервиса. Это то же самое, что читает Thunderbird, когда
+ * подставляет настройки сам. У части хостеров такого файла нет — там
+ * источником служит их собственная документация, и это помечено полем
+ * sourceKind, чтобы страница не ссылалась на автоконфигурацию, которой не
+ * существует. Ссылки лежат в sources, дата проверки — в checked.
+ *
+ * Всё, что нельзя было подтвердить источником, на страницу не попало.
+ * Неверный хост в такой таблице — это час чужого времени и обращение в
+ * поддержку не по адресу. Так, для i.ua и meta.ua официальная документация
+ * описывает только POP3: страниц по ним здесь нет, пока IMAP-хост не
+ * подтверждён первоисточником.
  *
  * Порядок языков: английский и украинский — основные рынки, русский
  * наравне. Тексты пишутся под запросы своего рынка, а не переводятся
@@ -60,6 +66,12 @@ export type ImapHost = {
   exportHost?: string;
   /** Чем подтверждены значения в таблице. */
   sources: string[];
+  /**
+   * Каким источником. 'autoconfig' — файл автоконфигурации (по умолчанию),
+   * 'docs' — документация самого сервиса: у части хостеров файла нет, и
+   * ссылаться на него было бы неправдой.
+   */
+  sourceKind?: 'autoconfig' | 'docs';
   /** Когда значения проверялись последний раз, ISO. */
   checked: string;
   ru: ImapHostCopy;
@@ -1270,6 +1282,558 @@ export const imapHosts: ImapHost[] = [
         [
           'Чи можна зберегти адресу на mail.com після перенесення?',
           'Так — перенесення копіює пошту в іншу скриньку і нічого не змінює у старій адресі: вона працює, доки ви самі її не закриєте.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'ionos',
+    name: 'IONOS',
+    domains: ['ionos.com', 'ionos.de', '1and1.com'],
+    imap: { host: 'imap.ionos.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.ionos.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/',
+      'https://www.ionos.co.uk/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/',
+    ],
+    checked: '2026-09-15',
+    sourceKind: 'docs',
+    en: {
+      title: 'IONOS IMAP settings — host, port, TLS requirement',
+      description:
+        'IMAP for an IONOS mailbox: imap.ionos.com, port 993, SSL. Regional hosts, the TLS 1.2 requirement and where the panel shows your exact server.',
+      h1: 'IONOS IMAP settings',
+      intro:
+        'IONOS hosts mail for millions of domains under several brands and in several countries, which is why answers about "the IONOS server" disagree with each other. The documented host is imap.ionos.com; regional accounts can be served under a country domain instead, and the control panel always shows the one that belongs to your mailbox.',
+      pitfalls: [
+        'Regional hosts exist alongside imap.ionos.com. If authentication fails with a password you are sure about, check the mailbox settings in the IONOS panel for the server it names.',
+        'TLS 1.0 and 1.1 are no longer accepted. An old client that cannot do TLS 1.2 fails at the encryption stage, which looks like a connection problem rather than a client problem.',
+        'The username is the full address, not the customer number you sign in to the panel with.',
+        'A mailbox moved to Microsoft 365 through IONOS is a Microsoft 365 mailbox: its host is outlook.office365.com, and the IONOS hosts will not authenticate it.',
+      ],
+      faq: [
+        [
+          'Which host do I use?',
+          'imap.ionos.com on port 993 with SSL/TLS, and smtp.ionos.com on 465 for sending. If your account is regional, the panel shows the exact server for your mailbox.',
+        ],
+        [
+          'Why does my old mail program suddenly fail?',
+          'Most often because it only supports TLS 1.0 or 1.1, which IONOS has disabled. Updating the program fixes it; changing ports does not.',
+        ],
+        [
+          'What is the username?',
+          'The full email address. The customer number is for the IONOS control panel, not for IMAP.',
+        ],
+        [
+          'Can I migrate a whole IONOS mailbox elsewhere?',
+          'Yes — messages, folder tree, flags and dates transfer over IMAP, and the IONOS mailbox stays as it is until you delete it yourself.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для IONOS — хост, порт, требование TLS',
+      description:
+        'IMAP для ящика IONOS: imap.ionos.com, порт 993, SSL. Региональные хосты, требование TLS 1.2 и где панель показывает ваш точный сервер.',
+      h1: 'Настройки IMAP для IONOS',
+      intro:
+        'IONOS держит почту миллионов доменов под несколькими брендами и в нескольких странах — отсюда и противоречивые ответы про «сервер IONOS». Документированный хост — imap.ionos.com; региональные аккаунты могут обслуживаться на страновом домене, и панель управления всегда показывает тот, который относится к вашему ящику.',
+      pitfalls: [
+        'Кроме imap.ionos.com существуют региональные хосты. Если авторизация не проходит с паролем, в котором вы уверены, посмотрите в панели IONOS, какой сервер указан для этого ящика.',
+        'TLS 1.0 и 1.1 больше не принимаются. Старый клиент, не умеющий TLS 1.2, падает на этапе шифрования — и это выглядит как проблема соединения, а не программы.',
+        'Логин — полный адрес почты, а не номер клиента, под которым вы входите в панель.',
+        'Ящик, переведённый через IONOS на Microsoft 365, — это ящик Microsoft 365: его хост outlook.office365.com, на хостах IONOS он не авторизуется.',
+      ],
+      faq: [
+        [
+          'Какой хост использовать?',
+          'imap.ionos.com, порт 993 с SSL/TLS, отправка — smtp.ionos.com на 465. Если аккаунт региональный, точный сервер для вашего ящика показывает панель.',
+        ],
+        [
+          'Почему старая почтовая программа вдруг перестала работать?',
+          'Чаще всего потому, что она умеет только TLS 1.0 или 1.1, а IONOS их отключил. Помогает обновление программы, а не смена портов.',
+        ],
+        [
+          'Что указывать логином?',
+          'Полный адрес почты. Номер клиента — это для панели IONOS, а не для IMAP.',
+        ],
+        [
+          'Можно ли перенести ящик IONOS целиком?',
+          'Да — письма, дерево папок, флаги и даты переносятся по IMAP, а ящик в IONOS остаётся на месте, пока вы сами его не удалите.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для IONOS — хост, порт, вимога TLS',
+      description:
+        'IMAP для скриньки IONOS: imap.ionos.com, порт 993, SSL. Регіональні хости, вимога TLS 1.2 і де панель показує ваш точний сервер.',
+      h1: 'Налаштування IMAP для IONOS',
+      intro:
+        'IONOS тримає пошту мільйонів доменів під кількома брендами та в кількох країнах — звідси й суперечливі відповіді про «сервер IONOS». Документований хост — imap.ionos.com; регіональні акаунти можуть обслуговуватися на країновому домені, і панель керування завжди показує той, що стосується вашої скриньки.',
+      pitfalls: [
+        'Крім imap.ionos.com існують регіональні хости. Якщо авторизація не проходить із паролем, в якому ви впевнені, подивіться в панелі IONOS, який сервер указано для цієї скриньки.',
+        'TLS 1.0 і 1.1 більше не приймаються. Старий клієнт, що не вміє TLS 1.2, падає на етапі шифрування — і це виглядає як проблема з’єднання, а не програми.',
+        'Логін — повна адреса пошти, а не номер клієнта, під яким ви входите в панель.',
+        'Скринька, переведена через IONOS на Microsoft 365, — це скринька Microsoft 365: її хост outlook.office365.com, на хостах IONOS вона не авторизується.',
+      ],
+      faq: [
+        [
+          'Який хост використовувати?',
+          'imap.ionos.com, порт 993 із SSL/TLS, надсилання — smtp.ionos.com на 465. Якщо акаунт регіональний, точний сервер для вашої скриньки показує панель.',
+        ],
+        [
+          'Чому стара поштова програма раптом перестала працювати?',
+          'Найчастіше тому, що вона вміє лише TLS 1.0 або 1.1, а IONOS їх вимкнув. Допомагає оновлення програми, а не зміна портів.',
+        ],
+        [
+          'Що вказувати логіном?',
+          'Повну адресу пошти. Номер клієнта — це для панелі IONOS, а не для IMAP.',
+        ],
+        [
+          'Чи можна перенести скриньку IONOS цілком?',
+          'Так — листи, дерево папок, прапорці та дати переносяться за IMAP, а скринька в IONOS лишається на місці, доки ви самі її не видалите.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'hostinger',
+    name: 'Hostinger',
+    domains: ['hostinger.com'],
+    imap: { host: 'imap.hostinger.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.hostinger.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/',
+      'https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/',
+    ],
+    checked: '2026-09-15',
+    sourceKind: 'docs',
+    en: {
+      title: 'Hostinger IMAP settings — Hostinger Email and Titan',
+      description:
+        'IMAP for Hostinger Email: imap.hostinger.com, port 993, SSL. Titan Email sold through the same panel uses different servers.',
+      h1: 'Hostinger IMAP settings',
+      intro:
+        'Hostinger sells two different mail products through one panel, and half the confusion about its settings comes from that. Hostinger Email answers at imap.hostinger.com; Titan Email is a separate service with its own servers, shown in Titan webmail under the settings for third-party apps. Check which one your domain uses before typing anything.',
+      pitfalls: [
+        'Hostinger Email and Titan Email are different products with different servers. imap.hostinger.com belongs to the first one only.',
+        'For Titan, the exact host comes from Titan webmail → Settings → the section for configuring third-party apps. Do not guess it from a hosting article.',
+        'The username is the full mailbox address, not the hPanel account you bought the hosting with.',
+        'Only encrypted ports are served: IMAP 993 with SSL, SMTP 465 with SSL.',
+      ],
+      faq: [
+        [
+          'How do I tell which mail product I have?',
+          'hPanel shows it next to the domain: either Hostinger Email or Titan. The connect-apps page in the panel prints the exact server for that mailbox.',
+        ],
+        [
+          'Which host for Hostinger Email?',
+          'imap.hostinger.com on 993 with SSL/TLS, and smtp.hostinger.com on 465. The username is the full address, and the password is the mailbox password.',
+        ],
+        [
+          'Is an app password needed?',
+          'No — Hostinger Email takes the mailbox password. The password you use for hPanel is a different one.',
+        ],
+        [
+          'Can I move mail from Hostinger to another host?',
+          'Yes. Point the source at the Hostinger mailbox over IMAP and the destination at the new one; folders, flags and dates come across, and nothing is deleted at the source.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Hostinger — Hostinger Email и Titan',
+      description:
+        'IMAP для Hostinger Email: imap.hostinger.com, порт 993, SSL. У Titan Email, который продаётся в той же панели, серверы другие.',
+      h1: 'Настройки IMAP для Hostinger',
+      intro:
+        'Hostinger продаёт через одну панель два разных почтовых продукта, и половина путаницы с настройками именно отсюда. Hostinger Email отвечает на imap.hostinger.com; Titan Email — отдельный сервис со своими серверами, которые показывает веб-почта Titan в разделе настройки сторонних приложений. Прежде чем что-то вводить, посмотрите, какой из двух у вашего домена.',
+      pitfalls: [
+        'Hostinger Email и Titan Email — разные продукты с разными серверами. imap.hostinger.com относится только к первому.',
+        'Для Titan точный хост берётся в веб-почте Titan: «Settings» → раздел настройки сторонних приложений. Не угадывайте его по статье про хостинг.',
+        'Логин — полный адрес ящика, а не аккаунт hPanel, на который куплен хостинг.',
+        'Обслуживаются только шифрованные порты: IMAP 993 с SSL, SMTP 465 с SSL.',
+      ],
+      faq: [
+        [
+          'Как понять, какой у меня почтовый продукт?',
+          'hPanel показывает это рядом с доменом: Hostinger Email или Titan. Страница подключения приложений в панели печатает точный сервер для этого ящика.',
+        ],
+        [
+          'Какой хост у Hostinger Email?',
+          'imap.hostinger.com, порт 993 с SSL/TLS, отправка — smtp.hostinger.com на 465. Логин — полный адрес, пароль — от ящика.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет — Hostinger Email принимает пароль ящика. Пароль от hPanel это другой пароль.',
+        ],
+        [
+          'Можно ли перенести почту с Hostinger на другой хостинг?',
+          'Да. Источник — ящик Hostinger по IMAP, назначение — новый ящик; папки, флаги и даты переносятся, в источнике ничего не удаляется.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Hostinger — Hostinger Email і Titan',
+      description:
+        'IMAP для Hostinger Email: imap.hostinger.com, порт 993, SSL. У Titan Email, який продається в тій самій панелі, сервери інші.',
+      h1: 'Налаштування IMAP для Hostinger',
+      intro:
+        'Hostinger продає через одну панель два різні поштові продукти, і половина плутанини з налаштуваннями саме звідси. Hostinger Email відповідає на imap.hostinger.com; Titan Email — окремий сервіс зі своїми серверами, які показує вебпошта Titan у розділі налаштування сторонніх застосунків. Перш ніж щось вводити, подивіться, який із двох у вашого домену.',
+      pitfalls: [
+        'Hostinger Email і Titan Email — різні продукти з різними серверами. imap.hostinger.com стосується лише першого.',
+        'Для Titan точний хост береться у вебпошті Titan: «Settings» → розділ налаштування сторонніх застосунків. Не вгадуйте його за статтею про хостинг.',
+        'Логін — повна адреса скриньки, а не акаунт hPanel, на який куплено хостинг.',
+        'Обслуговуються лише шифровані порти: IMAP 993 із SSL, SMTP 465 із SSL.',
+      ],
+      faq: [
+        [
+          'Як зрозуміти, який у мене поштовий продукт?',
+          'hPanel показує це поруч із доменом: Hostinger Email або Titan. Сторінка підключення застосунків у панелі друкує точний сервер для цієї скриньки.',
+        ],
+        [
+          'Який хост у Hostinger Email?',
+          'imap.hostinger.com, порт 993 із SSL/TLS, надсилання — smtp.hostinger.com на 465. Логін — повна адреса, пароль — від скриньки.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні — Hostinger Email приймає пароль скриньки. Пароль від hPanel це інший пароль.',
+        ],
+        [
+          'Чи можна перенести пошту з Hostinger на інший хостинг?',
+          'Так. Джерело — скринька Hostinger за IMAP, призначення — нова скринька; папки, прапорці та дати переносяться, у джерелі нічого не видаляється.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'namecheap-private-email',
+    name: 'Namecheap Private Email',
+    domains: ['privateemail.com'],
+    imap: { host: 'mail.privateemail.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'mail.privateemail.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: [
+      'https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/private-email-contact-details-and-mail-client-setup/',
+    ],
+    checked: '2026-09-15',
+    sourceKind: 'docs',
+    en: {
+      title: 'Namecheap Private Email IMAP settings — host, port, passwords',
+      description:
+        'IMAP for Namecheap Private Email: mail.privateemail.com, port 993, SSL. One host for both directions, and app passwords alongside the master one.',
+      h1: 'Namecheap Private Email IMAP settings',
+      intro:
+        'Namecheap Private Email uses a single host for both directions — mail.privateemail.com — which trips people up when a client asks for two different servers and they invent an imap. prefix that does not exist. Only encrypted connections are served, and besides the mailbox password you can issue application passwords.',
+      pitfalls: [
+        'Incoming and outgoing use the same hostname: mail.privateemail.com. There is no separate imap. host to guess at.',
+        'Unencrypted connections are not served at all. Use 993 with SSL or 143 with STARTTLS for IMAP; 465 with SSL or 587 with STARTTLS for SMTP.',
+        'Secure Password Authentication must be off in Outlook, and SMTP authentication must be on — the default combination in some clients is exactly the wrong one.',
+        'The username is the full mailbox address, not the Namecheap account name.',
+      ],
+      faq: [
+        [
+          'What is the server address?',
+          'mail.privateemail.com for both IMAP and SMTP. IMAP on 993 with SSL, SMTP on 465 with SSL.',
+        ],
+        [
+          'Master password or application password?',
+          'Either works. An application password is worth using for a migration — it is revoked afterwards without touching the mailbox password.',
+        ],
+        [
+          'Why does Outlook keep rejecting the password?',
+          'Check that Secure Password Authentication is unticked and that outgoing server authentication is on. With SPA enabled the correct password is refused.',
+        ],
+        [
+          'Can I migrate mail into or out of Private Email?',
+          'Both. Over IMAP the messages, folder tree, flags and dates transfer either way, and the source is never modified.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Namecheap Private Email — хост, порт, пароли',
+      description:
+        'IMAP для Namecheap Private Email: mail.privateemail.com, порт 993, SSL. Один хост в обе стороны и пароли приложений помимо основного.',
+      h1: 'Настройки IMAP для Namecheap Private Email',
+      intro:
+        'У Namecheap Private Email один хост в обе стороны — mail.privateemail.com. На этом и спотыкаются: клиент просит два разных сервера, и человек придумывает префикс imap., которого не существует. Обслуживаются только шифрованные соединения, а кроме пароля ящика можно выпускать пароли приложений.',
+      pitfalls: [
+        'Входящая и исходящая почта — один и тот же хост: mail.privateemail.com. Отдельного сервера с префиксом imap. здесь нет.',
+        'Нешифрованные соединения не обслуживаются вовсе. IMAP — 993 с SSL или 143 со STARTTLS; SMTP — 465 с SSL или 587 со STARTTLS.',
+        'В Outlook нужно снять «Безопасная проверка пароля» (SPA) и включить авторизацию на SMTP — в некоторых клиентах по умолчанию стоит ровно наоборот.',
+        'Логин — полный адрес ящика, а не имя аккаунта Namecheap.',
+      ],
+      faq: [
+        [
+          'Какой адрес сервера?',
+          'mail.privateemail.com и для IMAP, и для SMTP. IMAP — порт 993 с SSL, SMTP — 465 с SSL.',
+        ],
+        [
+          'Основной пароль или пароль приложения?',
+          'Подходит любой. Для переноса удобнее пароль приложения: после окончания его отзывают, не трогая пароль ящика.',
+        ],
+        [
+          'Почему Outlook не принимает верный пароль?',
+          'Проверьте, что снята «Безопасная проверка пароля» (SPA) и включена авторизация на исходящем сервере. С включённым SPA верный пароль отвергается.',
+        ],
+        [
+          'Можно ли переносить почту в Private Email и обратно?',
+          'И то и другое. По IMAP письма, дерево папок, флаги и даты переносятся в обе стороны, источник при этом не меняется.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Namecheap Private Email — хост, порт, паролі',
+      description:
+        'IMAP для Namecheap Private Email: mail.privateemail.com, порт 993, SSL. Один хост в обидва боки та паролі застосунків окрім основного.',
+      h1: 'Налаштування IMAP для Namecheap Private Email',
+      intro:
+        'У Namecheap Private Email один хост в обидва боки — mail.privateemail.com. На цьому й спотикаються: клієнт просить два різні сервери, і людина вигадує префікс imap., якого не існує. Обслуговуються лише шифровані з’єднання, а окрім пароля скриньки можна випускати паролі застосунків.',
+      pitfalls: [
+        'Вхідна та вихідна пошта — той самий хост: mail.privateemail.com. Окремого сервера з префіксом imap. тут немає.',
+        'Нешифровані з’єднання не обслуговуються взагалі. IMAP — 993 із SSL або 143 зі STARTTLS; SMTP — 465 із SSL або 587 зі STARTTLS.',
+        'В Outlook треба зняти «Безпечну перевірку пароля» (SPA) і увімкнути авторизацію на SMTP — у деяких клієнтах за замовчуванням стоїть рівно навпаки.',
+        'Логін — повна адреса скриньки, а не ім’я акаунта Namecheap.',
+      ],
+      faq: [
+        [
+          'Яка адреса сервера?',
+          'mail.privateemail.com і для IMAP, і для SMTP. IMAP — порт 993 із SSL, SMTP — 465 із SSL.',
+        ],
+        [
+          'Основний пароль чи пароль застосунку?',
+          'Підходить будь-який. Для перенесення зручніший пароль застосунку: після завершення його відкликають, не чіпаючи пароль скриньки.',
+        ],
+        [
+          'Чому Outlook не приймає правильний пароль?',
+          'Перевірте, що знято «Безпечну перевірку пароля» (SPA) і увімкнено авторизацію на вихідному сервері. З увімкненим SPA правильний пароль відхиляється.',
+        ],
+        [
+          'Чи можна переносити пошту в Private Email і назад?',
+          'І те, і те. За IMAP листи, дерево папок, прапорці та дати переносяться в обидва боки, джерело при цьому не змінюється.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'rackspace',
+    name: 'Rackspace Email',
+    domains: ['emailsrvr.com'],
+    imap: { host: 'secure.emailsrvr.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'secure.emailsrvr.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: ['https://docs.rackspace.com/docs/rackspace-email-settings'],
+    checked: '2026-09-15',
+    sourceKind: 'docs',
+    en: {
+      title: 'Rackspace Email IMAP settings — secure.emailsrvr.com',
+      description:
+        'IMAP for Rackspace Email: secure.emailsrvr.com, port 993, SSL. The same host handles sending on 465, and the username is the full address.',
+      h1: 'Rackspace Email IMAP settings',
+      intro:
+        'Rackspace hosts mail for other people\'s domains, so the server never carries your own domain name: both directions go to secure.emailsrvr.com. That single fact accounts for most failed setups — the client is pointed at mail.yourcompany.com, which has nothing listening on it.',
+      pitfalls: [
+        'The host is secure.emailsrvr.com, not anything under your own domain, however the address looks.',
+        'The same hostname serves both IMAP on 993 and SMTP on 465, both with SSL.',
+        'The username is the full email address; Rackspace mailboxes are not addressed by a short name.',
+        'Rackspace Email and Microsoft Exchange sold by Rackspace are different products. An Exchange mailbox does not use these hosts.',
+      ],
+      faq: [
+        [
+          'What do I put in the server field?',
+          'secure.emailsrvr.com for incoming and outgoing alike: IMAP 993 with SSL, SMTP 465 with SSL.',
+        ],
+        [
+          'Why does mail.mydomain.com not work?',
+          'Because nothing answers there. Rackspace serves every customer domain from its own hosts, and secure.emailsrvr.com is the one to use.',
+        ],
+        [
+          'Is an app password needed?',
+          'No, the mailbox password is used directly.',
+        ],
+        [
+          'Can I migrate a Rackspace mailbox to Microsoft 365 or Google?',
+          'Yes, over IMAP — messages, folders, flags and dates move across, and the Rackspace mailbox is left untouched.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для Rackspace Email — secure.emailsrvr.com',
+      description:
+        'IMAP для Rackspace Email: secure.emailsrvr.com, порт 993, SSL. Тот же хост отправляет почту на 465, логин — полный адрес.',
+      h1: 'Настройки IMAP для Rackspace Email',
+      intro:
+        'Rackspace держит почту чужих доменов, поэтому сервер никогда не называется вашим доменом: обе стороны ходят на secure.emailsrvr.com. Из этого одного факта и берётся большинство неудачных настроек — клиент указывают на mail.вашакомпания.com, где просто никто не слушает.',
+      pitfalls: [
+        'Хост — secure.emailsrvr.com, а не что-либо на вашем домене, как бы ни выглядел адрес почты.',
+        'Один и тот же хост обслуживает и IMAP на 993, и SMTP на 465, оба с SSL.',
+        'Логин — полный адрес почты; коротким именем ящики Rackspace не адресуются.',
+        'Rackspace Email и Microsoft Exchange, который Rackspace тоже продаёт, — разные продукты. Ящик Exchange на этих хостах не работает.',
+      ],
+      faq: [
+        [
+          'Что писать в поле сервера?',
+          'secure.emailsrvr.com и для входящей, и для исходящей: IMAP — 993 с SSL, SMTP — 465 с SSL.',
+        ],
+        [
+          'Почему не работает mail.мойдомен.com?',
+          'Потому что там никто не отвечает. Rackspace обслуживает домены всех клиентов со своих хостов, и нужный — secure.emailsrvr.com.',
+        ],
+        [
+          'Нужен ли пароль приложения?',
+          'Нет, используется обычный пароль ящика.',
+        ],
+        [
+          'Можно ли перенести ящик Rackspace в Microsoft 365 или Google?',
+          'Да, по IMAP — письма, папки, флаги и даты переезжают, ящик в Rackspace остаётся нетронутым.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для Rackspace Email — secure.emailsrvr.com',
+      description:
+        'IMAP для Rackspace Email: secure.emailsrvr.com, порт 993, SSL. Той самий хост надсилає пошту на 465, логін — повна адреса.',
+      h1: 'Налаштування IMAP для Rackspace Email',
+      intro:
+        'Rackspace тримає пошту чужих доменів, тому сервер ніколи не називається вашим доменом: обидва боки ходять на secure.emailsrvr.com. Із цього одного факту й береться більшість невдалих налаштувань — клієнт спрямовують на mail.вашакомпанія.com, де просто ніхто не слухає.',
+      pitfalls: [
+        'Хост — secure.emailsrvr.com, а не щось на вашому домені, хоч би як виглядала адреса пошти.',
+        'Той самий хост обслуговує і IMAP на 993, і SMTP на 465, обидва із SSL.',
+        'Логін — повна адреса пошти; коротким іменем скриньки Rackspace не адресуються.',
+        'Rackspace Email і Microsoft Exchange, який Rackspace теж продає, — різні продукти. Скринька Exchange на цих хостах не працює.',
+      ],
+      faq: [
+        [
+          'Що писати в полі сервера?',
+          'secure.emailsrvr.com і для вхідної, і для вихідної: IMAP — 993 із SSL, SMTP — 465 із SSL.',
+        ],
+        [
+          'Чому не працює mail.мійдомен.com?',
+          'Бо там ніхто не відповідає. Rackspace обслуговує домени всіх клієнтів зі своїх хостів, і потрібний — secure.emailsrvr.com.',
+        ],
+        [
+          'Чи потрібен пароль застосунку?',
+          'Ні, використовується звичайний пароль скриньки.',
+        ],
+        [
+          'Чи можна перенести скриньку Rackspace у Microsoft 365 або Google?',
+          'Так, за IMAP — листи, папки, прапорці та дати переїжджають, скринька в Rackspace лишається недоторканою.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'dreamhost',
+    name: 'DreamHost',
+    domains: ['dreamhost.com'],
+    imap: { host: 'imap.dreamhost.com', port: 993, security: 'SSL/TLS' },
+    smtp: { host: 'smtp.dreamhost.com', port: 465, security: 'SSL/TLS' },
+    login: 'email',
+    auth: 'password',
+    sources: ['https://autoconfig.dreamhost.com/mail/config-v1.1.xml'],
+    checked: '2026-09-15',
+    en: {
+      title: 'DreamHost IMAP settings — host, port, encryption',
+      description:
+        'IMAP for a DreamHost mailbox: imap.dreamhost.com, port 993, SSL. The full address is the username, and the shared hosts work for every domain.',
+      h1: 'DreamHost IMAP settings',
+      intro:
+        'DreamHost serves every hosted domain from the same pair of hosts, so the settings do not depend on your domain at all: imap.dreamhost.com in, smtp.dreamhost.com out. The older per-server names still float around in old forum answers, and they are the usual reason a client that worked for years suddenly stops.',
+      pitfalls: [
+        'Use imap.dreamhost.com, not the machine name of the server your hosting sits on. Old per-machine hostnames from forum posts are the classic cause of a sudden failure.',
+        'The username is the full mailbox address, not the DreamHost panel login.',
+        'Port 993 with SSL is the one to use; 143 with STARTTLS works too, plain 143 without encryption does not.',
+        'A mailbox and a hosting account are different credentials — changing the panel password does not change the mailbox one.',
+      ],
+      faq: [
+        [
+          'Which hosts does DreamHost use?',
+          'imap.dreamhost.com on 993 with SSL for receiving, smtp.dreamhost.com on 465 with SSL for sending. The same for every hosted domain.',
+        ],
+        [
+          'What is the username?',
+          'The full email address of the mailbox.',
+        ],
+        [
+          'Is there an app password?',
+          'No. DreamHost takes the mailbox password directly.',
+        ],
+        [
+          'Can I migrate DreamHost mail to another provider?',
+          'Yes — over IMAP, with folders, flags and dates preserved and nothing deleted at DreamHost.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Настройки IMAP для DreamHost — хост, порт, шифрование',
+      description:
+        'IMAP для ящика DreamHost: imap.dreamhost.com, порт 993, SSL. Логин — полный адрес, общие хосты работают для любого домена.',
+      h1: 'Настройки IMAP для DreamHost',
+      intro:
+        'DreamHost обслуживает все размещённые домены с одной и той же пары хостов, поэтому настройки вообще не зависят от вашего домена: imap.dreamhost.com на приём, smtp.dreamhost.com на отправку. Старые имена конкретных серверов до сих пор ходят по форумам — и это обычная причина, по которой годами работавший клиент вдруг отваливается.',
+      pitfalls: [
+        'Указывайте imap.dreamhost.com, а не имя машины, на которой стоит ваш хостинг. Старые имена серверов из форумных ответов — классическая причина внезапного отказа.',
+        'Логин — полный адрес ящика, а не логин панели DreamHost.',
+        'Рабочий порт — 993 с SSL; 143 со STARTTLS тоже подходит, а вот голый 143 без шифрования — нет.',
+        'Ящик и аккаунт хостинга — разные учётные данные: смена пароля в панели не меняет пароль ящика.',
+      ],
+      faq: [
+        [
+          'Какие хосты у DreamHost?',
+          'imap.dreamhost.com, порт 993 с SSL на приём; smtp.dreamhost.com, порт 465 с SSL на отправку. Одинаково для всех размещённых доменов.',
+        ],
+        [
+          'Что указывать логином?',
+          'Полный адрес ящика.',
+        ],
+        [
+          'Есть ли пароль приложения?',
+          'Нет. DreamHost принимает пароль ящика напрямую.',
+        ],
+        [
+          'Можно ли перенести почту DreamHost к другому провайдеру?',
+          'Да — по IMAP, с сохранением папок, флагов и дат, и ничего не удаляя в DreamHost.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Налаштування IMAP для DreamHost — хост, порт, шифрування',
+      description:
+        'IMAP для скриньки DreamHost: imap.dreamhost.com, порт 993, SSL. Логін — повна адреса, спільні хости працюють для будь-якого домену.',
+      h1: 'Налаштування IMAP для DreamHost',
+      intro:
+        'DreamHost обслуговує всі розміщені домени з однієї й тієї самої пари хостів, тому налаштування взагалі не залежать від вашого домену: imap.dreamhost.com на прийом, smtp.dreamhost.com на надсилання. Старі імена конкретних серверів досі ходять форумами — і це звичайна причина, чому клієнт, що працював роками, раптом відвалюється.',
+      pitfalls: [
+        'Указуйте imap.dreamhost.com, а не ім’я машини, на якій стоїть ваш хостинг. Старі імена серверів із форумних відповідей — класична причина раптової відмови.',
+        'Логін — повна адреса скриньки, а не логін панелі DreamHost.',
+        'Робочий порт — 993 із SSL; 143 зі STARTTLS теж підходить, а от голий 143 без шифрування — ні.',
+        'Скринька й акаунт хостингу — різні облікові дані: зміна пароля в панелі не змінює пароль скриньки.',
+      ],
+      faq: [
+        [
+          'Які хости в DreamHost?',
+          'imap.dreamhost.com, порт 993 із SSL на прийом; smtp.dreamhost.com, порт 465 із SSL на надсилання. Однаково для всіх розміщених доменів.',
+        ],
+        [
+          'Що вказувати логіном?',
+          'Повну адресу скриньки.',
+        ],
+        [
+          'Чи є пароль застосунку?',
+          'Ні. DreamHost приймає пароль скриньки напряму.',
+        ],
+        [
+          'Чи можна перенести пошту DreamHost до іншого провайдера?',
+          'Так — за IMAP, зі збереженням папок, прапорців і дат, і нічого не видаляючи в DreamHost.',
         ],
       ],
     },
