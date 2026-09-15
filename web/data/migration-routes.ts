@@ -1310,6 +1310,521 @@ export const migrationRoutes: MigrationRoute[] = [
       ],
     },
   },
+
+  {
+    slug: 'gmail-to-gmail',
+    source: 'gmail',
+    destination: 'gmail',
+    tier: 1,
+    ru: {
+      title: 'Перенос почты с одного Gmail на другой — MoveMailbox',
+      description:
+        'Как перенести письма и папки между двумя аккаунтами Gmail по IMAP: два пароля приложения, ловушка «Вся почта» с обеих сторон и лимиты выгрузки и приёма.',
+      h1: 'Перенос почты с одного Gmail на другой',
+      intro:
+        'Самый частый переезд внутри одного сервиса: старый личный ящик на новый или рабочий на личный перед увольнением. Технически это два разных аккаунта Google, и все требования Gmail действуют дважды — по паролю приложения на каждую сторону, по включённому IMAP на каждую сторону и ярлык «Вся почта», который умеет удвоить объём и там, и там.',
+      pitfalls: [
+        'Пароль приложения нужен на обе стороны, и на обеих сначала включается двухэтапная аутентификация. Одного пароля на оба аккаунта не бывает.',
+        'Ярлык «[Gmail]/Вся почта» исключается у источника. Если этого не сделать, каждое письмо приедет столько раз, сколько у него ярлыков.',
+        'Приём в Gmail медленнее выгрузки: отдаёт он около 2.5 ГБ в сутки, а принимает заметно меньше. Между двумя Gmail это самый узкий участок, и время считается по приёму.',
+        'Ярлыки переезжают как папки. Письмо с тремя ярлыками окажется в одной выбранной папке, а не в трёх — структура упростится, и это нормально.',
+      ],
+      faq: [
+        [
+          'Можно ли перенести почту между аккаунтами Google без пароля приложения?',
+          'Нет. Обычный пароль аккаунта IMAP не принимает ни на одной стороне: нужна двухэтапная аутентификация и созданный пароль приложения на каждом из двух ящиков.',
+        ],
+        [
+          'Переедут ли ярлыки?',
+          'Они станут обычными папками в новом аккаунте. Это ограничение IMAP: в протоколе есть папки и нет ярлыков, поэтому одно письмо попадёт в одну папку.',
+        ],
+        [
+          'Сколько это займёт?',
+          'Считайте по приёму: Gmail принимает медленнее, чем отдаёт. Ящик на 5 ГБ обычно переезжает за двое-трое суток, крупный архив — за неделю и больше.',
+        ],
+        [
+          'Останутся ли письма в старом аккаунте?',
+          'Да, базовый режим только копирует. Старый ящик можно закрывать, когда сверите счётчики папок в обоих аккаунтах.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Migrate Gmail to another Gmail account — MoveMailbox',
+      description:
+        'Moving mail between two Google accounts over IMAP: an app password on each side, the All Mail trap at both ends, and why the receiving side sets the pace.',
+      h1: 'Migrating from one Gmail account to another',
+      intro:
+        'The most common move inside a single service: an old personal mailbox into a new one, or a work account into a personal one before leaving a job. Technically these are two separate Google accounts, so every Gmail requirement applies twice — an app password per side, IMAP enabled per side, and the All Mail label that can double the volume at either end.',
+      pitfalls: [
+        'Each side needs its own app password, and each side needs 2-step verification switched on first. There is no single password covering both accounts.',
+        'Exclude "[Gmail]/All Mail" on the source. Leave it in and every message arrives as many times as it has labels.',
+        'Gmail receives more slowly than it sends: roughly 2.5 GB a day going out, noticeably less coming in. Between two Gmail accounts the inbound side is the bottleneck, so plan by that.',
+        'Labels arrive as folders. A message with three labels lands in one chosen folder rather than three — the structure flattens, and that is expected.',
+      ],
+      faq: [
+        [
+          'Can I move mail between Google accounts without app passwords?',
+          'No. The account password is refused over IMAP on both sides: each mailbox needs 2-step verification and its own app password.',
+        ],
+        [
+          'Do labels survive?',
+          'They become ordinary folders in the new account. IMAP has folders and no labels, so one message ends up in one folder.',
+        ],
+        [
+          'How long does it take?',
+          'Count by the receiving side, which is the slower one. A 5 GB mailbox usually takes two or three days; a large archive a week or more.',
+        ],
+        [
+          'Does anything leave the old account?',
+          'No, the default mode only copies. Close the old mailbox once the folder counts match on both sides.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Перенесення пошти з одного Gmail на інший — MoveMailbox',
+      description:
+        'Як перенести листи й папки між двома акаунтами Gmail за IMAP: два паролі застосунків, пастка «Вся пошта» з обох боків і ліміти вивантаження та прийому.',
+      h1: 'Перенесення пошти з одного Gmail на інший',
+      intro:
+        'Найчастіший переїзд усередині одного сервісу: стара особиста скринька на нову або робоча на особисту перед звільненням. Технічно це два різні акаунти Google, і всі вимоги Gmail діють двічі — по паролю застосунку на кожен бік, увімкнений IMAP на кожному боці та ярлик «Вся пошта», який уміє подвоїти обсяг і там, і там.',
+      pitfalls: [
+        'Пароль застосунку потрібен на обидва боки, і на обох спершу вмикається двоетапна автентифікація. Одного пароля на два акаунти не буває.',
+        'Ярлик «[Gmail]/Вся пошта» виключається у джерела. Якщо цього не зробити, кожен лист приїде стільки разів, скільки в нього ярликів.',
+        'Прийом у Gmail повільніший за вивантаження: віддає він близько 2.5 ГБ на добу, а приймає помітно менше. Між двома Gmail це найвужча ділянка, і час рахується за прийомом.',
+        'Ярлики переїжджають як папки. Лист із трьома ярликами опиниться в одній обраній папці, а не в трьох — структура спроститься, і це нормально.',
+      ],
+      faq: [
+        [
+          'Чи можна перенести пошту між акаунтами Google без пароля застосунку?',
+          'Ні. Звичайний пароль акаунта IMAP не приймає з жодного боку: потрібна двоетапна автентифікація і створений пароль застосунку на кожній зі скриньок.',
+        ],
+        [
+          'Чи переїдуть ярлики?',
+          'Вони стануть звичайними папками в новому акаунті. Це обмеження IMAP: у протоколі є папки і немає ярликів, тому один лист потрапить в одну папку.',
+        ],
+        [
+          'Скільки це триватиме?',
+          'Рахуйте за прийомом: Gmail приймає повільніше, ніж віддає. Скринька на 5 ГБ зазвичай переїжджає за дві-три доби, великий архів — за тиждень і більше.',
+        ],
+        [
+          'Чи залишаться листи у старому акаунті?',
+          'Так, базовий режим лише копіює. Стару скриньку можна закривати, коли звірите лічильники папок в обох акаунтах.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'ukr-net-to-gmail',
+    source: 'ukr-net',
+    destination: 'gmail',
+    tier: 1,
+    uk: {
+      title: 'Перенесення пошти з @UKR.NET на Gmail — MoveMailbox',
+      description:
+        'Як перенести листи та папки з @UKR.NET у Gmail за IMAP: пароль для зовнішніх програм, увімкнення доступу і ліміт прийому на боці Google.',
+      h1: 'Перенесення пошти з @UKR.NET на Gmail',
+      intro:
+        'Переїзд з української пошти на Gmail упирається не в Gmail, а в @UKR.NET: з лютого 2020 року основний пароль від скриньки для зовнішніх програм не приймається, а сам доступ вимкнений, доки його не увімкнути. Далі все звичайно — і найповільнішою ділянкою стає прийом на боці Google.',
+      pitfalls: [
+        'У @UKR.NET спершу вмикається доступ для зовнішніх програм і створюється окремий пароль — у розділі «Керування IMAP-доступом». Основний пароль не підійде.',
+        'У Gmail потрібен свій пароль застосунку і увімкнений IMAP: це два різні паролі на дві сторони, їх плутають частіше за все інше.',
+        'Gmail приймає повільніше, ніж віддає. Саме прийом і визначає час переїзду, а не швидкість @UKR.NET.',
+        'Кириличні назви папок приїжджають у modified UTF-7 — ми декодуємо їх автоматично, тому «Вхідні» лишаються «Вхідними», а не перетворюються на набір символів.',
+      ],
+      faq: [
+        [
+          'Де взяти пароль для зовнішніх програм @UKR.NET?',
+          'У налаштуваннях скриньки: «Керування IMAP-доступом» → увімкнути перемикач → підтвердити основним паролем → назвати програму → створити пароль. Показується він один раз.',
+        ],
+        [
+          'Чи залишиться пошта в @UKR.NET?',
+          'Так. Базовий режим лише копіює і нічого не видаляє у джерелі.',
+        ],
+        [
+          'Чи перенесуться папки і дати листів?',
+          'Так: дерево папок, прапорці прочитаного та початкові дати зберігаються. Нові листи не стають «сьогоднішніми».',
+        ],
+        [
+          'Скільки триватиме перенесення?',
+          'Обсяг вимірюється до запуску і показується у формі. Орієнтир — прийом Gmail: скринька на кілька гігабайтів зазвичай їде добу-другу.',
+        ],
+      ],
+    },
+    ru: {
+      title: 'Перенос почты с @UKR.NET на Gmail — MoveMailbox',
+      description:
+        'Как перенести письма и папки с @UKR.NET в Gmail по IMAP: пароль для внешних программ, включение доступа и лимит приёма на стороне Google.',
+      h1: 'Перенос почты с @UKR.NET на Gmail',
+      intro:
+        'Переезд с украинской почты на Gmail упирается не в Gmail, а в @UKR.NET: с февраля 2020 года основной пароль от ящика для внешних программ не принимается, а сам доступ выключен, пока его не включат. Дальше всё обычно — и самым медленным участком становится приём на стороне Google.',
+      pitfalls: [
+        'В @UKR.NET сначала включается доступ для внешних программ и создаётся отдельный пароль — в разделе «Керування IMAP-доступом». Основной пароль не подойдёт.',
+        'В Gmail нужен свой пароль приложения и включённый IMAP: это два разных пароля на две стороны, их путают чаще всего остального.',
+        'Gmail принимает медленнее, чем отдаёт. Именно приём и определяет время переезда, а не скорость @UKR.NET.',
+        'Кириллические имена папок приезжают в modified UTF-7 — мы декодируем их автоматически, поэтому «Вхідні» остаются «Вхідними», а не превращаются в набор символов.',
+      ],
+      faq: [
+        [
+          'Где взять пароль для внешних программ @UKR.NET?',
+          'В настройках ящика: «Керування IMAP-доступом» → включить переключатель → подтвердить основным паролем → назвать программу → создать пароль. Показывается он один раз.',
+        ],
+        [
+          'Останется ли почта в @UKR.NET?',
+          'Да. Базовый режим только копирует и ничего не удаляет в источнике.',
+        ],
+        [
+          'Перенесутся ли папки и даты писем?',
+          'Да: дерево папок, флаги прочитанного и исходные даты сохраняются. Письма не становятся «сегодняшними».',
+        ],
+        [
+          'Сколько займёт перенос?',
+          'Объём измеряется до запуска и показывается в форме. Ориентир — приём Gmail: ящик на несколько гигабайт обычно едет сутки-двое.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Migrate UKR.NET mail to Gmail — MoveMailbox',
+      description:
+        'Moving a @UKR.NET mailbox into Gmail over IMAP: the app password UKR.NET requires, the access switch, and Google as the slower, receiving side.',
+      h1: 'Migrating from UKR.NET to Gmail',
+      intro:
+        'Moving off the Ukrainian mail service is held up by UKR.NET rather than by Gmail: since February 2020 the account password is refused over IMAP, and external access stays off until you switch it on. After that it is an ordinary migration, with the receiving Google side as the bottleneck.',
+      pitfalls: [
+        'On the UKR.NET side, turn external access on and generate its own password first, under "Керування IMAP-доступом". The account password will not do.',
+        'Gmail needs its own app password and IMAP enabled: two different passwords for two sides, and mixing them up is the most common failure here.',
+        'Gmail receives more slowly than it sends, so the inbound side decides how long the move takes — not UKR.NET.',
+        'Cyrillic folder names travel in modified UTF-7. We decode them, so "Вхідні" stays "Вхідні" instead of turning into gibberish.',
+      ],
+      faq: [
+        [
+          'Where does the UKR.NET app password come from?',
+          'Mailbox settings: "Керування IMAP-доступом" → switch it on → confirm with the account password → name the program → create the password. It is shown once.',
+        ],
+        [
+          'Does the mail stay in UKR.NET?',
+          'Yes. The default mode copies only and deletes nothing at the source.',
+        ],
+        [
+          'Are folders and original dates preserved?',
+          'Yes — the folder tree, read flags and original dates all carry over. Nothing arrives dated today.',
+        ],
+        [
+          'How long will it take?',
+          'The size is measured before the run and shown in the form. Gmail\'s intake sets the pace: a few gigabytes usually take a day or two.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'outlook-to-microsoft-365',
+    source: 'outlook',
+    destination: 'microsoft-365',
+    tier: 2,
+    ru: {
+      title: 'Перенос почты с Outlook.com на Microsoft 365 — MoveMailbox',
+      description:
+        'Перенос личного ящика Outlook.com в корпоративный Microsoft 365: пароль приложения на источнике, OAuth на назначении и разные правила у одного хоста.',
+      h1: 'Перенос почты с Outlook.com на Microsoft 365',
+      intro:
+        'Личный ящик Outlook.com и корпоративный Microsoft 365 стоят на одном и том же хосте outlook.office365.com, из-за чего кажется, что перенос между ними — формальность. На деле это два разных мира по авторизации: у личного ящика ещё работает пароль приложения, у корпоративного basic-авторизация чаще всего выключена и нужен OAuth.',
+      pitfalls: [
+        'Хост совпадает, правила — нет. Источник авторизуется паролем приложения Microsoft, назначение почти всегда через OAuth: согласие даёт администратор тенанта.',
+        'Если basic auth в тенанте ещё включён, перенос пройдёт и с паролем — но Microsoft эту возможность последовательно сворачивает, и закладываться на неё не стоит.',
+        'Папка «Нежелательная почта» у Microsoft называется Junk, а не Spam. При ручном сопоставлении её теряют чаще всего.',
+        'В Microsoft 365 действует лимит на размер входящего письма (по умолчанию 35 МБ): письма с большими вложениями попадут в отчёт как пропущенные.',
+      ],
+      faq: [
+        [
+          'Нужен ли администратор тенанта?',
+          'Если в тенанте отключена basic-авторизация — да: он один раз даёт согласие приложению на право IMAP.AccessAsUser.All. Для личного ящика Outlook.com согласие не нужно.',
+        ],
+        [
+          'Сохранится ли структура папок?',
+          'Да, дерево папок переносится целиком. Различие только в служебных именах: Junk вместо Спама.',
+        ],
+        [
+          'Можно ли перенести календарь и контакты?',
+          'Нет. IMAP — это только почта; календарь и контакты живут в CalDAV и CardDAV, их экспортируют отдельно.',
+        ],
+        [
+          'Останется ли почта в Outlook.com?',
+          'Да, базовый режим только копирует.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Migrate Outlook.com to Microsoft 365 — MoveMailbox',
+      description:
+        'Moving a personal Outlook.com mailbox into a Microsoft 365 tenant: an app password on one side, OAuth on the other, and one host with two sets of rules.',
+      h1: 'Migrating Outlook.com to Microsoft 365',
+      intro:
+        'A personal Outlook.com mailbox and a corporate Microsoft 365 one sit on the very same host, outlook.office365.com, which makes the move look like a formality. In authentication terms they are two different worlds: the personal side still takes an app password, while the tenant usually has basic authentication disabled and needs OAuth.',
+      pitfalls: [
+        'Same host, different rules. The source signs in with a Microsoft app password; the destination almost always goes through OAuth, with tenant admin consent.',
+        'If basic auth is still enabled in the tenant a password will work — but Microsoft keeps retiring it, so it is not something to build on.',
+        'Microsoft calls the junk folder Junk, not Spam. Manual mapping loses it more often than any other folder.',
+        'Microsoft 365 caps the size of an incoming message (35 MB by default): anything larger shows up in the report as skipped.',
+      ],
+      faq: [
+        [
+          'Is a tenant administrator required?',
+          'If basic authentication is off in the tenant, yes: an admin grants the app the IMAP.AccessAsUser.All permission once. The personal Outlook.com side needs no consent.',
+        ],
+        [
+          'Does the folder tree survive?',
+          'Yes, it transfers whole. Only the special names differ — Junk instead of Spam.',
+        ],
+        [
+          'Can calendars and contacts come along?',
+          'No. IMAP carries mail only; calendars and contacts are CalDAV and CardDAV and are exported separately.',
+        ],
+        [
+          'Does the mail stay in Outlook.com?',
+          'Yes, the default mode only copies.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Перенесення пошти з Outlook.com на Microsoft 365 — MoveMailbox',
+      description:
+        'Перенесення особистої скриньки Outlook.com у корпоративний Microsoft 365: пароль застосунку в джерелі, OAuth у призначенні та різні правила в одного хоста.',
+      h1: 'Перенесення пошти з Outlook.com на Microsoft 365',
+      intro:
+        'Особиста скринька Outlook.com і корпоративний Microsoft 365 стоять на тому самому хості outlook.office365.com, через що здається, ніби перенесення між ними — формальність. Насправді це два різні світи за авторизацією: в особистої скриньки ще працює пароль застосунку, у корпоративної basic-авторизацію здебільшого вимкнено і потрібен OAuth.',
+      pitfalls: [
+        'Хост збігається, правила — ні. Джерело авторизується паролем застосунку Microsoft, призначення майже завжди через OAuth: згоду дає адміністратор тенанта.',
+        'Якщо basic auth у тенанті ще увімкнено, перенесення пройде і з паролем — але Microsoft цю можливість послідовно згортає, і покладатися на неї не варто.',
+        'Папка небажаної пошти в Microsoft називається Junk, а не Spam. За ручного зіставлення її втрачають найчастіше.',
+        'У Microsoft 365 діє ліміт на розмір вхідного листа (за замовчуванням 35 МБ): листи з великими вкладеннями потраплять у звіт як пропущені.',
+      ],
+      faq: [
+        [
+          'Чи потрібен адміністратор тенанта?',
+          'Якщо в тенанті вимкнено basic-авторизацію — так: він один раз дає згоду застосунку на право IMAP.AccessAsUser.All. Для особистої скриньки Outlook.com згода не потрібна.',
+        ],
+        [
+          'Чи збережеться структура папок?',
+          'Так, дерево папок переноситься цілком. Різниця лише у службових іменах: Junk замість Спаму.',
+        ],
+        [
+          'Чи можна перенести календар і контакти?',
+          'Ні. IMAP — це лише пошта; календар і контакти живуть у CalDAV та CardDAV, їх експортують окремо.',
+        ],
+        [
+          'Чи залишиться пошта в Outlook.com?',
+          'Так, базовий режим лише копіює.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'gmail-to-icloud',
+    source: 'gmail',
+    destination: 'icloud',
+    tier: 2,
+    ru: {
+      title: 'Перенос почты с Gmail на iCloud — MoveMailbox',
+      description:
+        'Перенос писем из Gmail в iCloud Mail по IMAP: пароль приложения Apple обязателен всегда, логин без домена и квота iCloud, о которую упирается объём.',
+      h1: 'Перенос почты с Gmail на iCloud',
+      intro:
+        'Переезд из Gmail в iCloud — это две особенности на двух сторонах и одна общая проблема с местом. У Gmail ярлыки и пароль приложения, у iCloud пароль приложения обязателен всегда и логин указывается без домена, а квота iCloud по умолчанию мала настолько, что архив Gmail в неё попросту не влезает.',
+      pitfalls: [
+        'Логин iCloud — часть адреса до собаки. Полный адрес сервер не примет, и выглядит это как неверный пароль.',
+        'Пароль приложения Apple нужен всегда, даже если двухфакторная аутентификация кажется вам выключенной: без неё пароль приложения просто не выдаётся.',
+        'Бесплатные 5 ГБ iCloud делятся между почтой, фото и резервными копиями. Архив Gmail на 15 ГБ упрётся в квоту на середине — объём стоит замерить до запуска.',
+        'Ярлык «Вся почта» у Gmail исключается, иначе приедут дубли и удвоенный объём, которого в iCloud тем более нет места.',
+      ],
+      faq: [
+        [
+          'Какой логин у iCloud?',
+          'Только часть адреса до собаки: для anna@icloud.com — anna. Это одно из самых частых мест, где перенос спотыкается.',
+        ],
+        [
+          'Что делать, если места в iCloud не хватает?',
+          'Либо расширить тариф iCloud+, либо перенести не весь ящик: в выборе папок можно снять архивные, а «Корзину» и «Спам» не переносить вовсе.',
+        ],
+        [
+          'Сохранятся ли даты и прочитанность?',
+          'Да, исходные даты и флаги прочитанного переносятся, письма не становятся новыми.',
+        ],
+        [
+          'Останется ли почта в Gmail?',
+          'Да. Ничего не удаляется, старый ящик можно закрыть после сверки.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Migrate Gmail to iCloud Mail — MoveMailbox',
+      description:
+        'Moving Gmail into iCloud Mail over IMAP: an Apple app password is always required, the username drops the domain, and the iCloud quota is the real limit.',
+      h1: 'Migrating Gmail to iCloud',
+      intro:
+        'Gmail to iCloud is two quirks on two sides plus one shared problem with space. Gmail brings labels and app passwords; iCloud always requires an app password and takes the username without the domain — and the default iCloud quota is small enough that a Gmail archive simply will not fit.',
+      pitfalls: [
+        'The iCloud username is the part before the @. The full address is refused, and it looks exactly like a wrong password.',
+        'An Apple app password is required in every case; without two-factor authentication Apple will not issue one at all.',
+        'The free 5 GB of iCloud is shared between mail, photos and backups. A 15 GB Gmail archive hits the quota half-way, so measure the size before starting.',
+        'Exclude Gmail\'s All Mail label, or duplicates arrive and double a volume that iCloud has even less room for.',
+      ],
+      faq: [
+        [
+          'What is the iCloud username?',
+          'Only the part before the @: for anna@icloud.com it is anna. This is one of the most common places a migration stalls.',
+        ],
+        [
+          'What if iCloud runs out of space?',
+          'Either move to a larger iCloud+ plan or migrate less: deselect archive folders, and leave Trash and Spam out entirely.',
+        ],
+        [
+          'Are dates and read state preserved?',
+          'Yes, original dates and read flags carry over; nothing arrives as new mail.',
+        ],
+        [
+          'Does the mail stay in Gmail?',
+          'Yes. Nothing is deleted; close the old mailbox once you have compared the counts.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Перенесення пошти з Gmail на iCloud — MoveMailbox',
+      description:
+        'Перенесення листів із Gmail в iCloud Mail за IMAP: пароль застосунку Apple обов’язковий завжди, логін без домену та квота iCloud, в яку впирається обсяг.',
+      h1: 'Перенесення пошти з Gmail на iCloud',
+      intro:
+        'Переїзд із Gmail в iCloud — це дві особливості на двох боках і одна спільна проблема з місцем. У Gmail ярлики та пароль застосунку, в iCloud пароль застосунку обов’язковий завжди і логін вказується без домену, а квота iCloud за замовчуванням мала настільки, що архів Gmail у неї просто не влізає.',
+      pitfalls: [
+        'Логін iCloud — частина адреси до равлика. Повну адресу сервер не прийме, і виглядає це як невірний пароль.',
+        'Пароль застосунку Apple потрібен завжди, навіть якщо двофакторна автентифікація здається вимкненою: без неї пароль застосунку просто не видається.',
+        'Безкоштовні 5 ГБ iCloud діляться між поштою, фото та резервними копіями. Архів Gmail на 15 ГБ упреться в квоту на середині — обсяг варто виміряти до запуску.',
+        'Ярлик «Вся пошта» у Gmail виключається, інакше приїдуть дублі та подвоєний обсяг, для якого в iCloud тим паче немає місця.',
+      ],
+      faq: [
+        [
+          'Який логін в iCloud?',
+          'Лише частина адреси до равлика: для anna@icloud.com — anna. Це одне з найчастіших місць, де перенесення спотикається.',
+        ],
+        [
+          'Що робити, якщо місця в iCloud бракує?',
+          'Або розширити тариф iCloud+, або перенести не всю скриньку: у виборі папок можна зняти архівні, а «Кошик» і «Спам» не переносити взагалі.',
+        ],
+        [
+          'Чи збережуться дати та прочитаність?',
+          'Так, початкові дати та прапорці прочитаного переносяться, листи не стають новими.',
+        ],
+        [
+          'Чи залишиться пошта в Gmail?',
+          'Так. Нічого не видаляється, стару скриньку можна закрити після звірки.',
+        ],
+      ],
+    },
+  },
+
+  {
+    slug: 'yahoo-to-outlook',
+    source: 'yahoo',
+    destination: 'outlook',
+    tier: 2,
+    ru: {
+      title: 'Перенос почты с Yahoo на Outlook.com — MoveMailbox',
+      description:
+        'Перенос писем из Yahoo Mail в Outlook.com по IMAP: пароль приложения Yahoo, отдельный хост для полной выгрузки и папка Bulk вместо Спама.',
+      h1: 'Перенос почты с Yahoo на Outlook.com',
+      intro:
+        'Yahoo и Microsoft по-разному называют одно и то же, и именно на этом теряются папки. У Yahoo нежелательная почта лежит в Bulk Mail, у Microsoft — в Junk, а обычный пароль ни один из двух сервисов по IMAP уже не принимает: с обеих сторон нужен пароль приложения.',
+      pitfalls: [
+        'Пароль приложения нужен и в Yahoo, и в Outlook.com. Обычные пароли аккаунтов оба сервиса по IMAP отклоняют.',
+        'Для выгрузки ящика целиком Yahoo называет отдельный хост — export.imap.mail.yahoo.com. Он и предназначен для массового чтения.',
+        'Bulk Mail у Yahoo — это Junk у Microsoft. Если не сопоставить руками, папка приедет отдельной и продублирует нежелательную почту.',
+        'Вложенные папки Yahoo используют точку как разделитель уровней. Мы сопоставляем дерево автоматически, но при ручной настройке это первое, что разъезжается.',
+      ],
+      faq: [
+        [
+          'Где создать пароль приложения Yahoo?',
+          'В настройках безопасности аккаунта Yahoo, раздел app passwords. Там же он и отзывается, когда перенос закончен.',
+        ],
+        [
+          'imap.mail.yahoo.com или export.imap.mail.yahoo.com?',
+          'Оба хоста Yahoo на порту 993 с SSL. Первый — обычный почтовый, второй Yahoo называет для выгрузки ящика целиком, а перенос именно этим и занимается.',
+        ],
+        [
+          'Переедет ли папка со спамом?',
+          'Только если вы её выберете. Обычно её не переносят: это мусор, который занимает время и место.',
+        ],
+        [
+          'Останутся ли письма в Yahoo?',
+          'Да, базовый режим только копирует и ничего не удаляет.',
+        ],
+      ],
+    },
+    en: {
+      title: 'Migrate Yahoo Mail to Outlook.com — MoveMailbox',
+      description:
+        'Moving Yahoo Mail into Outlook.com over IMAP: app passwords on both sides, Yahoo\'s dedicated export host, and Bulk Mail versus Junk.',
+      h1: 'Migrating Yahoo Mail to Outlook.com',
+      intro:
+        'Yahoo and Microsoft call the same things by different names, and that is where folders get lost. Yahoo keeps unwanted mail in Bulk Mail, Microsoft in Junk — and neither service takes a plain account password over IMAP any more: both sides need an app password.',
+      pitfalls: [
+        'App passwords are required at both ends. Yahoo and Outlook.com both refuse the account password over IMAP.',
+        'For pulling a whole mailbox Yahoo names a separate host, export.imap.mail.yahoo.com, meant for exactly this kind of bulk read.',
+        'Yahoo\'s Bulk Mail is Microsoft\'s Junk. Without mapping them the folder arrives separately and duplicates the junk you already have.',
+        'Yahoo\'s nested folders use a dot as the level separator. We map the tree automatically, but in a hand-made setup this is the first thing that drifts.',
+      ],
+      faq: [
+        [
+          'Where do I create the Yahoo app password?',
+          'In Yahoo Account Security, under app passwords. The same page revokes it when the migration is done.',
+        ],
+        [
+          'imap.mail.yahoo.com or export.imap.mail.yahoo.com?',
+          'Both are Yahoo hosts on port 993 with SSL. The first is the everyday mail host; the second is the one Yahoo documents for downloading a full mailbox, which is what a migration does.',
+        ],
+        [
+          'Will the spam folder come across?',
+          'Only if you select it. Usually it is left behind: it costs time and space and holds nothing worth keeping.',
+        ],
+        [
+          'Does the mail stay in Yahoo?',
+          'Yes, the default mode copies only and deletes nothing.',
+        ],
+      ],
+    },
+    uk: {
+      title: 'Перенесення пошти з Yahoo на Outlook.com — MoveMailbox',
+      description:
+        'Перенесення листів із Yahoo Mail в Outlook.com за IMAP: пароль застосунку Yahoo, окремий хост для повного вивантаження та папка Bulk замість Спаму.',
+      h1: 'Перенесення пошти з Yahoo на Outlook.com',
+      intro:
+        'Yahoo і Microsoft по-різному називають те саме, і саме на цьому губляться папки. У Yahoo небажана пошта лежить у Bulk Mail, у Microsoft — у Junk, а звичайний пароль жоден із двох сервісів за IMAP уже не приймає: з обох боків потрібен пароль застосунку.',
+      pitfalls: [
+        'Пароль застосунку потрібен і в Yahoo, і в Outlook.com. Звичайні паролі акаунтів обидва сервіси за IMAP відхиляють.',
+        'Для вивантаження скриньки цілком Yahoo називає окремий хост — export.imap.mail.yahoo.com. Він і призначений для масового читання.',
+        'Bulk Mail у Yahoo — це Junk у Microsoft. Якщо не зіставити вручну, папка приїде окремою і продублює небажану пошту.',
+        'Вкладені папки Yahoo використовують крапку як роздільник рівнів. Ми зіставляємо дерево автоматично, але за ручного налаштування це перше, що роз’їжджається.',
+      ],
+      faq: [
+        [
+          'Де створити пароль застосунку Yahoo?',
+          'У налаштуваннях безпеки акаунта Yahoo, розділ app passwords. Там само він і відкликається, коли перенесення завершено.',
+        ],
+        [
+          'imap.mail.yahoo.com чи export.imap.mail.yahoo.com?',
+          'Обидва хости Yahoo на порту 993 із SSL. Перший — звичайний поштовий, другий Yahoo називає для вивантаження скриньки цілком, а перенесення саме цим і займається.',
+        ],
+        [
+          'Чи переїде папка зі спамом?',
+          'Лише якщо ви її оберете. Зазвичай її не переносять: це сміття, яке забирає час і місце.',
+        ],
+        [
+          'Чи залишаться листи в Yahoo?',
+          'Так, базовий режим лише копіює і нічого не видаляє.',
+        ],
+      ],
+    },
+  },
 ];
 
 export const migrationRouteSlugs = migrationRoutes.map((r) => r.slug);

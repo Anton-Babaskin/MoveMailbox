@@ -1240,6 +1240,9 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 }
 
 /* --- список ошибок --- */
+/* Ссылка на подробный разбор внутри ответа сервера. */
+.err-more{margin-top:14px}
+
 .error-index {
   display: grid;
   gap: 12px;

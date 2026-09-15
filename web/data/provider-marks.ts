@@ -49,6 +49,7 @@ export const providerMarks: Record<ProviderKey, ProviderMark> = {
   mailru: { letter: '@', b1: '#6E8FE8', b2: '#1F3FA8', logo: '/brand/providers/mailru.svg' },
   zoho: { letter: 'Z', b1: '#E8A05A', b2: '#9E5A0E', logo: '/brand/providers/zoho.svg' },
   cpanel: { letter: 'c', b1: '#E8944E', b2: '#A4560D', wordmark: '/brand/providers/cpanel-wm.svg' },
+  'ukr-net': { letter: 'U', b1: '#7FC08A', b2: '#2E7D46' },
   exchange: { letter: 'E', b1: '#6FA8DC', b2: '#1F5FA8', logo: '/brand/providers/exchange.svg' },
 };
 

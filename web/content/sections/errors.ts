@@ -6,6 +6,8 @@ export type ErrorPart = string | { readonly code: string };
 export type ErrorItem = {
   /** Ответ сервера. Одинаков во всех языках: его ищут дословно. */
   readonly code: string;
+  /** Слаг подробного разбора в data/imap-errors.ts. */
+  readonly slug: string;
   readonly title: string;
   readonly body: readonly ErrorPart[];
   readonly fixLabel: string;
@@ -17,6 +19,8 @@ export type ErrorsCopy = {
   readonly h2a: string;
   readonly h2b: string;
   readonly lede: string;
+  /** Подпись ссылки на подробный разбор. */
+  readonly more: string;
   readonly items: readonly ErrorItem[];
 };
 
@@ -26,9 +30,11 @@ export const errors = {
     h2a: 'Что означают ошибки, ',
     h2b: 'которые вы увидите в журнале.',
     lede: 'IMAP-серверы отвечают лаконично и почти никогда не объясняют причину. Здесь перевод самых частых ответов на человеческий — и что с каждым делать.',
+    more: 'Подробный разбор',
     items: [
       {
         code: 'NO [AUTHENTICATIONFAILED]',
+        slug: 'authenticationfailed',
         title: 'Сервер не принял логин или пароль',
         body: [
           'В девяти случаях из десяти пароль правильный, а проблема в другом: не создан пароль приложения, не включён IMAP в настройках почты, либо логин указан не в том формате. Яндекс требует оба действия сразу и на любое из них отвечает одинаково, из-за чего люди часами проверяют не тот пароль.',
@@ -40,6 +46,7 @@ export const errors = {
       },
       {
         code: 'certificate verify failed',
+        slug: 'certificate-verify-failed',
         title: 'Сертификат сервера не проходит проверку',
         body: [
           'Обычная история на shared-хостинге: сертификат выписан на имя сервера вроде ',
@@ -57,6 +64,7 @@ export const errors = {
       },
       {
         code: 'OVERQUOTA / Quota exceeded',
+        slug: 'quota-exceeded',
         title: 'В новом ящике кончилось место',
         body: [
           'Перенос встал на середине, потому что 12 ГБ не помещаются в тариф на 5 ГБ. Худший вариант этой ошибки — когда квота кончается ночью и вы узнаёте об этом утром по наполовину перенесённому ящику.',
@@ -68,6 +76,7 @@ export const errors = {
       },
       {
         code: 'Too many simultaneous connections',
+        slug: 'too-many-connections',
         title: 'Провайдер режет число сессий',
         body: [
           'У Microsoft 365 лимит около 20 одновременных IMAP-сессий на ящик, у iCloud — заметно меньше. Попытка ускорить перенос параллельными потоками даёт обратный результат: сервер начинает рвать соединения, и повторов становится больше, чем полезной работы.',
@@ -79,6 +88,7 @@ export const errors = {
       },
       {
         code: 'Connection reset by peer',
+        slug: 'connection-reset',
         title: 'Сервер молча закрыл соединение',
         body: [
           'Классический троттлинг. Провайдер решил, что запросы идут слишком часто, и разорвал сессию без объяснений. У Gmail после особо агрессивной выгрузки IMAP может быть временно заблокирован на несколько часов.',
@@ -90,6 +100,7 @@ export const errors = {
       },
       {
         code: 'CREATE failed: invalid folder name',
+        slug: 'invalid-folder-name',
         title: 'Имя папки не принимается назначением',
         body: [
           'Обычно виноват разделитель уровней: Dovecot использует ',
@@ -107,6 +118,7 @@ export const errors = {
       },
       {
         code: 'message too large',
+        slug: 'message-too-large',
         title: 'Письмо не влезло в лимит назначения',
         body: [
           'Microsoft 365 по умолчанию принимает письма до 35 МБ, другие провайдеры ставят свои границы. Письмо с крупным вложением просто пропускается — весь остальной перенос при этом идёт нормально.',
@@ -123,9 +135,11 @@ export const errors = {
     h2a: 'What those errors mean ',
     h2b: 'when you read the log.',
     lede: 'IMAP servers answer in a few words and almost never say why. Here are the most common replies in plain language, and what to do about each one.',
+    more: 'The long version',
     items: [
       {
         code: 'NO [AUTHENTICATIONFAILED]',
+        slug: 'authenticationfailed',
         title: 'The server rejected the username or password',
         body: [
           'Nine times out of ten the password is fine and something else is wrong: no app password was created, IMAP is switched off in the mail settings, or the username is in the wrong format. Yandex needs both things done and answers the same way to either, which is why people spend hours checking the wrong password.',
@@ -137,6 +151,7 @@ export const errors = {
       },
       {
         code: 'certificate verify failed',
+        slug: 'certificate-verify-failed',
         title: 'The server certificate fails verification',
         body: [
           'Common on shared hosting: the certificate is issued for a server name like ',
@@ -154,6 +169,7 @@ export const errors = {
       },
       {
         code: 'OVERQUOTA / Quota exceeded',
+        slug: 'quota-exceeded',
         title: 'The new mailbox ran out of space',
         body: [
           'The transfer stopped halfway because 12 GB will not fit into a 5 GB plan. The worst version of this is when the quota runs out overnight and you find out in the morning, looking at a half-migrated mailbox.',
@@ -165,6 +181,7 @@ export const errors = {
       },
       {
         code: 'Too many simultaneous connections',
+        slug: 'too-many-connections',
         title: 'The provider is capping the number of sessions',
         body: [
           'Microsoft 365 allows about 20 concurrent IMAP sessions per mailbox, and iCloud noticeably fewer. Trying to speed a transfer up with parallel threads backfires: the server starts dropping connections and you end up with more retries than useful work.',
@@ -176,6 +193,7 @@ export const errors = {
       },
       {
         code: 'Connection reset by peer',
+        slug: 'connection-reset',
         title: 'The server closed the connection without a word',
         body: [
           'Classic throttling. The provider decided the requests were coming too fast and cut the session with no explanation. After a particularly aggressive download, Gmail may block IMAP for a few hours.',
@@ -187,6 +205,7 @@ export const errors = {
       },
       {
         code: 'CREATE failed: invalid folder name',
+        slug: 'invalid-folder-name',
         title: 'The destination will not accept the folder name',
         body: [
           'Usually it is the hierarchy separator: Dovecot uses ',
@@ -204,6 +223,7 @@ export const errors = {
       },
       {
         code: 'message too large',
+        slug: 'message-too-large',
         title: 'The message exceeds the destination limit',
         body: [
           'Microsoft 365 accepts messages up to 35 MB by default, and other providers set their own boundaries. A message with a large attachment is simply skipped — the rest of the transfer runs as usual.',
@@ -220,9 +240,11 @@ export const errors = {
     h2a: 'Що означають помилки, ',
     h2b: 'які ви побачите в журналі.',
     lede: 'IMAP-сервери відповідають лаконічно і майже ніколи не пояснюють причину. Тут переклад найчастіших відповідей людською мовою — і що з кожною робити.',
+    more: 'Докладний розбір',
     items: [
       {
         code: 'NO [AUTHENTICATIONFAILED]',
+        slug: 'authenticationfailed',
         title: 'Сервер не прийняв логін або пароль',
         body: [
           'У дев’яти випадках із десяти пароль правильний, а проблема в іншому: не створено пароль застосунку, не увімкнено IMAP у налаштуваннях пошти, або логін вказано не в тому форматі. Яндекс вимагає обидві дії одразу і на будь-яку з них відповідає однаково, через що люди годинами перевіряють не той пароль.',
@@ -234,6 +256,7 @@ export const errors = {
       },
       {
         code: 'certificate verify failed',
+        slug: 'certificate-verify-failed',
         title: 'Сертифікат сервера не проходить перевірку',
         body: [
           'Звична історія на shared-хостингу: сертифікат виписано на ім’я сервера на кшталт ',
@@ -251,6 +274,7 @@ export const errors = {
       },
       {
         code: 'OVERQUOTA / Quota exceeded',
+        slug: 'quota-exceeded',
         title: 'У новій скриньці закінчилося місце',
         body: [
           'Перенесення спинилося посередині, бо 12 ГБ не вміщаються в тариф на 5 ГБ. Найгірший варіант цієї помилки — коли квота закінчується вночі, і ви дізнаєтеся про це вранці з наполовину перенесеної скриньки.',
@@ -262,6 +286,7 @@ export const errors = {
       },
       {
         code: 'Too many simultaneous connections',
+        slug: 'too-many-connections',
         title: 'Провайдер обмежує кількість сесій',
         body: [
           'У Microsoft 365 ліміт близько 20 одночасних IMAP-сесій на скриньку, в iCloud — помітно менше. Спроба пришвидшити перенесення паралельними потоками дає зворотний результат: сервер починає рвати з’єднання, і повторів стає більше, ніж корисної роботи.',
@@ -273,6 +298,7 @@ export const errors = {
       },
       {
         code: 'Connection reset by peer',
+        slug: 'connection-reset',
         title: 'Сервер мовчки закрив з’єднання',
         body: [
           'Класичний тротлінг. Провайдер вирішив, що запити йдуть надто часто, і розірвав сесію без пояснень. У Gmail після особливо агресивного вивантаження IMAP може бути тимчасово заблокований на кілька годин.',
@@ -284,6 +310,7 @@ export const errors = {
       },
       {
         code: 'CREATE failed: invalid folder name',
+        slug: 'invalid-folder-name',
         title: 'Ім’я папки не приймається призначенням',
         body: [
           'Зазвичай винен роздільник рівнів: Dovecot використовує ',
@@ -301,6 +328,7 @@ export const errors = {
       },
       {
         code: 'message too large',
+        slug: 'message-too-large',
         title: 'Лист не вліз у ліміт призначення',
         body: [
           'Microsoft 365 за замовчуванням приймає листи до 35 МБ, інші провайдери ставлять свої межі. Лист із великим вкладенням просто пропускається — решта перенесення при цьому йде нормально.',
