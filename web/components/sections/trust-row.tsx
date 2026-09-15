@@ -1,6 +1,7 @@
 import { ProviderMark } from '@/components/provider-mark';
 import { trustRow } from '@/content/sections/trust-row';
 import { providers } from '@/data/providers';
+import { mark } from '@/data/provider-marks';
 import type { ProviderKey } from '@/data/providers';
 import type { Lang } from '@/i18n/config';
 
@@ -9,6 +10,38 @@ const MARQUEE: ProviderKey[] = [
   'gmail', 'outlook', 'microsoft-365', 'yandex', 'icloud',
   'yahoo', 'mailru', 'zoho', 'cpanel', 'exchange', 'google-workspace',
 ];
+
+/**
+ * Один сервис в ленте.
+ *
+ * Три случая, и ни в одном не остаётся голой буквы в квадрате — буква в
+ * бегущей строке читается как опечатка, а не как бренд:
+ *
+ *   есть квадратный знак   — знак и название текстом;
+ *   есть логотип-надпись   — только она, название уходит в alt: надпись и
+ *                            есть название, дублировать его текстом рядом
+ *                            значит написать «Yandex Яндекс.Почта»;
+ *   нет ничего             — одно название, набранное чуть плотнее.
+ */
+function Item({ provider }: { provider: ProviderKey }) {
+  const m = mark(provider);
+  const name = providers[provider].name;
+
+  if (m.wordmark) {
+    return (
+      <span className="mq-item">
+        <img className="mq-wm" src={m.wordmark} alt={name} loading="lazy" decoding="async" />
+      </span>
+    );
+  }
+
+  return (
+    <span className="mq-item">
+      {m.logo && <ProviderMark provider={provider} />}
+      {name}
+    </span>
+  );
+}
 
 /**
  * Лента под первым экраном.
@@ -30,19 +63,9 @@ function Track({ lang, hidden = false }: { lang: Lang; hidden?: boolean }) {
   return (
     <div className="mq-track" aria-hidden={hidden || undefined}>
       <span className="mq-claim"><svg aria-hidden="true"><use href="#ck" /></svg>{t.sourceKept}</span>
-      {MARQUEE.slice(0, 5).map((key) => (
-        <span className="mq-item" key={key}>
-          <ProviderMark provider={key} />
-          {providers[key].name}
-        </span>
-      ))}
+      {MARQUEE.slice(0, 5).map((key) => <Item provider={key} key={key} />)}
       <span className="mq-claim"><svg aria-hidden="true"><use href="#ck" /></svg>{t.imapsync}</span>
-      {MARQUEE.slice(5).map((key) => (
-        <span className="mq-item" key={key}>
-          <ProviderMark provider={key} />
-          {providers[key].name}
-        </span>
-      ))}
+      {MARQUEE.slice(5).map((key) => <Item provider={key} key={key} />)}
       <span className="mq-claim"><svg aria-hidden="true"><use href="#ck" /></svg>{t.free}</span>
     </div>
   );

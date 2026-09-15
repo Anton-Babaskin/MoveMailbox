@@ -1,4 +1,6 @@
 import { ProviderGuidesInit } from '@/components/section-init';
+import { ProviderMark } from '@/components/provider-mark';
+import { mark } from '@/data/provider-marks';
 import { providerGuides } from '@/content/sections/provider-guides';
 import { guidesRuntime } from '@/content/sections/guides-runtime';
 import type { Lang } from '@/i18n/config';
@@ -25,20 +27,20 @@ export function ProviderGuides({ lang, pageTitle = false }: { lang: Lang; pageTi
               она открывается h1, и панель провайдера с h3 давала пропуск. */}
           {pageTitle && <h2 className="h-struct">{t.navLabel}</h2>}
           <div className="pv-nav" role="tablist" aria-label={t.navLabel}>
-            <button role="tab" aria-selected="true" data-pv="gmail" style={{ '--b1': '#F2685A', '--b2': '#C42D20' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.gmail.letter}</i></span><span className="txt"><b>{t.tabs.gmail.name}</b><small>imap.gmail.com</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="m365" style={{ '--b1': '#5A8DE8', '--b2': '#1B4699' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.m365.letter}</i></span><span className="txt"><b>{t.tabs.m365.name}</b><small>outlook.office365.com</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="outlook" style={{ '--b1': '#45BCF2', '--b2': '#0E74BE' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.outlook.letter}</i></span><span className="txt"><b>{t.tabs.outlook.name}</b><small>outlook.office365.com</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="yandex" style={{ '--b1': '#FF6055', '--b2': '#B81208' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.yandex.letter}</i></span><span className="txt"><b>{t.tabs.yandex.name}</b><small>imap.yandex.ru</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="icloud" style={{ '--b1': '#94DBF8', '--b2': '#3390D4' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.icloud.letter}</i></span><span className="txt"><b>{t.tabs.icloud.name}</b><small>imap.mail.me.com</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="zoho" style={{ '--b1': '#4FC684', '--b2': '#147C4E' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.zoho.letter}</i></span><span className="txt"><b>{t.tabs.zoho.name}</b><small>imap.zoho.eu</small></span></button>
-            <button role="tab" aria-selected="false" data-pv="cpanel" style={{ '--b1': '#FF9B4D', '--b2': '#C4530D' } as React.CSSProperties}>
-              <span className="pvi"><i>{t.tabs.cpanel.letter}</i></span><span className="txt"><b>{t.tabs.cpanel.name}</b><small>mail.domain.tld</small></span></button>
+            <button role="tab" aria-selected="true" data-pv="gmail" style={{ '--b1': mark('gmail').b1, '--b2': mark('gmail').b2 } as React.CSSProperties}>
+              <ProviderMark provider="gmail" /><span className="txt"><b>{t.tabs.gmail.name}</b><small>imap.gmail.com</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="m365" style={{ '--b1': mark('microsoft-365').b1, '--b2': mark('microsoft-365').b2 } as React.CSSProperties}>
+              <ProviderMark provider="microsoft-365" /><span className="txt"><b>{t.tabs.m365.name}</b><small>outlook.office365.com</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="outlook" style={{ '--b1': mark('outlook').b1, '--b2': mark('outlook').b2 } as React.CSSProperties}>
+              <ProviderMark provider="outlook" /><span className="txt"><b>{t.tabs.outlook.name}</b><small>outlook.office365.com</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="yandex" style={{ '--b1': mark('yandex').b1, '--b2': mark('yandex').b2 } as React.CSSProperties}>
+              <ProviderMark provider="yandex" /><span className="txt"><b>{t.tabs.yandex.name}</b><small>imap.yandex.ru</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="icloud" style={{ '--b1': mark('icloud').b1, '--b2': mark('icloud').b2 } as React.CSSProperties}>
+              <ProviderMark provider="icloud" /><span className="txt"><b>{t.tabs.icloud.name}</b><small>imap.mail.me.com</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="zoho" style={{ '--b1': mark('zoho').b1, '--b2': mark('zoho').b2 } as React.CSSProperties}>
+              <ProviderMark provider="zoho" /><span className="txt"><b>{t.tabs.zoho.name}</b><small>imap.zoho.eu</small></span></button>
+            <button role="tab" aria-selected="false" data-pv="cpanel" style={{ '--b1': mark('cpanel').b1, '--b2': mark('cpanel').b2 } as React.CSSProperties}>
+              <ProviderMark provider="cpanel" /><span className="txt"><b>{t.tabs.cpanel.name}</b><small>mail.domain.tld</small></span></button>
           </div>
           {/* Первая вкладка отрисована на сервере.
               Раньше панель приходила пустой и заполнялась скриптом после
@@ -47,9 +49,7 @@ export function ProviderGuides({ lang, pageTitle = false }: { lang: Lang; pageTi
           <div className="pv-body" id="pvBody">
             <div className="pv-panel">
               <div className="pv-head">
-                <span className="pvi lg" style={{ '--b1': '#F2685A', '--b2': '#C42D20' } as React.CSSProperties}>
-                  <i>{t.tabs.gmail.letter}</i>
-                </span>
+                <ProviderMark provider="gmail" size="lg" />
                 <h3>{first.n}</h3>
                 <span className="hosttag">{first.conn[0][1]} : {first.conn[1][1].split(' ')[0]}</span>
               </div>

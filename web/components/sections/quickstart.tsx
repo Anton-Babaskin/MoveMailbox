@@ -1,6 +1,22 @@
+import { ProviderMark } from '@/components/provider-mark';
 import { quickstart, quickstartMarks, quickstartOrder } from '@/content/sections/quickstart';
 import { findProviderHub } from '@/data/provider-hubs';
+import { mark as providerMark } from '@/data/provider-marks';
+import type { ProviderKey } from '@/data/providers';
 import { href, type Lang } from '@/i18n/config';
+
+/**
+ * Слаг плитки и ключ провайдера совпадают не везде, а последняя плитка —
+ * вообще не сервис, а «любой IMAP-сервер». Для неё остаётся буква из
+ * quickstartMarks; остальные берут общий значок, и Gmail на этой странице
+ * выглядит так же, как в ленте и в каталоге маршрутов.
+ */
+const AS_PROVIDER: Record<string, ProviderKey> = {
+  gmail: 'gmail',
+  'microsoft-365': 'microsoft-365',
+  yahoo: 'yahoo',
+  exchange: 'exchange',
+};
 
 /**
  * Плитки «откуда переносим» на главной.
@@ -23,7 +39,8 @@ export function Quickstart({ lang }: { lang: Lang }) {
       <div className="qs-grid" data-fx-items>
         {quickstartOrder.map((slug) => {
           const hub = findProviderHub(slug);
-          const mark = quickstartMarks[slug];
+          const key = AS_PROVIDER[slug];
+          const mark = key ? providerMark(key) : quickstartMarks[slug];
           if (!hub || !mark) return null;
           return (
             <a
@@ -32,7 +49,11 @@ export function Quickstart({ lang }: { lang: Lang }) {
               href={href(lang, `/migrate/${slug}`)}
               style={{ ['--b1' as string]: mark.b1, ['--b2' as string]: mark.b2 }}
             >
-              <span className="pvi lg" aria-hidden="true"><i>{mark.letter}</i></span>
+              {key ? (
+                <ProviderMark provider={key} size="lg" />
+              ) : (
+                <span className="pvi lg" aria-hidden="true"><i>{mark.letter}</i></span>
+              )}
               <span className="qs-body">
                 <b>{hub[lang].h1}</b>
                 <small>{t.cards[slug]}</small>
