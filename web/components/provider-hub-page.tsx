@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { JsonLd } from '@/components/json-ld';
 import { FinalCta } from '@/components/sections/final-cta';
+import { ProviderMark } from '@/components/provider-mark';
 import { findProviderHub } from '@/data/provider-hubs';
 import { migrationRoutes } from '@/data/migration-routes';
 import { provider, providers } from '@/data/providers';
@@ -82,6 +83,13 @@ export function ProviderHubPage({ lang, slug }: { lang: Lang; slug: string }) {
 
       <section className="shell">
         <div className="head-wide">
+          {/* Знак сервиса рядом с заголовком: страница про один сервис, и
+              узнаётся он с одного взгляда быстрее, чем читается. */}
+          {hub.provider && (
+            <div style={{ marginBottom: '18px' }}>
+              <ProviderMark provider={hub.provider} size="lg" />
+            </div>
+          )}
           <p className="eyebrow">{t.eyebrow} · {name}</p>
           <h1>{copy.h1}</h1>
           <p className="lede" style={{ marginTop: '16px' }}>{copy.intro}</p>

@@ -59,6 +59,23 @@
 }
 
 *{box-sizing:border-box}
+
+/* Прокрутка.
+   Переход по якорю раньше был мгновенным прыжком, и цель вставала ровно под
+   липкую шапку: заголовок секции оказывался закрыт, а человек видел середину
+   блока и не понимал, куда попал. Особенно заметно на кнопке «Перенести
+   почту» со страниц справочника — она ведёт на #workspace.
+   scroll-padding-top отодвигает точку приземления на высоту шапки с
+   запасом, scroll-behavior добавляет плавность самому переходу.
+   Физику колеса и трекпада мы не трогаем: перехват прокрутки скриптом
+   ломает и отзывчивость, и доступность, а родная инерция у системы и так
+   лучше любой библиотеки. */
+:root{--header-h:71px}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 16px)}
+@media (max-width:560px){:root{--header-h:63px}}
+/* Кому анимации мешают — тому и плавная прокрутка мешает. */
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.62;
   -webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1,h2,h3,h4{margin:0;line-height:1.1;letter-spacing:-.03em;text-wrap:balance;font-weight:700}
@@ -706,7 +723,12 @@ code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px
 .band>*{position:relative;z-index:1}
 .band h2{color:var(--term-hi)}
 .band .eyebrow{color:var(--term-g)}
-.band-g{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(26px,4vw,54px);align-items:start}
+/* Колонки выравниваются по центру, а не по верху. Слева заголовок с абзацем
+   и ссылкой, справа доска из четырёх пунктов — она вдвое выше. При
+   выравнивании по верху под левой колонкой оставалось полэкрана пустой
+   темноты: на главной это тонуло среди других секций, а на отдельной
+   странице безопасности выглядело незаконченной вёрсткой. */
+.band-g{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(26px,4vw,54px);align-items:center}
 @media (max-width:920px){.band-g{grid-template-columns:1fr}}
 .band p.lede{color:#94AABA}
 /* ---- status board ---- */
@@ -744,14 +766,14 @@ code{font-family:var(--mono);font-size:.85em;background:var(--surf-2);border:1px
 /* windows */
 .win{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(26px,4vw,58px);align-items:center}
 @media (max-width:920px){.win{grid-template-columns:1fr}}
-.frame{background:var(--surf);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh-hi);overflow:hidden}
-.frame-t{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid var(--line);background:var(--surf-2)}
-.frame-t i{width:9px;height:9px;border-radius:50%;background:var(--line)}
-.frame-t small{margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--ink-3)}
-.frame-b{padding:34px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
-.frame-b .ico{width:56px;height:56px;border-radius:16px}
-.frame-b strong{font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--acc)}
-.frame-b span{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+/* Карточка локального режима. Полосы с точками и заголовком окна больше нет:
+   это была имитация чужого интерфейса, а карточка теперь такая же, как все
+   остальные карточки сайта. */
+.frame{background:var(--surf);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh);overflow:hidden}
+.frame-b{padding:46px 30px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.frame-b .ico{width:60px;height:60px;border-radius:18px}
+.frame-b strong{font-size:1.06rem;letter-spacing:-.02em;color:var(--ink)}
+.frame-b span{font-size:.86rem;color:var(--ink-3);max-width:30ch}
 .bars{display:flex;gap:6px;margin-top:8px;width:100%;max-width:230px}
 .bars i{flex:1;height:6px;border-radius:20px;background:var(--line-2);overflow:hidden;position:relative}
 .bars i::after{content:"";position:absolute;inset:0;background:var(--acc);transform:scaleX(0);transform-origin:left;
