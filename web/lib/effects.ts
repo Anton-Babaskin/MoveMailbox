@@ -71,7 +71,10 @@ export function initEffects() {
       ['left',  '.brief-col:first-child .brief-list li,.tx-cols>*:first-child', 60],
       ['right', '.brief-col:last-child .brief-facts li,.tx-cols>*:last-child', 60],
       ['mask',  '.frame,.calc,.biz,.pv,.slist article,.error-sample,.post-body', 0],
-      ['pop',   '.trust span,.badge,.tag', 45]
+      /* .trust span здесь был, пока лента была статичной строкой. Теперь она
+         едет сама, её элементы постоянно въезжают в кадр, и «проявление»
+         гасило их в ноль прямо на ходу. */
+      ['pop',   '.badge,.tag', 45]
     ];
 
     plan.forEach(function(rule){
