@@ -31,9 +31,25 @@ verification before relying on a hypervisor reboot.
 
 Public readiness/session endpoints require a pilot invitation. Product guest
 sessions remain separate. Create one account per tester; never use mailbox
-passwords. No permanent credentials have been delivered yet. Access logs are
+passwords. Owner access was issued and verified on 2026-09-15. Access logs are
 disabled; API Authorization is stripped by nginx. All clients currently share
 the backend's direct-proxy IP quota (240/min), while nginx limits source IPs.
+
+Use `scripts/pilot-access.py` locally with `--ssh-key`, `--username` and a new
+`--output` file in a private directory outside Git, after uploading the script
+to the operator home on the VM. It saves the generated secret locally, sends it
+over SSH stdin, stores only a salted hash at the gateway and checks readiness.
+Windows output inherits directory ACLs: choose a user-private directory and
+verify them. The local credential file is intentionally not Git-synchronized.
+Existing usernames are refused; a failure may leave a saved but unissued local
+credential. Do not share one account between multiple testers.
+
+`scripts/smoke-https-mail.py --allow-test-mail --pilot-credential FILE` reads
+authorized source/destination accounts as one JSON line on stdin. It creates
+one unique synthetic folder/message, transfers only that folder through the
+public HTTPS API, repeats, compares body/flags/date, and retains its fixtures.
+It does not exercise destructive mirror. Run with exclusive pilot access;
+all mail-provider connections verify TLS. Never put account secrets in Git.
 
 Upload `scripts/smoke-public-pilot.py` to the operator home on the VM and run the
 local copy with `--ssh-key PATH`. It uses normal public TLS trust, provisions a
