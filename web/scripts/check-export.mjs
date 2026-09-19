@@ -99,4 +99,53 @@ if (!home.includes('/favicon.ico')) {
   process.exit(1);
 }
 
-console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый; favicon.ico на месте`);
+/**
+ * robots.txt не должен закрывать то, что мы сами же отдали в карту сайта.
+ *
+ * Запреты там точечные: служебные выгрузки Next (__next.*.txt и index.txt
+ * рядом с каждой страницей) съедают бюджет обхода, а страницами не являются.
+ * Шаблон легко испортить одним символом — `/*.txt$` вместо `/*index.txt$`
+ * закроет заодно llms.txt, а `/*_next` вместо `/*__next` унесёт скрипты и
+ * стили, без которых робот не отрисует страницу. Поэтому здесь проверяется
+ * и то, что ни один адрес из карты не попал под запрет, и то, что нужное
+ * осталось открытым.
+ */
+const robots = await readFile(join(out, 'robots.txt'), 'utf8');
+const disallow = robots
+  .split('\n')
+  .filter((line) => /^disallow:/i.test(line.trim()))
+  .map((line) => line.split(':')[1].trim())
+  .filter(Boolean);
+
+const blockedBy = (path) =>
+  disallow.find((rule) => {
+    const anchored = rule.endsWith('$');
+    const body = anchored ? rule.slice(0, -1) : rule;
+    const source =
+      '^' + body.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + (anchored ? '$' : '');
+    return new RegExp(source).test(path);
+  });
+
+for (const loc of locs) {
+  const path = new URL(loc).pathname;
+  const rule = blockedBy(path);
+  if (rule) {
+    console.error(`robots.txt закрывает страницу из карты сайта: ${path} (правило ${rule})`);
+    process.exit(1);
+  }
+}
+
+for (const open of ['/llms.txt', '/favicon.ico', '/og.png', '/_next/static/chunks/a.js']) {
+  const rule = blockedBy(open);
+  if (rule) {
+    console.error(`robots.txt закрывает нужный ресурс: ${open} (правило ${rule})`);
+    process.exit(1);
+  }
+}
+
+if (!blockedBy('/index.txt') || !blockedBy('/imap/gmx/__next._full.txt')) {
+  console.error('robots.txt больше не закрывает служебные выгрузки Next — они съедят бюджет обхода');
+  process.exit(1);
+}
+
+console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый; favicon.ico на месте; robots не задевает страницы и закрывает служебные выгрузки`);

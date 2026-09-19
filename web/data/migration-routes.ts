@@ -31,6 +31,13 @@ export type MigrationRoute = {
   destination: ProviderKey;
   /** Приоритет в sitemap: 1 — основной трафик, 2 — второй эшелон. */
   tier: 1 | 2;
+  /**
+   * Дата публикации маршрута, ISO. Нужна только тем, кто появился позже
+   * общей даты текстов: lastmod не должен быть старше самой страницы.
+   * Поисковик берёт его как подсказку, когда заходить, и адрес с датой
+   * «до своего рождения» уезжает в конец очереди обхода.
+   */
+  published?: string;
   ru: RouteCopy;
   en: RouteCopy;
   /** Украинский: полный блок копии. */
@@ -1316,6 +1323,7 @@ export const migrationRoutes: MigrationRoute[] = [
     source: 'gmail',
     destination: 'gmail',
     tier: 1,
+    published: '2026-09-15',
     ru: {
       title: 'Перенос почты с одного Gmail на другой — MoveMailbox',
       description:
@@ -1419,6 +1427,7 @@ export const migrationRoutes: MigrationRoute[] = [
     source: 'ukr-net',
     destination: 'gmail',
     tier: 1,
+    published: '2026-09-15',
     uk: {
       title: 'Перенесення пошти з @UKR.NET на Gmail — MoveMailbox',
       description:
@@ -1522,6 +1531,7 @@ export const migrationRoutes: MigrationRoute[] = [
     source: 'outlook',
     destination: 'microsoft-365',
     tier: 2,
+    published: '2026-09-15',
     ru: {
       title: 'Перенос почты с Outlook.com на Microsoft 365 — MoveMailbox',
       description:
@@ -1625,6 +1635,7 @@ export const migrationRoutes: MigrationRoute[] = [
     source: 'gmail',
     destination: 'icloud',
     tier: 2,
+    published: '2026-09-15',
     ru: {
       title: 'Перенос почты с Gmail на iCloud — MoveMailbox',
       description:
@@ -1728,6 +1739,7 @@ export const migrationRoutes: MigrationRoute[] = [
     source: 'yahoo',
     destination: 'outlook',
     tier: 2,
+    published: '2026-09-15',
     ru: {
       title: 'Перенос почты с Yahoo на Outlook.com — MoveMailbox',
       description:
