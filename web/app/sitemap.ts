@@ -54,11 +54,14 @@ const pages: Entry[] = [
   { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
 ].map((page) => ({ ...page, lastModified: CONTENT_UPDATED }) as Entry);
 
+/* Дата у маршрута своя, если он появился позже общей правки текстов.
+   lastmod старше самой страницы — это не мелочь: поисковик читает его как
+   «тут давно ничего нового» и откладывает обход. */
 const routePages: Entry[] = migrationRoutes.map((route) => ({
   path: `/migrate/${route.slug}`,
   changeFrequency: 'monthly' as ChangeFrequency,
   priority: route.tier === 1 ? 0.86 : 0.74,
-  lastModified: CONTENT_UPDATED,
+  lastModified: route.published ?? CONTENT_UPDATED,
 }));
 
 /* Страницы провайдеров: точка входа по запросу про один сервис.
