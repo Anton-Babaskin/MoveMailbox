@@ -26,6 +26,7 @@
 ## Build it
 
 - [Contributing](../CONTRIBUTING.md) — development workflow and checks.
+- [Release acceptance](RELEASE-CHECKLIST.md) — native artifacts and staging promotion.
 - [MVP scope](MVP.md) · [Readiness roadmap](ROADMAP.md).
 - [Engineering handoff](HANDOFF.md) · [Two-computer synchronization](TWO-COMPUTERS.md).
 - [Licensing](LICENSING.md) · [Third-party inventory](../THIRD_PARTY_NOTICES.md).

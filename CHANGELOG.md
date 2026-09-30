@@ -5,6 +5,13 @@ Preview tags are immutable and are not silently promoted to stable.
 
 ## Unreleased
 
+- Native packages now export/embed the current interface before compiling;
+  avoid a homepage 404 when releasing from the integrated UI source.
+- Publication waits for packaged Windows/Linux native launch, assets/CSP,
+  demo completion and SQLite restart checks; all five archives are validated.
+- Executable build/dependency inventory and manual candidate-only release gate.
+- Stable release packaging requires an owner-approved project LICENSE.
+- SQLite updated to 1.59.0 with green backend CI.
 - New repository presentation, original SVG artwork and English/Russian overviews.
 - Separate setup/configuration reference and documentation directory.
 - Contribution/support guides, structured issue forms and a PR checklist.

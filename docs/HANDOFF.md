@@ -1,4 +1,38 @@
-# Engineering handoff — 2026-09-13
+# Engineering handoff — 2026-09-30
+
+## Native release candidate pipeline (2026-09-30, technical scope)
+
+- Synchronized main; PR #45 was already merged. Reviewed backend dependency PR
+  #51 at 99d99f5 (seven successful CI checks) and merged it; SQLite is 1.59.0.
+  Website PRs were not changed or merged by this agent. Claude's subsequent
+  already-merged changes were received by a safe fast-forward.
+- Active branch: `release/embedded-native-rc`. Found a release-path regression:
+  current Go API serves `internal/web/out`, but native packaging did not export
+  it. A current-source native build would serve homepage 404. Published
+  v0.4.0-preview uses the legacy UI and is not affected. Docker already exports
+  the new interface.
+- Native release now exports the existing API-enabled interface before build,
+  records executable dependencies and waits for Windows/Linux native archive
+  acceptance. All five archives/checksums are inspected; loopback demo verifies
+  pages/assets/CSP, selected-folder result, SQLite restart and password absence.
+  ARM/macOS are cross-built, not natively exercised. No website design changed.
+- Manual candidate validation does not publish; stable packaging refuses a
+  missing owner-approved LICENSE. The planned candidate is v0.5.0-rc.1; it is
+  not described here as published before the workflow succeeds.
+- Local checks: pinned Go 1.27.0 `go test -race ./...` and `go vet ./...` passed;
+  export/check passed (247 rendered pages, 243 sitemap URLs before Claude's latest
+  link-only update); six SDK tests passed; Linux/WSL Python harness suite passed
+  with one missing-age integration skip; seven release validation tests passed.
+  Full operator harnesses use Linux/WSL, not native Windows (POSIX operations).
+  CI installs age and remains required for the exact pushed SHA.
+- VM API and worker were healthy, readiness 200, still staging-5b55549. No VM
+  image, secrets, external routing or VPN configuration changed during these
+  pre-release checks. No new real mailbox test was performed yet.
+- Next two steps: (1) after green technical CI, merge and publish the candidate
+  only after native acceptance succeeds; (2) promote the reviewed Docker commit
+  to idle staging with the transactional updater, then check HTTPS and one
+  authorized isolated mail fixture. Licensing, automatic certificate renewal,
+  paid identity/billing and public-launch gates remain separate pending work.
 
 ## Website: internal links and IndexNow (2026-09-30, website scope)
 

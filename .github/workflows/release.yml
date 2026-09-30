@@ -4,19 +4,31 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      candidate_tag:
+        description: 'Validate candidate archives without publishing a tag or release'
+        required: true
+        default: 'v0.5.0-rc.1'
+        type: string
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   GO_VERSION: "1.27.0"
   GOTOOLCHAIN: local
   GOVULNCHECK_VERSION: "v1.7.0"
+  RELEASE_TAG: ${{ inputs.candidate_tag || github.ref_name }}
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -25,6 +37,25 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+
+      # Build the same API-enabled export as Docker, not the Pages-only demo.
+      # Native binaries otherwise embed only out/.gitkeep and serve 404 at /.
+      - name: Set up Node for the embedded interface
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build and embed the existing interface
+        working-directory: web
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_PUBLIC_STATIC_SITE: '0'
+        run: |
+          npm ci --ignore-scripts
+          npm run export
+          npm run check
 
       - name: Verify source
         shell: bash
@@ -48,40 +79,60 @@ jobs:
           AGE_BINARY="${RUNNER_TEMP}/age-bin/age" AGE_KEYGEN_BINARY="${RUNNER_TEMP}/age-bin/age-keygen" python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
       - name: Build Windows, Linux and macOS previews
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          [[ "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
-          version="${RELEASE_TAG#v}"
-          for target in windows/amd64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
-            goos="${target%/*}"
-            goarch="${target#*/}"
-            package="movemailbox-${goos}-${goarch}-${RELEASE_TAG}"
-            suffix=""
-            if [[ "${goos}" == windows ]]; then suffix=".exe"; fi
-            mkdir -p "dist/${package}/operations"
-            GOOS="${goos}" GOARCH="${goarch}" CGO_ENABLED=0 go build -trimpath \
-              -ldflags="-s -w -X github.com/Anton-Babaskin/MoveMailbox/internal/api.Version=${version}" \
-              -o "dist/${package}/movemailbox${suffix}" ./cmd/mailbox-migrator
-            cp README.md SECURITY.md docs/LICENSING.md "dist/${package}/"
-            cp docs/WORKER.md docs/BACKUP-RUNBOOK.md "dist/${package}/operations/"
-            cp scripts/backup_archive.py scripts/backup_validation.py "dist/${package}/operations/"
-            printf 'Version: %s\nCommit: %s\nPlatform: %s\n' "${RELEASE_TAG}" "${GITHUB_SHA}" "${target}" > "dist/${package}/BUILD-INFO.txt"
-            if [[ "${goos}" == windows ]]; then
-              cp scripts/windows/START-DEMO.cmd scripts/windows/START-DEMO-DEBUG.cmd scripts/windows/START-REAL.cmd scripts/windows/README-RU.txt "dist/${package}/"
-              (cd dist && zip -qr "${package}.zip" "${package}")
-            else
-              cp scripts/README-UNIX.txt "dist/${package}/"
-              tar -czf "dist/${package}.tar.gz" -C dist "${package}"
-            fi
-          done
-          cd dist
-          sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+        run: bash scripts/build-release.sh
 
       - name: Smoke test packaged Linux binary
         run: |
-          python3 scripts/smoke-remote-worker.py --binary "dist/movemailbox-linux-amd64-${GITHUB_REF_NAME}/movemailbox"
+          python3 scripts/smoke-remote-worker.py --binary "dist/movemailbox-linux-amd64-${RELEASE_TAG}/movemailbox"
+
+      - name: Store candidate archives for native acceptance
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-release
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  native-acceptance:
+    needs: build
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            target: windows/amd64
+          - os: ubuntu-24.04
+            target: linux/amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: native-release
+          path: dist
+      - name: Verify archives and run the packaged native client
+        env:
+          TARGET: ${{ matrix.target }}
+        shell: bash
+        run: python scripts/smoke-release.py --dist dist --tag "$RELEASE_TAG" --commit "$GITHUB_SHA" --target "$TARGET"
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build, native-acceptance]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: native-release
+          path: dist
 
       - name: Publish GitHub release
         env:
