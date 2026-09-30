@@ -5,6 +5,10 @@ Preview tags are immutable and are not silently promoted to stable.
 
 ## Unreleased
 
+- Private staging monitor: bounded disk/inode, authenticated readiness, queue,
+  failure and credential-cleanup checks; installed/served TLS expiry checks;
+  redacted local alerts with deduplication and recovery, without new listeners.
+
 - Staging updater rejects active jobs/envelopes before service stop; pilot
   authority preflight reads nested API snapshot status correctly.
 

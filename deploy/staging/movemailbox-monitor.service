@@ -1,0 +1,37 @@
+[Unit]
+Description=MoveMailbox private operator diagnostics
+After=docker.service movemailbox-staging.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/movemailbox/scripts/staging_monitor.py
+User=root
+UMask=0077
+StateDirectory=movemailbox-monitor
+StateDirectoryMode=0700
+TimeoutStartSec=75
+MemoryMax=128M
+CPUQuota=25%
+TasksMax=16
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=movemailbox-monitor
+
+# Root reads private metadata and invokes read-only Docker inspect commands.
+# Docker socket access is still privileged; this is not a Docker authorization boundary.
+# Read-only SQLite may need to create/map SHM when the writer is unavailable.
+# Deny filesystem writes to live volumes: inability to read becomes an alert.

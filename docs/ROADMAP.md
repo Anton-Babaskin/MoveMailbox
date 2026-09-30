@@ -128,6 +128,12 @@ execute the same lease, and quota decisions remain consistent under load.
 
 ## 5. Operations and commercial readiness
 
+Private staging: a bounded five-minute operator monitor covers disk/inodes,
+container and authenticated worker readiness, queue/failures/envelope counts,
+and installed/served TLS certificates. See [monitoring runbook](STAGING-MONITORING.md).
+Alerts currently remain in the local journal/private report; owner delivery,
+independent external uptime monitoring and automatic renewal are not configured.
+
 - structured redacted logs, metrics, alerts and a status page;
 - privacy policy, terms, refund rules, subprocessors and retention schedule;
 - final MoveMailbox license/distribution decision and third-party notices;

@@ -1,5 +1,41 @@
 # Engineering handoff — 2026-09-30
 
+## VM capacity and operator monitoring (2026-09-30, technical scope)
+
+- Owner approved stage 1 and VM-only root expansion. Revalidated 50 GiB disk,
+  ext4 root `/dev/ubuntu-vg/ubuntu-lv` and 24 GiB free in its VG. Online
+  `lvextend --resizefs` expanded root from about 24 to 48 GiB. Free root space
+  increased from 5.4 to about 29 GiB (38% used). No partition, virtualization
+  host, firewall, VPN, credentials or runtime image change. API/worker healthy;
+  readiness 200 and container start times unchanged.
+- Branch `ops/staging-monitor`: private five-minute systemd diagnostics for
+  root space/inodes, selected container state, authenticated API/worker
+  readiness, aggregate queue delay/stalled progress/recent failures/envelopes,
+  installed certificate expiry and actual loopback served-certificate trust/name
+  and copy match. No credential/event/snapshot payloads or job IDs in reports;
+  SQLite query-only reads include committed WAL. No automatic restart/replay.
+- Added [monitoring runbook](STAGING-MONITORING.md). Alerts and recoveries are
+  deduplicated into local journal plus atomic root-private state; no outbound
+  channel or independent external heartbeat yet. Root/Docker access remains
+  privileged, despite the read-only commands and systemd filesystem hardening.
+- Local Linux/WSL Python: 70 tests passed with one missing-age integration skip;
+  12 new monitor tests cover fault thresholds, committed WAL, redaction,
+  expiry/mismatch, queue/error counts, dedup/recovery and corrupt/unsafe state.
+  Go race tests and vet passed; Go formatting clean; docs check passed.
+- Read-only VM candidate probe under a transient systemd filesystem sandbox
+  passed in about 0.6 s: no alerts, API/worker ready, two completed jobs per
+  store, zero envelopes/active work, served certificate matches and about
+  74 days remaining. Permanent timer installation is pending exact-SHA CI;
+  this entry does not claim it is already installed or the PR merged.
+- Runtime stays v0.5.0-rc.1, image
+  `sha256:c3b4994e0692a0c1d34a65066f00296e524cccbbbdf606bbc4429b3f99a4f7ca`.
+  No new mail/provider load test needed for this operator-only stage.
+- Next two concrete steps: (1) real native Windows IMAP acceptance using a
+  compatible imapsync plus owner-approved license choice before stable;
+  (2) choose/test outbound alert delivery and an independent HTTPS check, then
+  owner-controlled certificate renewal automation. Off-site backups stay
+  deferred by owner; paid identity/billing and public launch remain separate.
+
 ## v0.5.0-rc.1 published and promoted (2026-09-30, technical scope)
 
 - PR #56 merged after all seven CI checks passed for full source commit

@@ -136,6 +136,10 @@ separate reviewed plan; other Docker projects and host rules must be preserved.
 
 ## Still required before public use
 
+For the lightweight private operator timer, thresholds and local alert reports,
+see [staging monitoring](../../docs/STAGING-MONITORING.md). Outbound notification
+delivery and an independent external uptime check still require configuration.
+
 DNS/NAT ownership, trusted HTTPS, restricted pilot admission, off-site encrypted
 backup and restore, retention/alerts, full reboot acceptance, host updates and
 SSH hardening with verified fallback access. No production launch, payment flow,
