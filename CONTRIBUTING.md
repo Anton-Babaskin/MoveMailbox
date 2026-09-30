@@ -21,6 +21,10 @@ The module requires Go 1.25+ and pins Go 1.27.0. Full backup harness testing use
 Python 3.11+ and age 1.3.2 on Linux/WSL. Docker is required for container drills.
 
 ```sh
+cd web
+npm ci --ignore-scripts
+npm run export
+cd ..
 go run ./cmd/mailbox-migrator --demo --open
 go test ./...
 go vet ./...
@@ -32,6 +36,9 @@ Format changed Go files with gofmt. Linux CI additionally runs the race detector
 dependency vulnerability checks, five cross-builds and Docker fault drills.
 Some local age tests skip if tools are missing: report skips as skips, not passes.
 Follow [.github/workflows/ci.yml](.github/workflows/ci.yml) for the full setup.
+The UI build needs Node 24; Go-only unit tests can still use the checked-in
+`internal/web/out/.gitkeep`. A runnable UI needs the export step above.
+See [release acceptance](docs/RELEASE-CHECKLIST.md) for candidate packaging.
 
 Do not use a real mailbox unless its owner explicitly authorizes the exact test.
 Start with demo fixtures. Destructive mirror requires separate test intent and
@@ -58,7 +65,8 @@ a disposable destination; generic permission to test is not permission to erase.
 | `internal/jobs/` | Lifecycle, events, cancellation and history |
 | `internal/migrator/` | IMAP preflight and imapsync adapter |
 | `internal/worker/` | Independent and embedded worker runtimes |
-| `internal/webui/dist/` | Embedded browser interface |
+| `internal/web/out/` | Generated interface export embedded by Go; not committed |
+| `web/` | Website/interface source, maintained by Claude |
 | `scripts/` | Launchers, drills and release helpers |
 | `docs/` | Architecture, operator guides and evidence |
 

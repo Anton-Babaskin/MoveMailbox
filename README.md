@@ -80,10 +80,17 @@ Go 1.25+ is required; `go.mod` pins the Go 1.27.0 toolchain.
 ```sh
 git clone https://github.com/Anton-Babaskin/MoveMailbox.git
 cd MoveMailbox
+cd web
+npm ci --ignore-scripts
+npm run export
+cd ..
 go run ./cmd/mailbox-migrator --demo --open
 ```
 
-Open **http://127.0.0.1:8080**. For real work, install imapsync and omit `--demo`.
+Node 24 is needed only to build the existing interface. `npm run export` puts it
+in `internal/web/out` before Go embeds it; skipping this step produces an API-only
+build with no homepage. Open **http://127.0.0.1:8080**. For real work, install
+imapsync and omit `--demo`. Native release archives include the exported interface.
 
 ### Docker / private deployment
 

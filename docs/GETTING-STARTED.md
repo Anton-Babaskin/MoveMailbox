@@ -18,13 +18,19 @@ but never IMAP passwords. Use `--database` to select another location.
 
 The module requires Go 1.25 or newer and declares a reproducible Go
 toolchain in `go.mod`.
+Build the interface once with Node 24 before running the application:
 
 ```bash
+cd web
+npm ci --ignore-scripts
+npm run export
+cd ..
 go run ./cmd/mailbox-migrator --demo --open
 ```
 
-Open <http://127.0.0.1:8080>. Demo credentials are filled automatically and no
-external IMAP servers are contacted.
+Open <http://127.0.0.1:8080>. The demo engine does not contact external IMAP
+servers. Re-export after interface changes. Release archives and Docker images
+already embed the interface; users do not need Node.
 
 ### Real migration with imapsync
 
