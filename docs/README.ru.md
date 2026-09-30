@@ -6,7 +6,7 @@
 
 **Ваша почта. Новый сервер. Понятный перенос.**
 
-[Сайт](https://movemailbox.com) · [Скачать preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview) · [Документация](README.md) · [English](../README.md)
+[Сайт](https://movemailbox.com) · [Скачать кандидат](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1) · [Документация](README.md) · [English](../README.md)
 
 </div>
 
@@ -35,7 +35,7 @@ MoveMailbox. У провайдера остаются собственные к�
 
 ## Скачать и попробовать
 
-- **Windows amd64:** распакуйте ZIP из [релиза](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview), запустите `START-DEMO.cmd`.
+- **Windows amd64:** распакуйте ZIP из [релиза-кандидата](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1), запустите `START-DEMO.cmd`.
 - **Linux / macOS, amd64 или arm64:** распакуйте подходящий архив и выполните `./movemailbox --demo --open=true`.
 - **Docker:** из клонированного репозитория выполните `docker compose up --build`.
 

@@ -1,5 +1,47 @@
 # Engineering handoff — 2026-09-30
 
+## v0.5.0-rc.1 published and promoted (2026-09-30, technical scope)
+
+- PR #56 merged after all seven CI checks passed for full source commit
+  `303e1053762bb3ba3aee366fac5360fc8e9aebcb`. That reviewed commit is in main and
+  is the immutable candidate tag target. Release run `36700102165` passed build,
+  Linux/Windows native acceptance and publication. Five native archives plus
+  checksums are available at [v0.5.0-rc.1](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1).
+  The same native acceptance also passed on the owner's Windows machine using
+  temporary loopback/demo state, without touching installed runtimes.
+- Built Docker from that exact Git archive on the VM, including passing real
+  imapsync TLS/STARTTLS trusted/untrusted/wrong-peer tests. Promoted idle API and
+  worker with the transactional updater after explicit read-only drained checks.
+  Runtime immutable image:
+  `sha256:c3b4994e0692a0c1d34a65066f00296e524cccbbbdf606bbc4429b3f99a4f7ca`.
+  Rollback image `sha256:c4abfb457b32a262d8840c2c9254528df9193e998498377b6cbba85dd6b44862`
+  remains installed, with a validated local pre-update metadata pair.
+- Both runtime containers are healthy, non-root/read-only. Health reports
+  `0.5.0-rc.1`, `imapsync-remote-worker`; readiness is 200. HTTPS proxy was not
+  restarted. External trusted TLS/invitation/guest cookie/CSRF/Origin/Host and
+  invitation revocation passed. No host routing, VPN or credentials rotated.
+- Fresh authorized real-mail HTTPS acceptance passed: one synthetic message with
+  64 KiB attachment copied; repeat copied zero; body hash, flags and internal date
+  preserved; source unchanged. Retained fixture `MoveMailbox-HTTPS-87cca49047b8`.
+  Read-only post-run checks: two API and two worker jobs completed, zero remaining
+  credential envelopes.
+  This is Mail-in-a-Box evidence, not universal exactly-once/provider coverage.
+- Follow-up branch `ops/rc-promotion-handoff`: fixed two operator preflight
+  defects found during promotion. Updater used to validate drained state only
+  after service stop; it now refuses existing active API/worker work/envelopes
+  before downtime. Authority helper read status at the wrong snapshot level,
+  incorrectly rejecting retained terminal history; both now share a read-only
+  guard. It still requires an exclusive window, not a concurrent admission lock.
+  Linux Python suite: 58 tests, one missing-age integration skip. CI installs age.
+- Resource observation: VM disk 50 GiB, root LV only 24 GiB, free VG 24 GiB;
+  root has about 5.4 GiB free after the build. No disk resize or cache deletion
+  performed. Owner approval is needed before changing the root LV allocation.
+- Next two stages: (1) operator observability/alerts for storage, queue failures,
+  readiness and certificate expiry, plus approve the VM-only root LV expansion;
+  (2) real native Windows migration acceptance with a compatible imapsync and
+  owner license choice before stable distribution. Paid identity/billing and
+  automated certificate renewal are still pending; candidate != public launch.
+
 ## Native release candidate pipeline (2026-09-30, technical scope)
 
 - Synchronized main; PR #45 was already merged. Reviewed backend dependency PR

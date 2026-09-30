@@ -5,6 +5,11 @@ Preview tags are immutable and are not silently promoted to stable.
 
 ## Unreleased
 
+- Staging updater rejects active jobs/envelopes before service stop; pilot
+  authority preflight reads nested API snapshot status correctly.
+
+## v0.5.0-rc.1 — 2026-09-30
+
 - Native packages now export/embed the current interface before compiling;
   avoid a homepage 404 when releasing from the integrated UI source.
 - Publication waits for packaged Windows/Linux native launch, assets/CSP,
@@ -12,6 +17,14 @@ Preview tags are immutable and are not silently promoted to stable.
 - Executable build/dependency inventory and manual candidate-only release gate.
 - Stable release packaging requires an owner-approved project LICENSE.
 - SQLite updated to 1.59.0 with green backend CI.
+- Candidate deployed to closed staging; trusted HTTPS, real synthetic attachment,
+  flags/date/source integrity, zero-copy repeat and terminal cleanup verified.
+
+[Release](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1)
+· [Acceptance limits](docs/RELEASE-CHECKLIST.md)
+
+### Earlier repository improvements
+
 - New repository presentation, original SVG artwork and English/Russian overviews.
 - Separate setup/configuration reference and documentation directory.
 - Contribution/support guides, structured issue forms and a PR checklist.

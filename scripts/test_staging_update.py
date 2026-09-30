@@ -1,4 +1,5 @@
 import importlib.util
+from contextlib import closing
 import json
 import os
 from pathlib import Path
@@ -17,11 +18,11 @@ spec.loader.exec_module(stage)
 def create_pair(root):
     api = root / "api-live.db"
     worker = root / "worker-live.db"
-    with sqlite3.connect(api) as db:
+    with closing(sqlite3.connect(api)) as db, db:
         db.execute("CREATE TABLE job_snapshots(id TEXT, snapshot_json BLOB)")
         db.execute("INSERT INTO job_snapshots VALUES (?, ?)",
                    ("one", json.dumps({"view": {"id": "one", "status": "completed"}})))
-    with sqlite3.connect(worker) as db:
+    with closing(sqlite3.connect(worker)) as db, db:
         db.execute("PRAGMA journal_mode=WAL")
         db.execute("PRAGMA wal_autocheckpoint=0")
         db.execute("CREATE TABLE credential_envelopes(id TEXT)")
@@ -44,7 +45,7 @@ class StagingUpdateTests(unittest.TestCase):
                 writer.commit()
                 backup = root / "backup"
                 manifest = stage.snapshot_pair(databases, backup, {"sourceCommit": "a" * 40})
-                with sqlite3.connect(backup / "worker.db") as db:
+                with closing(sqlite3.connect(backup / "worker.db")) as db, db:
                     self.assertEqual(db.execute("SELECT status FROM worker_jobs").fetchone()[0], "completed")
                 self.assertEqual(set(manifest["files"]), {"api", "worker"})
                 self.assertEqual({path.name for path in backup.iterdir()},
@@ -76,7 +77,7 @@ class StagingUpdateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
             databases = create_pair(root)
-            with sqlite3.connect(databases["worker"]) as db:
+            with closing(sqlite3.connect(databases["worker"])) as db, db:
                 db.execute("UPDATE worker_jobs SET status='completed'")
             backup = root / "backup"
             manifest = stage.snapshot_pair(databases, backup, {})
@@ -90,17 +91,17 @@ class StagingUpdateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
             databases = create_pair(root)
-            with sqlite3.connect(databases["worker"]) as db:
+            with closing(sqlite3.connect(databases["worker"])) as db, db:
                 db.execute("UPDATE worker_jobs SET status='completed'")
             backup = root / "backup"
             manifest = stage.snapshot_pair(databases, backup, {})
-            with sqlite3.connect(databases["worker"]) as db:
+            with closing(sqlite3.connect(databases["worker"])) as db, db:
                 db.execute("UPDATE worker_jobs SET status='failed'")
             sidecar = Path(str(databases["worker"]) + "-wal")
             sidecar.write_bytes(b"failed-image-sidecar")
             with mock.patch.object(stage.os, "chown"):
                 stage.restore_pair(databases, backup, manifest)
-            with sqlite3.connect(databases["worker"]) as db:
+            with closing(sqlite3.connect(databases["worker"])) as db, db:
                 self.assertEqual(db.execute("SELECT status FROM worker_jobs").fetchone()[0], "completed")
             self.assertTrue(not sidecar.exists() or sidecar.read_bytes() != b"failed-image-sidecar")
 
@@ -111,6 +112,40 @@ class StagingUpdateTests(unittest.TestCase):
                 stage.update("image", "short")
             pin.assert_not_called()
 
+    def test_drained_terminal_history_is_allowed(self):
+        with tempfile.TemporaryDirectory() as name:
+            paths = create_pair(Path(name))
+            with closing(sqlite3.connect(paths['worker'])) as db, db:
+                db.execute("UPDATE worker_jobs SET status='completed'")
+            stage.ensure_pair_drained(paths)
+
+    def test_active_work_refused_before_service_stop_or_pin_change(self):
+        for role in ('api', 'worker', 'credentials'):
+            with self.subTest(role=role), tempfile.TemporaryDirectory() as name:
+                paths = create_pair(Path(name))
+                with closing(sqlite3.connect(paths['worker'])) as db, db:
+                    db.execute("UPDATE worker_jobs SET status='completed'")
+                    if role == 'worker':
+                        db.execute("UPDATE worker_jobs SET status='running'")
+                    if role == 'credentials':
+                        db.execute("INSERT INTO credential_envelopes VALUES ('one')")
+                if role == 'api':
+                    with closing(sqlite3.connect(paths['api'])) as db, db:
+                        db.execute('UPDATE job_snapshots SET snapshot_json=?',
+                                   (json.dumps({'view': {'id': 'one', 'status': 'running'}}),))
+                with mock.patch.object(stage.os, 'geteuid', return_value=0), \
+                     mock.patch.object(stage, 'current_pin', return_value='sha256:' + '1' * 64), \
+                     mock.patch.object(stage, 'image_id', return_value='sha256:' + '2' * 64), \
+                     mock.patch.object(stage, 'database_paths', return_value=paths), \
+                     mock.patch.object(stage, 'ensure_backup_root') as backup, \
+                     mock.patch.object(stage, 'run') as run, \
+                     mock.patch.object(stage, 'atomic_pin') as pin:
+                    with self.assertRaises(ValueError):
+                        stage.update('candidate', 'a' * 40)
+                    backup.assert_not_called()
+                    run.assert_not_called()
+                    pin.assert_not_called()
+
     def test_failed_health_restores_pair_and_old_pin(self):
         old, new = "sha256:" + "1" * 64, "sha256:" + "2" * 64
         manifest = {"files": {"api": "a", "worker": "b"}}
@@ -120,6 +155,7 @@ class StagingUpdateTests(unittest.TestCase):
              mock.patch.object(stage, "current_pin", return_value=old), \
              mock.patch.object(stage, "image_id", side_effect=lambda ref: new if ref == "candidate" else old), \
              mock.patch.object(stage, "database_paths", return_value={"api": Path("api"), "worker": Path("worker")}), \
+             mock.patch.object(stage, "ensure_pair_drained"), \
              mock.patch.object(stage, "ensure_backup_root"), \
              mock.patch.object(stage, "run"), \
              mock.patch.object(stage, "stopped"), \

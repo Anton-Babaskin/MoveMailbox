@@ -8,7 +8,7 @@
 
 An IMAP migration tool with a browser UI, a local client and a separate hosted worker.
 
-[Website](https://movemailbox.com) · [Download preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview) · [Documentation](docs/README.md) · [Русский](docs/README.ru.md)
+[Website](https://movemailbox.com) · [Download candidate](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1) · [Documentation](docs/README.md) · [Русский](docs/README.ru.md)
 
 [![CI](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
 [![Preview](https://img.shields.io/github/v/release/Anton-Babaskin/MoveMailbox?include_prereleases&label=preview&color=087f66)](https://github.com/Anton-Babaskin/MoveMailbox/releases)
@@ -19,10 +19,10 @@ An IMAP migration tool with a browser UI, a local client and a separate hosted w
 </div>
 
 > [!IMPORTANT]
-> **Engineering preview, not a public-cloud launch.** Real migrations work locally
+> **Release candidate, not a public-cloud launch.** Real migrations work locally
 > with imapsync and in controlled self-hosted deployments. The hosted API/worker
-> is implemented and tested; public deployment still needs HTTPS, enforced
-> network egress, operations and the [launch gates](docs/ROADMAP.md).
+> is running in an invite-only pilot with verified HTTPS and worker egress.
+> Public self-service still needs operational and [launch gates](docs/ROADMAP.md).
 > A separate website mockup is not proof of a live migration service.
 
 ## Why MoveMailbox?
@@ -56,14 +56,14 @@ including mailbox growth during a transfer.
 
 ### Windows
 
-[Download Windows amd64](https://github.com/Anton-Babaskin/MoveMailbox/releases/download/v0.4.0-preview/movemailbox-windows-amd64-v0.4.0-preview.zip) → extract the ZIP → run **START-DEMO.cmd**.
+[Download Windows amd64](https://github.com/Anton-Babaskin/MoveMailbox/releases/download/v0.5.0-rc.1/movemailbox-windows-amd64-v0.5.0-rc.1.zip) → extract the ZIP → run **START-DEMO.cmd**.
 
 Demo mode contacts no mail servers. For real work, install imapsync and run
 **START-REAL.cmd**. Administrator privileges are not required.
 
 ### Linux & macOS
 
-Extract the matching archive from [v0.4.0-preview](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview), then run:
+Extract the matching archive from [v0.5.0-rc.1](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1), then run:
 
 ```sh
 ./movemailbox --demo --open=true

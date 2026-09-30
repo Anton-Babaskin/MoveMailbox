@@ -51,6 +51,10 @@ confirms no active API/worker jobs; it snapshots the metadata pair and rolls bac
 both image and pair if readiness fails. This is a deployment safeguard, not the
 deferred off-site backup project. Do not alter the owner-managed host routing or
 VPN, or recreate Compose with a different project name.
+The shared read-only drained preflight now runs before service stop, so existing
+active work rejects the update without interruption. It is not an atomic
+admission lock: use an exclusive closed-pilot maintenance window; do not apply
+this operator workflow to a publicly admitting service without freezing ingress.
 
 After promotion check image IDs, `/api/health`, `/api/ready`, the trusted HTTPS
 invitation gate, and one explicitly authorized disposable-mail fixture including
