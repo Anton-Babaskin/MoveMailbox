@@ -148,4 +148,25 @@ if (!blockedBy('/index.txt') || !blockedBy('/imap/gmx/__next._full.txt')) {
   process.exit(1);
 }
 
-console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый; favicon.ico на месте; robots не задевает страницы и закрывает служебные выгрузки`);
+/**
+ * Ключ IndexNow: ровно один файл <32 hex>.txt в корне, содержимое совпадает
+ * с именем, robots его не закрывает. Иначе поисковик отвергнет отправку
+ * (scripts/indexnow.mjs), а мы узнаем об этом только по логам CI.
+ */
+const { readdir } = await import('node:fs/promises');
+const keyFiles = (await readdir(out)).filter((f) => /^[a-f0-9]{32}\.txt$/.test(f));
+if (keyFiles.length !== 1) {
+  console.error(`ключ IndexNow: в корне сборки должен быть ровно один файл, найдено ${keyFiles.length}`);
+  process.exit(1);
+}
+const keyName = keyFiles[0].slice(0, -4);
+if ((await readFile(join(out, keyFiles[0]), 'utf8')).trim() !== keyName) {
+  console.error(`ключ IndexNow: содержимое ${keyFiles[0]} не совпадает с именем файла`);
+  process.exit(1);
+}
+if (blockedBy('/' + keyFiles[0])) {
+  console.error(`robots.txt закрывает файл ключа IndexNow: /${keyFiles[0]}`);
+  process.exit(1);
+}
+
+console.log(`sitemap: ${locs.length} URL, все существуют и без плейсхолдеров; 404.html целый; favicon.ico на месте; robots не задевает страницы и закрывает служебные выгрузки; ключ IndexNow на месте`);

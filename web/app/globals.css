@@ -1453,6 +1453,19 @@ footer{border-top:1px solid var(--line);background:var(--surf);padding-block:34p
 .qs-go svg{width:13px;height:13px;transition:transform .26s}
 .qs-card:hover .qs-go svg{transform:translateX(3px)}
 .qs-card .pvi.lg{align-self:start}
+/* Строка «только настройки»: ссылки в раздел /imap чипами, не абзацем —
+   так их видно как навигацию, и каждая остаётся нормальной целью касания. */
+.qs-hosts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:22px;
+  font-size:.9rem;color:var(--ink-3)}
+.qs-hosts>span{margin-right:4px}
+.qs-hosts>a:not(.brief-link){display:inline-flex;align-items:center;min-height:32px;padding:0 12px;
+  border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;
+  transition:border-color .2s,color .2s}
+.qs-hosts>a:not(.brief-link):hover{border-color:var(--acc);color:var(--acc)}
+.qs-hosts>a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.qs-hosts .brief-link{margin-top:0;margin-left:4px}
+@media (max-width:560px){.qs-hosts>a:not(.brief-link){min-height:40px;padding:0 14px}
+  .qs-hosts>span{flex-basis:100%}}
 
 /* --- Страница провайдера: карточка настроек --- */
 .hub-settings{margin-top:32px;padding:22px 24px;border:1px solid var(--line);border-radius:16px;background:var(--surf)}

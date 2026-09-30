@@ -13,7 +13,8 @@
     "build:static": "NEXT_PUBLIC_STATIC_SITE=1 next build && npm run csp",
     "csp": "node scripts/add-csp.mjs",
     "check": "node scripts/check-export.mjs",
-    "check:live": "node scripts/check-live.mjs"
+    "check:live": "node scripts/check-live.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "next": "16.3.6",

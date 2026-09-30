@@ -17,7 +17,7 @@ export const popularRoutes = {
     aria4: 'Перенести почту из iCloud Mail в Gmail',
     aria5: 'Перенести почту из cPanel в Microsoft 365',
     aria6: 'Перенести почту из Яндекс.Почты в Microsoft 365',
-    aria7: 'Перенести почту из Старый хостинг в Новый хостинг',
+    aria7: 'Перенести почту со старого хостинга на новый',
   },
   en: {
     eyebrow: 'Popular routes',

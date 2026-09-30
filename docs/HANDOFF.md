@@ -1,5 +1,43 @@
 # Engineering handoff — 2026-09-13
 
+## Website: internal links and IndexNow (2026-09-30, website scope)
+
+Branch `claude/website-seo-scqzs2`; only `web/`, `.github/workflows/pages.yml`
+and this section changed. Nothing under `internal/` was touched.
+
+- Status before the change: live site passes `npm run check:live` (243 sitemap
+  pages, 272 internal URLs, canonicals, redirects, real 404). No technical block
+  on indexing was found; the actual indexed count is visible only in the
+  owner's Search Console "Pages" report.
+- Internal links. The homepage linked to 18 pages and to none of the route or
+  IMAP host pages. It now carries the "popular routes" block (7 route pages)
+  and a row of IMAP host links under the quickstart tiles (per-language set).
+  IMAP host pages link to hosts of the same group. The "other routes" block on
+  route pages used to show the same first eight routes everywhere; it now puts
+  routes with the same source or destination first and fills the rest in a
+  rotation, plus a link to the provider hub pages of both sides. Minimum
+  inbound internal links, measured on the build: route pages 3 → 8, IMAP host
+  pages 3 → 8.
+- IndexNow. Key file `web/public/<32 hex>.txt` (public by protocol design, not
+  a secret). `scripts/indexnow.mjs` runs in the Pages build on `main` before
+  deployment, diffs the new sitemap against the live one (new, changed lastmod,
+  removed); the first run, when the live key file is still 404, submits the
+  whole sitemap. A separate `indexnow` job posts to api.indexnow.org after the
+  deployment; it is `continue-on-error` and has no permissions. Google does not
+  use IndexNow; this is for Bing, Yandex and other participants.
+  `check-export` now fails if the key file is missing, duplicated, mismatched
+  or blocked by robots.
+- Verified locally: `tsc`, `build:static`, CSP on 246 pages, `npm run check`,
+  browser audit on 13 pages (headings, alt, empty links, duplicate ids), CLS
+  0.0000 at 1440 and 390 px, no horizontal overflow at 390 px, dry run of the
+  IndexNow diff (first-run path: 243 URLs; diff path: 0 changes against live).
+  The real IndexNow POST happens only in CI after merge.
+- Next two steps: (1) owner: add the site to Bing Webmaster Tools (it can
+  import from Search Console) to see IndexNow acceptance, and keep requesting
+  indexing for key URLs in Search Console; (2) website: prototype the paid
+  cabinet from `docs/PAID-ACCOUNT-DESIGN.md` as a static, clearly non-functional
+  mock until the backend identity/payment API exists.
+
 ## Owner access, real HTTPS mail and paid-account brief (2026-09-15)
 
 - Merged PR #44 after all seven checks succeeded for 0aad8b1. Current work:
