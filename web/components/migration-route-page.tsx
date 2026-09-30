@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JsonLd } from '@/components/json-ld';
 import { FinalCta } from '@/components/sections/final-cta';
 import { findRoute, migrationRoutes } from '@/data/migration-routes';
+import { findProviderHub, type ProviderHub } from '@/data/provider-hubs';
 import { provider } from '@/data/providers';
 import { breadcrumbLd, buildMetadata, faqLd, howToLd } from '@/lib/seo';
 import { href, type Lang } from '@/i18n/config';
@@ -40,6 +41,33 @@ function ConnCard({
       </dl>
     </article>
   );
+}
+
+/**
+ * Восемь соседних маршрутов для блока «другие направления».
+ *
+ * Раньше здесь стояли просто первые восемь из списка — на всех страницах
+ * одни и те же. Первые маршруты получали ссылку с каждой страницы, а
+ * добавленные позже (ukr.net → Gmail, Gmail → iCloud и другие) не получали
+ * ни одной, кроме каталога. Теперь сначала идут маршруты с тем же
+ * источником или той же целью — это и человеку полезнее, — а остаток
+ * добирается по кругу от текущей позиции, так что входящие ссылки
+ * распределяются по всему списку ровно.
+ */
+function relatedRoutes(slug: string, limit = 8) {
+  const i = migrationRoutes.findIndex((r) => r.slug === slug);
+  const self = migrationRoutes[i];
+  if (!self) return [];
+  const rest = [...migrationRoutes.slice(i + 1), ...migrationRoutes.slice(0, i)];
+  const near = rest.filter((r) => r.source === self.source || r.destination === self.destination);
+  const far = rest.filter((r) => !near.includes(r));
+  return [...near.slice(0, limit - 2), ...far].slice(0, limit);
+}
+
+function routeHubs(route: { source: string; destination: string }) {
+  return [...new Set([route.source, route.destination])]
+    .map((key) => findProviderHub(key))
+    .filter((hub): hub is ProviderHub => Boolean(hub));
 }
 
 export function migrationRouteMetadata(lang: Lang, slug: string): Metadata {
@@ -183,21 +211,28 @@ export function MigrationRoutePage({ lang, slug }: { lang: Lang; slug: string })
           <h2>{t.relatedTitle}</h2>
         </div>
         <div className="route-links">
-          {migrationRoutes
-            .filter((r) => r.slug !== slug)
-            .slice(0, 8)
-            .map((r) => (
-              <a
-                key={r.slug}
-                className="brief-link"
-                href={href(lang, `/migrate/${r.slug}`)}
-              >
-                {provider(r.source).short} → {provider(r.destination).short}
-                <svg aria-hidden="true">
-                  <use href="#ar" />
-                </svg>
-              </a>
-            ))}
+          {relatedRoutes(slug).map((r) => (
+            <a
+              key={r.slug}
+              className="brief-link"
+              href={href(lang, `/migrate/${r.slug}`)}
+            >
+              {provider(r.source).short} → {provider(r.destination).short}
+              <svg aria-hidden="true">
+                <use href="#ar" />
+              </svg>
+            </a>
+          ))}
+          {/* Страницы провайдеров обеих сторон, если такие есть: до них
+              иначе вела только главная и каталог. */}
+          {routeHubs(route).map((hub) => (
+            <a key={hub.slug} className="brief-link" href={href(lang, `/migrate/${hub.slug}`)}>
+              {hub[lang].h1}
+              <svg aria-hidden="true">
+                <use href="#ar" />
+              </svg>
+            </a>
+          ))}
         </div>
       </section>
 

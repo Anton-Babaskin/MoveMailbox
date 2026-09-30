@@ -1,5 +1,6 @@
 import { ProviderMark } from '@/components/provider-mark';
-import { quickstart, quickstartMarks, quickstartOrder } from '@/content/sections/quickstart';
+import { quickstart, quickstartHosts, quickstartMarks, quickstartOrder } from '@/content/sections/quickstart';
+import { findImapHost } from '@/data/imap-hosts';
 import { findProviderHub } from '@/data/provider-hubs';
 import { mark as providerMark } from '@/data/provider-marks';
 import type { ProviderKey } from '@/data/providers';
@@ -66,6 +67,18 @@ export function Quickstart({ lang }: { lang: Lang }) {
           );
         })}
       </div>
+
+      <p className="qs-hosts">
+        <span>{t.hostsLabel}</span>
+        {quickstartHosts[lang].map((slug) => {
+          const host = findImapHost(slug);
+          return host ? <a key={slug} href={href(lang, `/imap/${slug}`)}>{host.name}</a> : null;
+        })}
+        <a className="brief-link" href={href(lang, '/imap')}>
+          {t.hostsAll}
+          <svg aria-hidden="true"><use href="#ar" /></svg>
+        </a>
+      </p>
     </section>
   );
 }

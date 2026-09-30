@@ -15,6 +15,28 @@ import { href, type Lang } from '@/i18n/config';
  * остальное — ловушки, вопросы и переход к переносу — ниже, для тех, кому
  * настройки не помогли.
  */
+/**
+ * Соседи по группе для блока «похожие сервисы».
+ *
+ * Раньше страница хоста ссылалась только на витрину /imap, и до каждой
+ * отдельной страницы робот доходил одним путём. Группы — по тому, кто
+ * ищет: пользователь бесплатной почты, абонент провайдера, владелец
+ * домена на хостинге. Слаг вне групп просто не получает блока.
+ */
+const HOST_GROUPS: string[][] = [
+  ['ukr-net', 'gmx', 'web-de', 'mail-com', 'wp-pl', 'aol', 'fastmail', 'proton-mail'],
+  ['comcast-xfinity', 'att', 'cox', 'spectrum', 't-online', 'bt-mail', 'sky-mail'],
+  ['godaddy', 'ionos', 'hostinger', 'namecheap-private-email', 'rackspace', 'dreamhost'],
+];
+
+function relatedHosts(slug: string): ImapHost[] {
+  const group = HOST_GROUPS.find((g) => g.includes(slug)) ?? [];
+  return group
+    .filter((s) => s !== slug)
+    .map((s) => findImapHost(s))
+    .filter((h): h is ImapHost => Boolean(h));
+}
+
 export function imapHostMetadata(lang: Lang, slug: string): Metadata {
   const host = findImapHost(slug);
   if (!host) return {};
@@ -65,6 +87,7 @@ export function ImapHostPage({ lang, slug }: { lang: Lang; slug: string }) {
   const copy = host[lang];
   const t = imapHostPage[lang];
   const path = `/imap/${slug}`;
+  const related = relatedHosts(slug);
 
   return (
     <main>
@@ -187,6 +210,25 @@ export function ImapHostPage({ lang, slug }: { lang: Lang; slug: string }) {
           </a>
         </p>
       </section>
+
+      {related.length > 0 && (
+        <section className="shell">
+          <div className="head-wide">
+            <p className="eyebrow">{t.eyebrow}</p>
+            <h2>{t.relatedTitle}</h2>
+          </div>
+          <div className="error-index" style={{ marginTop: '24px' }}>
+            {related.map((other) => (
+              <a key={other.slug} href={href(lang, `/imap/${other.slug}`)}>
+                <code>{other.imap ? other.imap.host : '—'}</code>
+                <strong>{other.name}</strong>
+                <span>{other[lang].description}</span>
+                <svg aria-hidden="true"><use href="#ar" /></svg>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       <FinalCta lang={lang} />
     </main>

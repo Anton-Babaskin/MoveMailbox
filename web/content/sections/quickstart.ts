@@ -16,6 +16,8 @@ export const quickstart = {
       imap: 'Любой сервер: хостинг, Dovecot, свой почтовик',
     },
     go: 'Настройки и порядок',
+    hostsLabel: 'Нужны только настройки сервера для почтовой программы?',
+    hostsAll: 'Все настройки IMAP',
   },
   en: {
     eyebrow: 'Quickstart',
@@ -30,6 +32,8 @@ export const quickstart = {
       imap: 'Any server: hosting, Dovecot, your own mail host',
     },
     go: 'Settings and steps',
+    hostsLabel: 'Only need the server settings for a mail app?',
+    hostsAll: 'All IMAP settings',
   },
   uk: {
     eyebrow: 'Швидкий старт',
@@ -44,6 +48,8 @@ export const quickstart = {
       imap: 'Будь-який сервер: хостинг, Dovecot, власний поштовик',
     },
     go: 'Налаштування та кроки',
+    hostsLabel: 'Потрібні лише налаштування сервера для поштової програми?',
+    hostsAll: 'Усі налаштування IMAP',
   },
 } as const;
 
@@ -66,3 +72,18 @@ export const quickstartMarks: Record<string, { letter: string; b1: string; b2: s
 
 /** Порядок плиток. Общая IMAP-плитка последняя: она для тех, кто не нашёл свой. */
 export const quickstartOrder = ['gmail', 'microsoft-365', 'yahoo', 'exchange', 'imap'] as const;
+
+/**
+ * Строка «только настройки» под плитками: ведёт в раздел /imap.
+ *
+ * Главная — самая посещаемая роботом страница, а раздел настроек до этого
+ * был связан с ней только ссылкой в подвале. Набор у каждого языка свой,
+ * под свой рынок: ukr.net первым для украинского, американские провайдеры
+ * для английского. Слаги обязаны существовать в data/imap-hosts.ts —
+ * компонент молча пропускает неизвестный, а check-export ловит битые ссылки.
+ */
+export const quickstartHosts = {
+  ru: ['ukr-net', 'gmx', 'web-de', 'aol', 'fastmail', 'proton-mail', 't-online', 'wp-pl'],
+  en: ['aol', 'comcast-xfinity', 'att', 'godaddy', 'fastmail', 'proton-mail', 'gmx', 'bt-mail'],
+  uk: ['ukr-net', 'gmx', 'web-de', 'wp-pl', 'aol', 'fastmail', 'proton-mail', 't-online'],
+} as const;

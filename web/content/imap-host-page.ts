@@ -38,6 +38,8 @@ export const imapHostPage: Record<
     faqTitle: string;
     cta: (name: string) => string;
     allHosts: string;
+    /** Заголовок блока соседних сервисов той же группы. */
+    relatedTitle: string;
     guides: string;
     errors: string;
   }
@@ -73,6 +75,7 @@ export const imapHostPage: Record<
     faqTitle: 'Коротко о частом',
     cta: (name) => `Перенести почту ${name}`,
     allHosts: 'Все настройки IMAP',
+    relatedTitle: 'Настройки похожих сервисов',
     guides: 'Гайды по провайдерам',
     errors: 'Справочник ошибок IMAP',
   },
@@ -107,6 +110,7 @@ export const imapHostPage: Record<
     faqTitle: 'The short answers',
     cta: (name) => `Migrate a ${name} mailbox`,
     allHosts: 'All IMAP settings',
+    relatedTitle: 'Settings for similar services',
     guides: 'Provider guides',
     errors: 'IMAP error reference',
   },
@@ -141,6 +145,7 @@ export const imapHostPage: Record<
     faqTitle: 'Коротко про часте',
     cta: (name) => `Перенести пошту ${name}`,
     allHosts: 'Усі налаштування IMAP',
+    relatedTitle: 'Налаштування схожих сервісів',
     guides: 'Гайди за провайдерами',
     errors: 'Довідник помилок IMAP',
   },
