@@ -5,6 +5,28 @@ import json
 import sqlite3
 
 
+def ensure_pair_drained(databases):
+    """Preflight only; caller must prevent admissions in an exclusive window.
+
+    Terminal API history is valid. Its status is nested in snapshot['view'],
+    not at the top level. Check before stopping a service, not only afterwards.
+    This read-only check is not an atomic admission lock.
+    """
+    path = databases['api']
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('API database is missing or linked')
+    with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True)) as db:
+        if db.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
+            raise ValueError('API integrity failed')
+        for job_id, payload in db.execute('SELECT id, snapshot_json FROM job_snapshots'):
+            view = json.loads(payload)['view']
+            if view['id'] != job_id:
+                raise ValueError('snapshot identity mismatch')
+            if view['status'] not in ('completed', 'failed', 'cancelled'):
+                raise ValueError('API jobs are not drained')
+    ensure_worker_drained(databases['worker'])
+
+
 def ensure_worker_drained(path):
     """Read-only rotation/backup gate. Caller must first stop admissions/writer."""
     if path.is_symlink() or not path.is_file():

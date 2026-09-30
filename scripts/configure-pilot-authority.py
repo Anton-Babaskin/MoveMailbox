@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """Apply the approved :18443 authority on the dedicated idle staging VM."""
 import os
-import json
 from pathlib import Path
-import sqlite3
 import subprocess
 import time
 import urllib.request
-from contextlib import closing
 from staging_update import ENV, CONTAINERS, database_paths
+from backup_validation import ensure_pair_drained
 
 
 def run(*args):
@@ -18,16 +16,7 @@ def run(*args):
 def main():
     if os.geteuid() != 0 or ENV.is_symlink():
         raise RuntimeError('requires root and regular staging env')
-    for role, path in database_paths().items():
-        with closing(sqlite3.connect(path.as_uri()+'?mode=ro', uri=True)) as db:
-            if role == 'worker':
-                active = db.execute("SELECT count(*) FROM worker_jobs WHERE status NOT IN ('completed','failed','cancelled')").fetchone()[0]
-                active += db.execute('SELECT count(*) FROM credential_envelopes').fetchone()[0]
-            else:
-                active = sum(json.loads(row[0]).get('status') not in ('completed', 'failed', 'cancelled')
-                             for row in db.execute('SELECT snapshot_json FROM job_snapshots'))
-            if active:
-                raise RuntimeError('active jobs; use an exclusive idle window')
+    ensure_pair_drained(database_paths())
     original = ENV.read_text()
     lines = original.splitlines()
     positions = [i for i, line in enumerate(lines) if line.startswith('MOVEMAILBOX_ALLOWED_HOSTS=')]

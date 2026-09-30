@@ -24,7 +24,7 @@ import tempfile
 import time
 import urllib.request
 
-from backup_validation import validate_pair
+from backup_validation import ensure_pair_drained, validate_pair
 
 
 ENV = Path("/etc/movemailbox/staging.env")
@@ -228,6 +228,7 @@ def update(reference, source_commit):
         raise RuntimeError("requested image is already deployed")
     image_id(old)  # Rollback image must exist before downtime begins.
     databases = database_paths()
+    ensure_pair_drained(databases)  # Refuse active work before causing downtime.
     ensure_backup_root()
     run("systemctl", "stop", SERVICE)
     changed = False
