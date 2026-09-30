@@ -25,7 +25,10 @@ fi
 
 echo "session-start: зависимости сайта"
 if [ -d "${CLAUDE_PROJECT_DIR:-.}/web" ]; then
-  (cd "${CLAUDE_PROJECT_DIR:-.}/web" && npm install --no-audit --no-fund)
+  # npm ci ставит ровно то, что в lockfile, и сам lockfile не трогает.
+  # npm install здесь переписывал его (здешний npm выкидывает поля libc),
+  # и каждая сессия начиналась с грязного дерева.
+  (cd "${CLAUDE_PROJECT_DIR:-.}/web" && npm ci --no-audit --no-fund)
 fi
 
 CA_BUNDLE=/root/.ccr/ca-bundle.crt
