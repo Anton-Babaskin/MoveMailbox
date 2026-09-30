@@ -78,18 +78,28 @@ jobs:
     needs: [build, deploy]
     if: needs.build.outputs.indexnow != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 12
     continue-on-error: true
     permissions: {}
     steps:
       - name: Notify IndexNow
         env:
           PAYLOAD: ${{ needs.build.outputs.indexnow }}
+        # Pages отдаёт новый файл не мгновенно после выкладки: первая попытка
+        # 30.09 получила 403 SiteVerificationNotCompleted — IndexNow не смог
+        # прочитать ключ. На 403 и 429 ждём и пробуем снова, до четырёх раз.
         run: |
-          status=$(curl -sS -o response.txt -w '%{http_code}' --max-time 30 \
-            -X POST https://api.indexnow.org/indexnow \
-            -H 'Content-Type: application/json; charset=utf-8' \
-            --data-binary "$PAYLOAD")
-          echo "IndexNow HTTP $status"
-          cat response.txt || true
-          case "$status" in 200|202) ;; *) exit 1 ;; esac
+          for attempt in 1 2 3 4; do
+            status=$(curl -sS -o response.txt -w '%{http_code}' --max-time 30 \
+              -X POST https://api.indexnow.org/indexnow \
+              -H 'Content-Type: application/json; charset=utf-8' \
+              --data-binary "$PAYLOAD" || true)
+            echo "IndexNow attempt $attempt: HTTP $status"
+            cat response.txt 2>/dev/null || true
+            case "$status" in
+              200|202) exit 0 ;;
+              403|429|000|5??) sleep $((attempt * 60)) ;;
+              *) exit 1 ;;
+            esac
+          done
+          exit 1
