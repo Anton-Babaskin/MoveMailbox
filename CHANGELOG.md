@@ -8,6 +8,8 @@ Preview tags are immutable and are not silently promoted to stable.
 - Private staging monitor: bounded disk/inode, authenticated readiness, queue,
   failure and credential-cleanup checks; installed/served TLS expiry checks;
   redacted local alerts with deduplication and recovery, without new listeners.
+- Docker lab launcher selects an unused subnet rather than randomly colliding
+  with retained stopped labs; ENOSPC setup errors expose only operation labels.
 
 - Staging updater rejects active jobs/envelopes before service stop; pilot
   authority preflight reads nested API snapshot status correctly.

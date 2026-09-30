@@ -246,5 +246,11 @@ if __name__ == "__main__":
             run(args, temporary)
     except Exception as exc:
         frame = traceback.extract_tb(exc.__traceback__)[-1]
-        print("FAIL:", type(exc).__name__, getattr(exc, "sqlite_errorname", ""), "line", frame.lineno, "(sensitive details withheld)", flush=True)
+        print("FAIL:", type(exc).__name__, getattr(exc, "sqlite_errorname", ""),
+              Path(frame.filename).name, "line", frame.lineno, "(sensitive details withheld)", flush=True)
+        # Constant operation labels help distinguish setup from application faults.
+        # Never expose the exception string, Docker stderr, environment or args.
+        operation = getattr(exc, 'operation', None)
+        if operation in ('run', 'network', 'volume', 'image', 'inspect', 'exec', 'stop', 'pause', 'unpause', 'kill', 'start', 'logs'):
+            print('Docker operation:', operation, flush=True)
         raise SystemExit(1)

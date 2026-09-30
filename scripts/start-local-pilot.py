@@ -11,6 +11,7 @@ a trusted local HTTPS proxy. Never disable public mode to bypass cookie handling
 import base64
 import argparse
 import hashlib
+import ipaddress
 import json
 import os
 import secrets
@@ -22,11 +23,45 @@ IMAGE = "movemailbox:pilot"
 PREFIX = "movemailbox-pilot"
 
 
+class DockerOperationError(RuntimeError):
+    def __init__(self, operation):
+        super().__init__('Docker operation failed; details withheld')
+        self.operation = operation
+
+
 def docker(*args, env=None):
     result = subprocess.run(["docker", *args], env=env, capture_output=True, timeout=90)
     if result.returncode:
-        raise RuntimeError("Docker operation failed; inspect container status (output withheld)")
+        # Only the fixed operation name, never arguments/env/stderr with secrets.
+        raise DockerOperationError(args[0])
     return result.stdout.decode().strip()
+
+
+def create_lab_network(prefix):
+    # Retained stopped labs still own their networks. Hashing into only 200
+    # slots made sequential CI faults collide randomly; never delete those labs.
+    ids = docker("network", "ls", "--quiet").split()
+    if any(not value.isascii() or not all(c in '0123456789abcdef' for c in value) for value in ids):
+        raise RuntimeError("invalid Docker network inventory")
+    occupied = []
+    if ids:
+        lines = docker("network", "inspect", *ids, "--format={{json .IPAM.Config}}").splitlines()
+        if len(lines) != len(ids):
+            raise RuntimeError("incomplete Docker network inventory")
+        for line in lines:
+            for config in json.loads(line) or []:
+                if config.get("Subnet"):
+                    occupied.append(ipaddress.ip_network(config["Subnet"], strict=False))
+    start = int.from_bytes(hashlib.sha256(prefix.encode()).digest()[:2], "big") % 3200
+    for offset in range(3200):
+        slot = (start + offset) % 3200
+        subnet = ipaddress.ip_network(f"10.254.{16 + slot // 16}.{(slot % 16) * 16}/28")
+        if not any(network.version == 4 and subnet.overlaps(network) for network in occupied):
+            # Docker remains the atomic collision guard against concurrent creation.
+            # Any creation failure is fatal, never a reason to remove another network.
+            docker("network", "create", "--subnet", str(subnet), prefix)
+            return
+    raise RuntimeError("no unused lab subnet; existing networks preserved")
 
 
 def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, demo=False, worker_test_args=(), started_containers=None, worker_test_database=None, resume_interrupted=True):
@@ -44,8 +79,7 @@ def start(prefix=PREFIX, port=8180, image=IMAGE, max_mailbox_bytes=5000000000, d
     keys = dict(line.split("=", 1) for line in docker("run", "--rm", image, "keygen").splitlines())
     # Explicitly allocate a tiny private subnet. Developer machines often retain
     # stopped test labs until inspection, exhausting Docker's default pools.
-    subnet_octet = 16 + (int.from_bytes(hashlib.sha256(prefix.encode()).digest()[:2], "big") % 200)
-    docker("network", "create", "--subnet", f"10.254.{subnet_octet}.0/28", prefix)
+    create_lab_network(prefix)
     for role in ("worker", "api"):
         volume = prefix + "-" + role + "-data"
         docker("volume", "create", volume)

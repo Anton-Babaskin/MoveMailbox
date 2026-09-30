@@ -18,10 +18,20 @@
   deduplicated into local journal plus atomic root-private state; no outbound
   channel or independent external heartbeat yet. Root/Docker access remains
   privileged, despite the read-only commands and systemd filesystem hardening.
-- Local Linux/WSL Python: 70 tests passed with one missing-age integration skip;
+- Local Linux/WSL Python: 74 tests ran with one missing-age integration skip;
   12 new monitor tests cover fault thresholds, committed WAL, redaction,
   expiry/mismatch, queue/error counts, dedup/recovery and corrupt/unsafe state.
   Go race tests and vet passed; Go formatting clean; docs check passed.
+- Initial PR #59 CI at a497899 stopped during old ENOSPC lab setup, before
+  active application testing; the latest main CI also failed at that setup.
+  Original Docker stderr was withheld, so the exact old failure is not proven.
+  Found/reproduced a real launcher flaw: hashed subnets could collide with
+  retained stopped labs. Launcher now inspects IPAM and selects a free /28;
+  no existing networks removed, concurrent allocation still fails closed.
+  A real WSL Docker occupied-candidate test passed; only its two newly created
+  empty networks were removed. Four additional offline tests cover collisions,
+  full/invalid inventory and error redaction. ENOSPC errors now include a fixed
+  operation label, not Docker arguments/environment/output.
 - Read-only VM candidate probe under a transient systemd filesystem sandbox
   passed in about 0.6 s: no alerts, API/worker ready, two completed jobs per
   store, zero envelopes/active work, served certificate matches and about
