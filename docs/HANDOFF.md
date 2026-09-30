@@ -27,6 +27,11 @@ and this section changed. Nothing under `internal/` was touched.
   use IndexNow; this is for Bing, Yandex and other participants.
   `check-export` now fails if the key file is missing, duplicated, mismatched
   or blocked by robots.
+- After merge (PR #54, a2c5c35): deploy succeeded; the first IndexNow POST
+  6 s after deploy got 403 SiteVerificationNotCompleted (key file not yet
+  served). Re-run from CI was not permitted to the agent, so the same 243-URL
+  payload was submitted once manually: HTTP 200. The job now retries 403/429/
+  5xx/network errors up to four times with growing pauses.
 - Verified locally: `tsc`, `build:static`, CSP on 246 pages, `npm run check`,
   browser audit on 13 pages (headings, alt, empty links, duplicate ids), CLS
   0.0000 at 1440 and 390 px, no horizontal overflow at 390 px, dry run of the
