@@ -1,5 +1,7 @@
 """Offline tests for test-only routing and partial-launch ownership tracking."""
 import importlib.util
+import ipaddress
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -14,6 +16,46 @@ def load(name, filename):
 
 
 class HarnessTests(unittest.TestCase):
+    def test_docker_error_operation_has_no_arguments_or_output(self):
+        pilot = load("pilot_network", "start-local-pilot.py")
+        result = SimpleNamespace(returncode=1, stdout=b'SYNTHETIC-SECRET', stderr=b'SYNTHETIC-SECRET')
+        with patch.object(pilot.subprocess, 'run', return_value=result):
+            with self.assertRaises(pilot.DockerOperationError) as caught:
+                pilot.docker('run', '--env', 'SYNTHETIC-SECRET')
+        self.assertEqual(caught.exception.operation, 'run')
+        self.assertNotIn('SYNTHETIC-SECRET', str(caught.exception))
+
+    def test_retained_network_collision_chooses_unused_subnet(self):
+        pilot = load("pilot_network", "start-local-pilot.py")
+        with patch.object(pilot, 'docker', return_value='') as docker:
+            pilot.create_lab_network('movemailbox-unit-network')
+            first = docker.call_args.args[3]
+        def inventory(*args):
+            if args[:2] == ('network', 'ls'):
+                return 'abcdef123456'
+            if args[:2] == ('network', 'inspect'):
+                return json.dumps([{'Subnet': first}, {'Subnet': '2001:db8::/32'}])
+            return ''
+        with patch.object(pilot, 'docker', side_effect=inventory) as docker:
+            pilot.create_lab_network('movemailbox-unit-network')
+            second = docker.call_args.args[3]
+            self.assertFalse(ipaddress.ip_network(first).overlaps(ipaddress.ip_network(second)))
+            self.assertFalse(any(call.args[:2] == ('network', 'rm') for call in docker.call_args_list))
+
+    def test_broad_network_blocks_lab_allocation_without_cleanup(self):
+        pilot = load("pilot_network", "start-local-pilot.py")
+        with patch.object(pilot, 'docker', side_effect=['abcdef123456', '[{"Subnet":"10.0.0.0/8"}]']) as docker:
+            with self.assertRaisesRegex(RuntimeError, 'no unused lab subnet'):
+                pilot.create_lab_network('movemailbox-unit-network')
+            self.assertEqual(docker.call_count, 2)
+
+    def test_incomplete_network_inventory_fails_closed(self):
+        pilot = load("pilot_network", "start-local-pilot.py")
+        with patch.object(pilot, 'docker', side_effect=['abcdef123456 fedcba654321', '[{"Subnet":"10.0.0.0/8"}]']) as docker:
+            with self.assertRaisesRegex(RuntimeError, 'incomplete'):
+                pilot.create_lab_network('movemailbox-unit-network')
+            self.assertEqual(docker.call_count, 2)
+
     def test_growth_fixtures_are_distinct_and_exceed_budget(self):
         growth = load("growth", "smoke-api-growth.py")
         first = growth.fixture("MoveMailbox-Growth-test", 1, 10000)
