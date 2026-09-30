@@ -35,8 +35,16 @@
 - Read-only VM candidate probe under a transient systemd filesystem sandbox
   passed in about 0.6 s: no alerts, API/worker ready, two completed jobs per
   store, zero envelopes/active work, served certificate matches and about
-  74 days remaining. Permanent timer installation is pending exact-SHA CI;
-  this entry does not claim it is already installed or the PR merged.
+  74 days remaining.
+- All seven CI checks passed at 2abe88718ea01196d3907726e8d0ecaef1fe50bd
+  (run 36711089681), including ENOSPC/crash tests with the corrected launcher.
+  Installed the three monitor files from that reviewed Git archive on the VM;
+  verified checksum, inventory and root-controlled previously absent targets.
+  Permanent timer enabled at 11:58 UTC; first actual hardened unit run succeeded,
+  no alerts; root-private state 0700 and JSON/lock 0600. Next automatic run was
+  scheduled five minutes later. API/worker/proxy image IDs and start times were
+  compared before/after and unchanged. Final evidence-only commit is in PR #59;
+  merge requires green checks for that exact final head too.
 - Runtime stays v0.5.0-rc.1, image
   `sha256:c3b4994e0692a0c1d34a65066f00296e524cccbbbdf606bbc4429b3f99a4f7ca`.
   No new mail/provider load test needed for this operator-only stage.
