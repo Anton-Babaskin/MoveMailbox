@@ -1,12 +1,12 @@
 module github.com/Anton-Babaskin/MoveMailbox
 
-go 1.25.0
+go 1.26.0
 
 toolchain go1.27.0
 
 require (
 	github.com/emersion/go-imap/v2 v2.0.0-beta.8
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.49.0
 	modernc.org/sqlite v1.59.0
 )
 
