@@ -1,5 +1,6 @@
 import { modes } from '@/content/sections/modes';
 import type { Lang } from '@/i18n/config';
+import { RELEASE_URL } from '@/lib/release';
 
 export function Modes({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boolean }) {
   const t = modes[lang];
@@ -37,8 +38,8 @@ export function Modes({ lang, pageTitle = false }: { lang: Lang; pageTitle?: boo
               ))}
             </ul>
             <div className="os-row">
-              <a className="os" href="https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview" target="_blank" rel="noreferrer"><svg aria-hidden="true"><use href="#win" /></svg>Windows<small>{t.desktop.win}</small></a>
-              <a className="os" href="https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview" target="_blank" rel="noreferrer"><svg aria-hidden="true"><use href="#lnx" /></svg>Linux<small>{t.desktop.lnx}</small></a>
+              <a className="os" href={RELEASE_URL} target="_blank" rel="noreferrer"><svg aria-hidden="true"><use href="#win" /></svg>Windows<small>{t.desktop.win}</small></a>
+              <a className="os" href={RELEASE_URL} target="_blank" rel="noreferrer"><svg aria-hidden="true"><use href="#lnx" /></svg>Linux<small>{t.desktop.lnx}</small></a>
               <span className="os soon"><svg aria-hidden="true"><use href="#mac" /></svg>macOS<small>{t.desktop.mac}</small></span>
             </div>
           </article>

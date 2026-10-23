@@ -20,8 +20,9 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = new URL('../out/', import.meta.url).pathname;
+const OUT = fileURLToPath(new URL('../out/', import.meta.url));
 
 /** Инлайновый тег — без src/href. Текст берём ровно как он лежит в файле:
  *  браузер считает хэш от тех же байт. */

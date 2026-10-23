@@ -8,7 +8,7 @@
 
 An IMAP migration tool with a browser UI, a local client and a separate hosted worker.
 
-[Website](https://movemailbox.com) · [Download candidate](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1) · [Documentation](docs/README.md) · [Русский](docs/README.ru.md)
+[Website](https://movemailbox.com) · [Download candidate](https://github.com/Anton-Babaskin/MoveMailbox/releases) · [Documentation](docs/README.md) · [Русский](docs/README.ru.md)
 
 [![CI](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Anton-Babaskin/MoveMailbox/actions/workflows/ci.yml)
 [![Preview](https://img.shields.io/github/v/release/Anton-Babaskin/MoveMailbox?include_prereleases&label=preview&color=087f66)](https://github.com/Anton-Babaskin/MoveMailbox/releases)
@@ -56,14 +56,14 @@ including mailbox growth during a transfer.
 
 ### Windows
 
-[Download Windows amd64](https://github.com/Anton-Babaskin/MoveMailbox/releases/download/v0.5.0-rc.1/movemailbox-windows-amd64-v0.5.0-rc.1.zip) → extract the ZIP → run **START-DEMO.cmd**.
+[Download the newest Windows amd64 candidate](https://github.com/Anton-Babaskin/MoveMailbox/releases) → extract the ZIP → run **START-DEMO.cmd**.
 
 Demo mode contacts no mail servers. For real work, install imapsync and run
 **START-REAL.cmd**. Administrator privileges are not required.
 
 ### Linux & macOS
 
-Extract the matching archive from [v0.5.0-rc.1](https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.5.0-rc.1), then run:
+Extract the matching archive from [the newest candidate release](https://github.com/Anton-Babaskin/MoveMailbox/releases), then run:
 
 ```sh
 ./movemailbox --demo --open=true
@@ -75,7 +75,7 @@ Checksums verify a match to the published file, not an independent publisher sig
 
 ### From source
 
-Go 1.25+ is required; `go.mod` pins the Go 1.27.0 toolchain.
+Go 1.26+ is required; `go.mod` pins the security-patched Go 1.27.3 toolchain.
 
 ```sh
 git clone https://github.com/Anton-Babaskin/MoveMailbox.git

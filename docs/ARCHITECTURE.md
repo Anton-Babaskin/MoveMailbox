@@ -104,7 +104,7 @@ with PostgreSQL for multiple API/worker replicas.
 ## Build and container trust
 
 - The module's minimum Go version remains distinct from its reproducible build
-  toolchain: Go 1.25 is required by the current SQLite/security dependency set,
+  toolchain: Go 1.26 is required by the current SQLite/security dependency set,
   while CI and Docker use the exact Go 1.27 toolchain named in `go.mod`.
 - GitHub Actions are referenced by immutable commit SHA with the human-readable
   release tag retained in a comment.

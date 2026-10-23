@@ -95,3 +95,18 @@ test('cancellation rejection is observable and does not terminate monitoring', a
   await assert.rejects(client.cancel('one'), { code: 'worker.stop_unconfirmed' });
   assert.equal(Stream.last.closed, false);
 });
+
+test('cancellation sends JSON Content-Type, body and CSRF required by the real API', async () => {
+  let submitted;
+  const client = createGuestClient({ fetch: async (path, init) => {
+    if (path === '/api/session') return response({ mode: 'guest', csrfToken: 'token' });
+    submitted = { path, init };
+    assert.equal(init.headers['Content-Type'], 'application/json');
+    assert.equal(init.headers['X-CSRF-Token'], 'token');
+    assert.deepEqual(JSON.parse(init.body), {});
+    return response({ id: 'one', status: 'cancelled' }, 202);
+  } });
+  await client.cancel('one');
+  assert.equal(submitted.path, '/api/jobs/one/cancel');
+  assert.equal(submitted.init.method, 'POST');
+});

@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GO_VERSION: "1.27.0"
+  GO_VERSION: "1.27.3"
   GOTOOLCHAIN: local
   GOVULNCHECK_VERSION: "v1.7.0"
 
@@ -53,7 +53,7 @@ jobs:
         run: go vet ./...
 
       - name: Test guest API client contract
-        run: node --test sdk/guest-client.test.mjs
+        run: node --test sdk/guest-client.test.mjs web/lib/mirror-safety.test.mjs
 
       - name: Check Python test harness syntax
         run: python3 -m compileall -q scripts

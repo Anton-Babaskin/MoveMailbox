@@ -102,7 +102,8 @@ export function createGuestClient({ fetch: request = globalThis.fetch,
     start: input => post('/api/jobs', input),
     list: () => json('GET', '/api/jobs'),
     get,
-    cancel: id => post(jobPath(id) + '/cancel'),
+    // The API guard requires JSON Content-Type on every POST, including cancel.
+    cancel: id => post(jobPath(id) + '/cancel', {}),
     watch,
   };
 }

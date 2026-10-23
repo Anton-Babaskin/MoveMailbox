@@ -1,4 +1,72 @@
-# Engineering handoff — 2026-09-30
+# Engineering handoff — 2026-10-23
+
+## Return-from-leave audit (2026-10-23)
+
+- Clean main c9f84f5 synchronized with GitHub; branch
+  `audit/october-launch-readiness`. Owner requested code/site/repository audit,
+  fixes and self-run acceptance, so website changes are limited to confirmed
+  integration/build/download defects; no redesign or Claude PR merge.
+- [Launch readiness](LAUNCH-READINESS.md) separates a finite free-MVP launch path
+  from later billing/PostgreSQL/team features. Public Pages is still preview;
+  working API/UI requires the same chosen HTTPS origin and public-exposure choice.
+- Fixed two browser-reproduced P1 issues: cancellation POST lacked JSON header
+  (real API rejected with 415); strict-mirror consent survived provider changes.
+  Added narrow regressions; no removal of existing safety gates.
+- Go 1.27.3, SQLite 1.60.1/x/sys 0.49.0, Next 16.4.2, React pair 19.3.1,
+  sharp 0.35.5/source-map-js 1.2.2 and reviewed SHA-pinned Actions updates.
+  Local Go race/vet/vulnerability scan passed (zero reachable advisories);
+  production npm audit zero. Python 74 tests, one missing-age local skip;
+  SDK/mirror tests nine passed. Docs/source type checks passed.
+- Live SEO full check passed 243 sitemap pages/272 internal URLs after a
+  transient 503 on the initial attempt. Static export and Windows CSP build
+  fixed/checked; download entry points no longer frozen on old v0.4.0.
+- Native Windows browser demo verified fields, check/folders, INBOX 184 result,
+  active-job reload, and mirror-reset fix. Rebuilt the executable with the cancel
+  fix; actual browser cancellation now reaches cancelled state with controls
+  restored, instead of HTTP 415. History persisted across the native restart.
+  These results are not a native real-provider acceptance.
+- Browser screenshot also revealed cancelled counters reset to zero despite
+  copied-folder events. Explicit cancellation now keeps last observed partial
+  transferred/skipped/bytes in its terminal view/event, with a focused Go test.
+  Final Windows browser recheck cancelled immediately after first INBOX progress:
+  cancelled view retained 184 messages/38 MB demo counters. These observations
+  are not a guaranteed final provider-side inventory or real-Windows IMAP proof.
+- Both backend CI (39941673906) and website build (39941673902) passed for
+  382c9cabe84ce21bfbc872200865cd6ef7ad38de. Built that exact source archive on
+  the VM, including real imapsync trusted/untrusted/wrong-peer TLS/STARTTLS checks.
+  Drained transactional promotion succeeded; runtime reports v0.5.0-rc.2,
+  `imapsync-remote-worker`, storage healthy/readiness 200. Immutable image:
+  `sha256:a59a2e3887abf76cad399cf4e45ed80752575f95891f8161e1f376595c6a3c1a`.
+  Prior c3b4994e image and validated local metadata snapshot remain for rollback.
+  API/worker stay non-root/read-only; HTTPS proxy, keys, routing and VPN untouched.
+  About 24 GiB remain free after builds; monitor refreshed and healthy, ~51 TLS days.
+- Fresh external HTTPS/worker real-mail acceptance passed with retained fixture
+  `MoveMailbox-HTTPS-8baca049a103`: synthetic attachment copied once, repeat
+  copied zero; body hash, flags and internal date matched; source unchanged.
+  The initial fixture `MoveMailbox-HTTPS-7f5944a1af48` overlapped a load run:
+  harness aborted without printing its protected error details, but read-only
+  stores proved its single job completed/copy=1 and envelopes=0. Serialized fresh
+  acceptance passed. Do not run acceptance and rate-limit load concurrently.
+- Post-promotion HTTPS readiness load: 80 requests/four clients, 27 HTTP 200 and
+  53 expected 429, p95 350.85 ms, max 419.96 ms, 18.82 s including recovery.
+  Three recovery requests were 200. Guest/CSRF/Origin/Host and temporary invite
+  revocation passed; no provider load. Final read-only stores: three completed
+  API/worker records, no active work, zero envelopes; monitor healthy.
+  No broader/public launch is implied.
+- PR #73 contains the audit and this evidence-only follow-up. Final-head CI must
+  be green before merge. Native publication is separate from deployed runtime;
+  use the actual Releases page/workflow result, never infer it from the image tag.
+- Release metadata prepared for v0.5.0-rc.2, with explicit verification limits;
+  README and website both link to the release index rather than freezing users
+  on an obsolete security preview. Publication remains gated by the tag workflow.
+- Final head 8542a6d passed all backend CI gates, but Pages exposed a Turbopack
+  Google-font module-resolution failure. Production builds now explicitly select
+  supported Webpack in all three entry points; fonts/design remain unchanged.
+  Require fresh exact-head backend/site CI before merge, not the earlier green run.
+- Next two bounded stages: (1) finish audit merge/security preview publication
+  and verify public static deployment; (2) owner choices for production origin,
+  alert delivery/renewal credentials and distribution license, then limited free
+  launch. No new billing/PostgreSQL project; backups remain deferred by owner.
 
 ## VM capacity and operator monitoring (2026-09-30, technical scope)
 
