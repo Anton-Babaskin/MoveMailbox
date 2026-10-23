@@ -32,6 +32,7 @@ demo и успешная сборка не заменяют этот тест. �
 | P1 | Go 1.27.0 build/runtime affected by reachable standard-library advisories; scheduled main CI red | Go 1.27.3 in module, CI, release and digest-pinned Docker builder; fresh vulnerability scan required |
 | P1 | Browser cancel sent no JSON Content-Type; actual API returned 415 instead of cancelling | SDK sends `{}` with JSON header and CSRF; regression plus real browser recheck |
 | P1 | Strict-mirror confirmation survived provider/security/port selection changes | Reset on both input/change for endpoint inputs and selects; browser reproduction plus regression |
+| P2 | Cancelled job reset transferred/skipped/bytes to zero despite visible partial copying | Preserve last observed partial counters in the terminal view/event; these are not a guaranteed final provider inventory |
 | P2 | Pinned sharp and retained source-map-js had high-severity advisories | sharp 0.35.5, source-map-js 1.2.2; Next 16.4.2, paired React/react-dom 19.3.1; production npm audit zero |
 | P2 | Download buttons frozen on v0.4.0-preview | Shared release index including prereleases; no `/releases/latest` trap or not-yet-existing tag |
 | P2 | Windows CSP generation used URL pathname, producing `C:\\C:\\...` | `fileURLToPath`; static build uses Node subprocesses instead of POSIX-only env syntax |

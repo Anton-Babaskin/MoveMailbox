@@ -9,6 +9,29 @@ import (
 	"github.com/Anton-Babaskin/MoveMailbox/internal/migrator"
 )
 
+func TestCancelRetainsLastObservedPartialCopyCounts(t *testing.T) {
+	engine := &controlledEngine{available: true, release: make(chan struct{})}
+	manager := newTestManager(t, engine, Config{})
+	job, err := manager.Start(validRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitForStatus(t, manager, job.ID, StatusRunning)
+	manager.publish(job.ID, migrator.Event{Type: "progress", Phase: PhaseCopying,
+		Progress: 42, Transferred: 7, Skipped: 2, Bytes: 4096})
+	if err := manager.Cancel(job.ID); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := manager.Get(job.ID)
+	if got.Status != StatusCancelled || got.Transferred != 7 || got.Skipped != 2 || got.Bytes != 4096 {
+		t.Fatalf("cancel erased observed partial counts: %+v", got)
+	}
+	last := got.RecentEvents[len(got.RecentEvents)-1]
+	if last.Type != "finished" || last.Transferred != 7 || last.Skipped != 2 || last.Bytes != 4096 {
+		t.Fatalf("terminal event disagrees with observed partial copy: %+v", last)
+	}
+}
+
 func TestCountersSurviveSnapshotsAndDoNotAliasSubscribers(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "jobs.db")
 	store, err := OpenSQLiteStore(path)

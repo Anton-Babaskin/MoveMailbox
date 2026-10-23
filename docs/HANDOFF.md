@@ -25,6 +25,10 @@
   fix; actual browser cancellation now reaches cancelled state with controls
   restored, instead of HTTP 415. History persisted across the native restart.
   These results are not a native real-provider acceptance.
+- Browser screenshot also revealed cancelled counters reset to zero despite
+  copied-folder events. Explicit cancellation now keeps last observed partial
+  transferred/skipped/bytes in its terminal view/event, with a focused Go test.
+  These counts are observations, not a guaranteed final provider-side inventory.
 - VM baseline remains v0.5.0-rc.1 on the September c3b4994e image: healthy,
   readiness 200, no work/envelopes, monitor running, 29 GiB free, ~51 TLS days.
   External invitation/cookie/CSRF/Origin/Host/revocation smoke passed. No VM image,

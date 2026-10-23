@@ -467,7 +467,11 @@ func (m *Manager) cancelJob(ownerID, id string, enforceOwner bool) error {
 		}
 	}
 	cancel := record.cancel
-	m.finishLocked(record, StatusCancelled, migrator.Result{}, "Миграция отменена")
+	// A stop has no final native result yet. Retain the last observed partial
+	// copy counters instead of incorrectly reporting that nothing was copied.
+	partial := migrator.Result{Transferred: record.view.Transferred,
+		Skipped: record.view.Skipped, Bytes: record.view.Bytes}
+	m.finishLocked(record, StatusCancelled, partial, "Миграция отменена")
 	m.mu.Unlock()
 	cancel()
 	if m.worker != nil {
