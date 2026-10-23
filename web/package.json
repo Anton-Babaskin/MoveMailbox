@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "export": "next build && node scripts/embed.mjs",
+    "build": "next build --webpack",
+    "export": "next build --webpack && node scripts/embed.mjs",
     "lint": "npm run typecheck",
     "typecheck": "tsc --noEmit",
     "build:static": "node scripts/build-static.mjs",

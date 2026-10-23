@@ -59,6 +59,10 @@
 - Release metadata prepared for v0.5.0-rc.2, with explicit verification limits;
   README and website both link to the release index rather than freezing users
   on an obsolete security preview. Publication remains gated by the tag workflow.
+- Final head 8542a6d passed all backend CI gates, but Pages exposed a Turbopack
+  Google-font module-resolution failure. Production builds now explicitly select
+  supported Webpack in all three entry points; fonts/design remain unchanged.
+  Require fresh exact-head backend/site CI before merge, not the earlier green run.
 - Next two bounded stages: (1) finish audit merge/security preview publication
   and verify public static deployment; (2) owner choices for production origin,
   alert delivery/renewal credentials and distribution license, then limited free

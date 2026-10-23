@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 for (const args of [
-  [fileURLToPath(new URL('../node_modules/next/dist/bin/next', import.meta.url)), 'build'],
+  [fileURLToPath(new URL('../node_modules/next/dist/bin/next', import.meta.url)), 'build', '--webpack'],
   [fileURLToPath(new URL('./add-csp.mjs', import.meta.url))],
 ]) {
   const result = spawnSync(process.execPath, args, {

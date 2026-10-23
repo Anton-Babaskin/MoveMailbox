@@ -37,6 +37,7 @@ demo и успешная сборка не заменяют этот тест. �
 | P2 | Download buttons frozen on v0.4.0-preview | Shared release index including prereleases; no `/releases/latest` trap or not-yet-existing tag |
 | P2 | Windows CSP generation used URL pathname, producing `C:\\C:\\...` | `fileURLToPath`; static build uses Node subprocesses instead of POSIX-only env syntax |
 | P2 | `next lint` no longer exists | Explicit TypeScript check and compatible `lint` alias; not represented as an ESLint run |
+| P2 | Final Pages CI exposed a Turbopack Google-font module-resolution failure | Explicit supported Webpack production builds for Pages, native embed and Windows static build; fonts/design unchanged |
 | Maintenance | Independent React/ReactDOM bot updates conflicted | Dependabot runtime group; reviewed minor Actions/SQLite/x/sys updates included |
 
 The npm peer-dependency failure examined at the start belonged to a Dependabot
