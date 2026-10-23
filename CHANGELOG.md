@@ -5,6 +5,10 @@ Preview tags are immutable and are not silently promoted to stable.
 
 ## Unreleased
 
+- October launch audit: security-patched Go 1.27.3 and refreshed dependencies;
+  browser cancellation sends valid JSON; mirror consent resets on endpoint
+  selections; portable Windows static/CSP build and current download index.
+
 - Private staging monitor: bounded disk/inode, authenticated readiness, queue,
   failure and credential-cleanup checks; installed/served TLS expiry checks;
   redacted local alerts with deduplication and recovery, without new listeners.

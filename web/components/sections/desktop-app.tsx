@@ -1,5 +1,6 @@
 import { desktopApp } from '@/content/sections/desktop-app';
 import type { Lang } from '@/i18n/config';
+import { RELEASE_URL } from '@/lib/release';
 
 export function DesktopApp({ lang }: { lang: Lang }) {
   const t = desktopApp[lang];
@@ -35,7 +36,7 @@ export function DesktopApp({ lang }: { lang: Lang }) {
               <p><b>{t.keepStrong}</b>{t.keepRest}</p>
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '26px' }}>
-              <a className="btn btn-p" href="https://github.com/Anton-Babaskin/MoveMailbox/releases/tag/v0.4.0-preview" target="_blank" rel="noreferrer">{t.download}<svg aria-hidden="true" style={{ width: '16px', height: '16px' }}><use href="#dl" /></svg></a>
+              <a className="btn btn-p" href={RELEASE_URL} target="_blank" rel="noreferrer">{t.download}<svg aria-hidden="true" style={{ width: '16px', height: '16px' }}><use href="#dl" /></svg></a>
               <a className="btn btn-g" href="https://github.com/Anton-Babaskin/MoveMailbox#readme" target="_blank" rel="noreferrer">{t.whatsInside}</a>
             </div>
           </div>

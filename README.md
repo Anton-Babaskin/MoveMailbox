@@ -75,7 +75,7 @@ Checksums verify a match to the published file, not an independent publisher sig
 
 ### From source
 
-Go 1.25+ is required; `go.mod` pins the Go 1.27.0 toolchain.
+Go 1.26+ is required; `go.mod` pins the security-patched Go 1.27.3 toolchain.
 
 ```sh
 git clone https://github.com/Anton-Babaskin/MoveMailbox.git

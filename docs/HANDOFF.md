@@ -1,4 +1,39 @@
-# Engineering handoff — 2026-09-30
+# Engineering handoff — 2026-10-23
+
+## Return-from-leave audit (2026-10-23)
+
+- Clean main c9f84f5 synchronized with GitHub; branch
+  `audit/october-launch-readiness`. Owner requested code/site/repository audit,
+  fixes and self-run acceptance, so website changes are limited to confirmed
+  integration/build/download defects; no redesign or Claude PR merge.
+- [Launch readiness](LAUNCH-READINESS.md) separates a finite free-MVP launch path
+  from later billing/PostgreSQL/team features. Public Pages is still preview;
+  working API/UI requires the same chosen HTTPS origin and public-exposure choice.
+- Fixed two browser-reproduced P1 issues: cancellation POST lacked JSON header
+  (real API rejected with 415); strict-mirror consent survived provider changes.
+  Added narrow regressions; no removal of existing safety gates.
+- Go 1.27.3, SQLite 1.60.1/x/sys 0.49.0, Next 16.4.2, React pair 19.3.1,
+  sharp 0.35.5/source-map-js 1.2.2 and reviewed SHA-pinned Actions updates.
+  Local Go race/vet/vulnerability scan passed (zero reachable advisories);
+  production npm audit zero. Python 74 tests, one missing-age local skip;
+  SDK/mirror tests nine passed. Docs/source type checks passed.
+- Live SEO full check passed 243 sitemap pages/272 internal URLs after a
+  transient 503 on the initial attempt. Static export and Windows CSP build
+  fixed/checked; download entry points no longer frozen on old v0.4.0.
+- Native Windows browser demo verified fields, check/folders, INBOX 184 result,
+  active-job reload, and mirror-reset fix. Rebuilt the executable with the cancel
+  fix; actual browser cancellation now reaches cancelled state with controls
+  restored, instead of HTTP 415. History persisted across the native restart.
+  These results are not a native real-provider acceptance.
+- VM baseline remains v0.5.0-rc.1 on the September c3b4994e image: healthy,
+  readiness 200, no work/envelopes, monitor running, 29 GiB free, ~51 TLS days.
+  External invitation/cookie/CSRF/Origin/Host/revocation smoke passed. No VM image,
+  routing, secrets or public access changed at this point. Build/promotion and
+  exact-head CI are pending; do not describe source fixes as deployed yet.
+- Next two bounded stages: (1) green audit PR, reviewed staging promotion,
+  fresh isolated real-mail copy/repeat and bounded HTTPS readiness load;
+  (2) owner choices for production origin, alert delivery/renewal credentials
+  and distribution license, then limited free launch. Backups remain deferred.
 
 ## VM capacity and operator monitoring (2026-09-30, technical scope)
 

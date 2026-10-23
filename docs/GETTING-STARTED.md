@@ -16,7 +16,7 @@ but never IMAP passwords. Use `--database` to select another location.
 
 ### Go demo
 
-The module requires Go 1.25 or newer and declares a reproducible Go
+The module requires Go 1.26 or newer and declares a reproducible Go
 toolchain in `go.mod`.
 Build the interface once with Node 24 before running the application:
 

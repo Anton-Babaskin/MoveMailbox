@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """External TLS/guest checks with a disposable invitation, removed in finally."""
 import argparse
+from collections import Counter
+import concurrent.futures
 import base64
 import http.client
 import json
 import secrets
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -38,6 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--remote', choices=['enroll', 'revoke'])
     parser.add_argument('--ssh-key')
+    parser.add_argument('--load', action='store_true', help='80 read-only readiness requests, four clients, no IMAP load')
     args = parser.parse_args()
     if args.remote:
         remote(args.remote)
@@ -52,9 +56,9 @@ def main():
                         '-o', 'StrictHostKeyChecking=yes', 'nomak@46.4.100.22',
                         'sudo python3 /home/nomak/smoke-public-pilot.py --remote '+mode],
                        input=json.dumps(credential), text=True, capture_output=True, check=True, timeout=20)
-    def request(path, method='GET', headers=None, body=None):
+    def request(path, method='GET', headers=None, body=None, timeout=8):
         # Direct socket; system proxy variables cannot change the endpoint.
-        connection = http.client.HTTPSConnection('staging.movemailbox.com', 18443, timeout=8)
+        connection = http.client.HTTPSConnection('staging.movemailbox.com', 18443, timeout=timeout)
         try:
             connection.request(method, path, body=body, headers=headers or {})
             response = connection.getresponse()
@@ -80,6 +84,28 @@ def main():
         auth['Origin'] = 'https://staging.movemailbox.com:8443'
         assert request('/api/jobs', 'POST', auth, '{}')[0] == 403
         assert request('/api/ready', headers={'Authorization': basic, 'Host': 'untrusted.invalid'})[0] == 421
+        if args.load:
+            started = time.monotonic()
+            def sample(_):
+                before = time.monotonic()
+                if before - started > 40:
+                    raise RuntimeError('load time budget exceeded')
+                code, _, _ = request('/api/ready', headers={'Authorization': basic}, timeout=2)
+                return code, (time.monotonic() - before) * 1000
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                results = list(pool.map(sample, range(80)))
+            counts = Counter(code for code, _ in results)
+            if not counts[200] or not counts[429] or set(counts) - {200, 429}:
+                raise RuntimeError('unexpected load status distribution')
+            time.sleep(12)  # Drain the proxy's 20-request burst at two/second.
+            if [sample(0)[0] for _ in range(3)] != [200, 200, 200]:
+                raise RuntimeError('readiness failed to recover after bounded load')
+            latency = sorted(duration for _, duration in results)
+            print(json.dumps({'result': 'PASS', 'requests': 80, 'concurrency': 4,
+                              'statuses': dict(counts), 'p95Ms': round(latency[75], 2),
+                              'maxMs': round(max(latency), 2),
+                              'elapsedSeconds': round(time.monotonic() - started, 2),
+                              'scope': 'external HTTPS gateway readiness, not IMAP throughput'}))
     finally:
         update('revoke')
     assert request('/api/ready', headers={'Authorization': basic})[0] == 401

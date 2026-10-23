@@ -9,21 +9,22 @@
     "dev": "next dev",
     "build": "next build",
     "export": "next build && node scripts/embed.mjs",
-    "lint": "next lint",
-    "build:static": "NEXT_PUBLIC_STATIC_SITE=1 next build && npm run csp",
+    "lint": "npm run typecheck",
+    "typecheck": "tsc --noEmit",
+    "build:static": "node scripts/build-static.mjs",
     "csp": "node scripts/add-csp.mjs",
     "check": "node scripts/check-export.mjs",
     "check:live": "node scripts/check-live.mjs",
     "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
-    "next": "16.3.6",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "overrides": {
     "postcss": "8.5.28",
-    "sharp": "0.35.4"
+    "sharp": "0.35.5"
   },
   "browserslist": [
     "chrome >= 111",

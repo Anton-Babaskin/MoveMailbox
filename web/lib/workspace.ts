@@ -6,6 +6,7 @@ import { createGuestClient } from '../../sdk/guest-client.mjs';
 import type { workspaceRuntime } from '@/content/sections/workspace-runtime';
 import { href, type Lang } from '@/i18n/config';
 import { providers, providerByEmail } from '@/data/providers';
+import { bindMirrorReset } from './mirror-safety.mjs';
 
 /**
  * В исходном макете это была глобальная переменная одного большого
@@ -463,10 +464,8 @@ export function initWorkspace(
     });
     /* подтверждение выдано под конкретную пару ящиков: меняются реквизиты
        любой стороны или стороны меняются местами — зеркало сбрасывается */
-    $$('.mbx').forEach(function(mbx){
-      $$('input',mbx).forEach(function(inp){
-        inp.addEventListener('input',function(){ if(btn.dataset.on==='1') setState(false); });
-      });
+    bindMirrorReset($$('.mbx input, .mbx select'), function(){
+      if(btn.dataset.on==='1') setState(false);
     });
     var swapBtn=$('#swap');
     if(swapBtn) swapBtn.addEventListener('click',function(){ if(btn.dataset.on==='1') setState(false); });
