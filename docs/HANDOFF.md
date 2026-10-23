@@ -1,5 +1,31 @@
 # Engineering handoff — 2026-10-23
 
+## Launch endpoint and operator delivery (2026-10-23)
+
+- Audit PR #73 is merged in main 3b365ca; exact-head/main CI, Pages deployment
+  and native release v0.5.0-rc.2 all passed. Post-deploy live SEO checked 243
+  sitemap pages/281 internal URLs. Eight superseded bot PRs closed; #68 is a
+  nonblocking development-types update. See the merged PR's final evidence.
+- Owner initially requested 443, then confirmed it still belongs to Amnezia.
+  Keep existing 18443; do not alter VPN/virtualization-host routing or buy an IP
+  on the owner's behalf. Proposed app subdomain/DNS approval is pending;
+  [endpoint runbook](LAUNCH-ENDPOINT.md) separates required owner inputs from
+  VM work. Existing stage continues unchanged and invitation-protected.
+- Owner selected SMTP, not Telegram. Branch `ops/smtp-launch-alerts` adds a
+  separate bounded delivery timer: fixed allowlisted check names only, verified
+  TLS before authentication, dedup/escalation/recovery and retry without losing
+  the delivered baseline. Hidden interactive private configuration avoids
+  passwords in chat/arguments/logs. [SMTP runbook](SMTP-ALERTS.md).
+- Focused SMTP tests: 13 passed; complete Python harness suite: 87 tests, one
+  local missing-age skip. Documentation checks and systemd unit validation passed
+  (DrvFS permission warnings locally; installation explicitly uses root 0644).
+  CI also validates operator unit syntax. No new mail-provider load performed.
+- SMTP credentials/inbox receipt, DNS/certificate issuance and actual app-origin
+  acceptance remain pending; prepared code is not configured delivery or launch.
+  Next two steps: install reviewed notification units and obtain private SMTP
+  settings; then apply the approved origin/certificate route and run one final
+  browser/real-mail acceptance before opening access. No website redesign.
+
 ## Return-from-leave audit (2026-10-23)
 
 - Clean main c9f84f5 synchronized with GitHub; branch

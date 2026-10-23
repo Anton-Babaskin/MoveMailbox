@@ -1,0 +1,11 @@
+[Unit]
+Description=Check MoveMailbox operator email delivery every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=15s
+Unit=movemailbox-notify.service
+
+[Install]
+WantedBy=timers.target
