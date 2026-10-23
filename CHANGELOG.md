@@ -5,6 +5,8 @@ Preview tags are immutable and are not silently promoted to stable.
 
 ## Unreleased
 
+## v0.5.0-rc.2 — 2026-10-23
+
 - October launch audit: security-patched Go 1.27.3 and refreshed dependencies;
   browser cancellation sends valid JSON; mirror consent resets on endpoint
   selections; portable Windows static/CSP build and current download index.

@@ -50,11 +50,15 @@
 - Post-promotion HTTPS readiness load: 80 requests/four clients, 27 HTTP 200 and
   53 expected 429, p95 350.85 ms, max 419.96 ms, 18.82 s including recovery.
   Three recovery requests were 200. Guest/CSRF/Origin/Host and temporary invite
-  revocation passed; no provider load. Final queues/envelopes need read-only
-  confirmation at handoff; no broader/public launch is implied.
+  revocation passed; no provider load. Final read-only stores: three completed
+  API/worker records, no active work, zero envelopes; monitor healthy.
+  No broader/public launch is implied.
 - PR #73 contains the audit and this evidence-only follow-up. Final-head CI must
   be green before merge. Native publication is separate from deployed runtime;
   use the actual Releases page/workflow result, never infer it from the image tag.
+- Release metadata prepared for v0.5.0-rc.2, with explicit verification limits;
+  README and website both link to the release index rather than freezing users
+  on an obsolete security preview. Publication remains gated by the tag workflow.
 - Next two bounded stages: (1) finish audit merge/security preview publication
   and verify public static deployment; (2) owner choices for production origin,
   alert delivery/renewal credentials and distribution license, then limited free

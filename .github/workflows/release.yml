@@ -9,7 +9,7 @@ on:
       candidate_tag:
         description: 'Validate candidate archives without publishing a tag or release'
         required: true
-        default: 'v0.5.0-rc.1'
+        default: 'v0.5.0-rc.2'
         type: string
 
 permissions:
