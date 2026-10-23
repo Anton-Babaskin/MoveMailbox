@@ -83,8 +83,10 @@ deleting the state file. Review any recovery before considering the incident clo
 
 ## Alert delivery and certificate renewal
 
-Current delivery is **local journal + root-private report only**. No Telegram,
-email, webhook, off-host heartbeat or public status page is configured. If the
+The monitor itself writes **local journal + root-private report only**. Optional
+[SMTP delivery](SMTP-ALERTS.md) has a separate timer and retry baseline; it is
+disabled until the owner installs private SMTP settings and verifies delivery.
+No Telegram, off-host heartbeat or public status page is configured. If the
 VM or timer dies, it cannot notify the operator itself. Before a public launch,
 choose an owner-controlled outbound channel and an independent external
 availability check; store webhook/SMTP credentials outside Git and test both

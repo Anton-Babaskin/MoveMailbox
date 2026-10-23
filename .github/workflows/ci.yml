@@ -61,6 +61,9 @@ jobs:
       - name: Check documentation links and static artwork
         run: python3 scripts/check-docs.py
 
+      - name: Validate operator monitoring and notification units
+        run: systemd-analyze verify deploy/staging/movemailbox-monitor.service deploy/staging/movemailbox-monitor.timer deploy/staging/movemailbox-notify.service deploy/staging/movemailbox-notify.timer
+
       - name: Install pinned backup encryption test tools
         run: |
           GOBIN="${RUNNER_TEMP}/age-bin" go install filippo.io/age/cmd/age@v1.3.2 filippo.io/age/cmd/age-keygen@v1.3.2
