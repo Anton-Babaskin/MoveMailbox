@@ -28,16 +28,37 @@
 - Browser screenshot also revealed cancelled counters reset to zero despite
   copied-folder events. Explicit cancellation now keeps last observed partial
   transferred/skipped/bytes in its terminal view/event, with a focused Go test.
-  These counts are observations, not a guaranteed final provider-side inventory.
-- VM baseline remains v0.5.0-rc.1 on the September c3b4994e image: healthy,
-  readiness 200, no work/envelopes, monitor running, 29 GiB free, ~51 TLS days.
-  External invitation/cookie/CSRF/Origin/Host/revocation smoke passed. No VM image,
-  routing, secrets or public access changed at this point. Build/promotion and
-  exact-head CI are pending; do not describe source fixes as deployed yet.
-- Next two bounded stages: (1) green audit PR, reviewed staging promotion,
-  fresh isolated real-mail copy/repeat and bounded HTTPS readiness load;
-  (2) owner choices for production origin, alert delivery/renewal credentials
-  and distribution license, then limited free launch. Backups remain deferred.
+  Final Windows browser recheck cancelled immediately after first INBOX progress:
+  cancelled view retained 184 messages/38 MB demo counters. These observations
+  are not a guaranteed final provider-side inventory or real-Windows IMAP proof.
+- Both backend CI (39941673906) and website build (39941673902) passed for
+  382c9cabe84ce21bfbc872200865cd6ef7ad38de. Built that exact source archive on
+  the VM, including real imapsync trusted/untrusted/wrong-peer TLS/STARTTLS checks.
+  Drained transactional promotion succeeded; runtime reports v0.5.0-rc.2,
+  `imapsync-remote-worker`, storage healthy/readiness 200. Immutable image:
+  `sha256:a59a2e3887abf76cad399cf4e45ed80752575f95891f8161e1f376595c6a3c1a`.
+  Prior c3b4994e image and validated local metadata snapshot remain for rollback.
+  API/worker stay non-root/read-only; HTTPS proxy, keys, routing and VPN untouched.
+  About 24 GiB remain free after builds; monitor refreshed and healthy, ~51 TLS days.
+- Fresh external HTTPS/worker real-mail acceptance passed with retained fixture
+  `MoveMailbox-HTTPS-8baca049a103`: synthetic attachment copied once, repeat
+  copied zero; body hash, flags and internal date matched; source unchanged.
+  The initial fixture `MoveMailbox-HTTPS-7f5944a1af48` overlapped a load run:
+  harness aborted without printing its protected error details, but read-only
+  stores proved its single job completed/copy=1 and envelopes=0. Serialized fresh
+  acceptance passed. Do not run acceptance and rate-limit load concurrently.
+- Post-promotion HTTPS readiness load: 80 requests/four clients, 27 HTTP 200 and
+  53 expected 429, p95 350.85 ms, max 419.96 ms, 18.82 s including recovery.
+  Three recovery requests were 200. Guest/CSRF/Origin/Host and temporary invite
+  revocation passed; no provider load. Final queues/envelopes need read-only
+  confirmation at handoff; no broader/public launch is implied.
+- PR #73 contains the audit and this evidence-only follow-up. Final-head CI must
+  be green before merge. Native publication is separate from deployed runtime;
+  use the actual Releases page/workflow result, never infer it from the image tag.
+- Next two bounded stages: (1) finish audit merge/security preview publication
+  and verify public static deployment; (2) owner choices for production origin,
+  alert delivery/renewal credentials and distribution license, then limited free
+  launch. No new billing/PostgreSQL project; backups remain deferred by owner.
 
 ## VM capacity and operator monitoring (2026-09-30, technical scope)
 

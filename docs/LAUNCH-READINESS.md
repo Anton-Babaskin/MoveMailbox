@@ -71,6 +71,15 @@ is not proof of absence of unknown vulnerabilities or a full penetration test.
   temporary invitation revocation. Optional `--load` is bounded to 80 readiness
   requests/four clients; it does not measure IMAP throughput or stress providers.
 
+Update: reviewed 382c9ca was promoted to the closed VM as v0.5.0-rc.2 after green
+backend/site CI. Actual external HTTPS/worker attachment copy, zero-copy repeat,
+body hash/flags/date and unchanged source passed. Post-promotion bounded gateway
+load passed with 27 responses 200/53 expected 429 and p95 350.85 ms, followed by
+three healthy recovery responses. About 24 GiB remain after builds. Initial
+overlapping load/mail acceptance was inconclusive as a harness run, although
+the original job completed; the clean serialized run passed. See handoff for
+fixture/image/source identities and publication status.
+
 Promotion, fresh real-mail fixture results, load measurements, exact CI/PR and
 published-versus-deployed versions must be recorded in the latest
 [handoff](HANDOFF.md), not inferred from older successful tests.
