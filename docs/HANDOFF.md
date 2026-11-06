@@ -1,4 +1,31 @@
-# Engineering handoff — 2026-10-23
+# Engineering handoff — 2026-11-06
+
+## Hetzner exit and ordinary-VPS recovery (2026-11-06)
+
+- Owner authorized copying MoveMailbox before deleting the old Hetzner host;
+  destination is an ordinary VPS, not Proxmox. Source was off, then the owner
+  powered it on. No virtualization-host/VPN/other-VM changes or deletion.
+- [Recovery receipt](RECOVERY-20261106.md): four encrypted VM archives saved
+  outside Hetzner/Git, plus full all-ref Git bundle and checked release packages.
+  Private age identity stays on the owner's workstation, separate from archives.
+- Gracefully paused admissions/writers, validated paired SQLite snapshots, then
+  returned the old API/worker/proxy/timers to service. Current retained job counts
+  were 0/0, envelopes 0. Historical local snapshots preserved privately.
+- All archive authentication/checksums passed. Preserved worker key pair/token,
+  session secret and TLS key/cert matched. Actual copied databases and exact
+  images booted in fresh internal-only local Docker; a new demo job completed
+  with 184 synthetic messages and zero terminal envelopes. No real mail traffic.
+  Test containers stopped; original/older test resources preserved.
+- Owner has approved app hostname on port 18443 for the old setup, but the new
+  VPS can use an approved ordinary HTTPS origin. Reissue certificates/update
+  DNS for the new IP; do not reuse the October DNS challenge or blindly overlay
+  old network/firewall files. Saved SMTP timer/code exists, private notify.json
+  did not: no configured email delivery to migrate.
+- Next two steps: owner protects a second off-server archive/identity copy and
+  supplies the new VPS SSH endpoint; then deploy a fresh closed pilot, adapt
+  egress/HTTPS/DNS, verify one real transfer and explicitly approve public access.
+  Local encrypted archives and identity do not travel through GitHub; another
+  computer needs the owner-provided private recovery materials, not chat history.
 
 ## Launch endpoint and operator delivery (2026-10-23)
 
