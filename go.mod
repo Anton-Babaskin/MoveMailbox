@@ -5,7 +5,7 @@ go 1.26.0
 toolchain go1.27.3
 
 require (
-	github.com/emersion/go-imap/v2 v2.0.0-beta.8
+	github.com/emersion/go-imap/v2 v2.0.0-beta.9
 	golang.org/x/sys v0.49.0
 	modernc.org/sqlite v1.60.1
 )
